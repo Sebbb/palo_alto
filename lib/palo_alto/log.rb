@@ -1,5 +1,3 @@
-require "pp"
-
 module PaloAlto
 	class XML
 
@@ -23,7 +21,6 @@ module PaloAlto
 				@count=nil
 				@skip=0
 				@first_result = fetch_result
-				#pp @current_result
 				super
 			end
 

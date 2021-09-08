@@ -2,6 +2,8 @@
 
 require 'openssl'
 require 'nokogiri'
+require 'net/http'
+require 'pp'
 
 require_relative 'palo_alto/version'
 
@@ -10,7 +12,6 @@ require_relative 'palo_alto/log'
 require_relative 'palo_alto/op'
 
 module PaloAlto
-
   class PermanentException < StandardError
   end
 

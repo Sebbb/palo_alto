@@ -1,5 +1,4 @@
 require "nokogiri"
-require "pp"
 
 module PaloAlto
   class XML
@@ -49,9 +48,7 @@ module PaloAlto
           section = obj.keys.first
           data = obj[section]
         else
-          puts "----------"
-          pp obj
-          raise
+          raise obj.pretty_inspect
         end
 
         unless ops.has_key?(section.to_s)
@@ -60,9 +57,6 @@ module PaloAlto
         end
 
         ops_tree = ops[section.to_s]
-        #pp [:ops, ops_tree]
-        #pp [:obj, obj]
-        #puts "****************** build #{section} (#{ops_tree[:obj]})"
 
         section = escape_xpath_tag(section)
 
@@ -104,8 +98,7 @@ module PaloAlto
             xml_builder(xml, ops_tree, v)
           }
         else
-          pp ops_tree[:obj]
-          raise
+          raise ops_tree[:obj].pretty_inspect
         end
         xml
       end
