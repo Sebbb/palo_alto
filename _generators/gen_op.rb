@@ -35,6 +35,6 @@ footer=<<EOF
 end
 EOF
 
-File.open("../lib/interface/paloalto_op.rb","w"){|f|
+File.open("#{__dir__}/../lib/palo_alto/op.rb","w"){|f|
   f.write( header + "@@ops=" + hash.pretty_inspect + footer)
 }

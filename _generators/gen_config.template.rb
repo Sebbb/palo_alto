@@ -435,7 +435,7 @@ module PaloAlto
 				self
 			end
 
-			def get(ignore_empty_result: false, xpath: self.to_xpath)
+			def get(ignore_empty_result: false, xpath: self.to_xpath, return_only: false)
 				if self.class.superclass == ArrayConfigClass && !@selector
 					raise(InvalidCommandException, "Please use 'get_all' here")
 				end
@@ -453,23 +453,28 @@ module PaloAlto
 					if ignore_empty_result==false
 						raise(ObjectNotPresentException, "empty result: #{payload.inspect}")
 					end
+				end
+
+				if return_only
+					data.xpath('//response/result/*')
 				else
-					#self.parent_instance.dup.create!.clear!.external_set(data.xpath('//response/result').first).first
 					@create_children=true
 					n = data.xpath('//response/result/*')
+					if n.any?
+						clear!
+						external_set(n.first)
 
-					clear!
-					external_set(n.first)
-
-					if is_a?(ArrayConfigClass)
-						primary_key = get_primary_key(n.first.attribute_nodes, self.class.props)
-						set_array_class_attributes(n.first, primary_key) # primary key, api_attributes
+						if is_a?(ArrayConfigClass)
+							primary_key = get_primary_key(n.first.attribute_nodes, self.class.props)
+							set_array_class_attributes(n.first, primary_key) # primary key, api_attributes
+						end
+					end
+					self
+				end.tap do
+					if XML.debug.include?(:statistics)
+						puts "Elapsed for parsing: #{Time.now-start_time} seconds"
 					end
 				end
-				if XML.debug.include?(:statistics)
-					puts "Elapsed for parsing: #{Time.now-start_time} seconds"
-				end
-				self
 			end
 
 			def get_primary_key(attribute_nodes, props)
@@ -767,23 +772,25 @@ module PaloAlto
 
 			def set_xpath_from_selector(selector: @selector)
 				xpath = self.parent_instance.child(_section)
-				k,v=selector.first
+				k, v = selector.first
 				obj = xpath.where(PaloAlto.xpath_attr(k.to_sym) == v)
 
 				@expression = obj.expression
 				@arguments = obj.arguments
 			end
 
-			def rename!(new_name)
+			def rename!(new_name, internal_only: false)
 				# https://docs.paloaltonetworks.com/pan-os/10-1/pan-os-panorama-api/pan-os-xml-api-request-types/configuration-api/rename-configuration.html
-				payload = {
-					type:		'config',
-					action: 'rename',
-					xpath:	self.to_xpath,
-					newname: new_name
-				}
+				unless internal_only
+					payload = {
+						type:   'config',
+						action: 'rename',
+						xpath:  self.to_xpath,
+						newname: new_name
+					}
 
-				result = XML.execute(payload)
+					result = XML.execute(payload)
+				end
 
 				# now update also the internal value to the new name
 				self.selector.transform_values!{new_name}

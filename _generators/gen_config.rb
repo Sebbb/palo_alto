@@ -217,7 +217,7 @@ def iter_array(section, json, indent:)
 end
 
 
-File.open("../lib/interface/paloalto_config.rb","w"){|f|
+File.open("#{__dir__}/../lib/palo_alto/config.rb","w"){|f|
 	$f = f
 	f.write("# generated: #{Time.now.to_s}\n")
 	indent_puts(File.read("gen_config.template.rb"), indent: 0)
