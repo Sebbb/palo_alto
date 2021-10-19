@@ -213,12 +213,15 @@ module PaloAlto
       end
     end
 
-    def commit!(all: false)
+    def commit!(all: false, device_groups: nil, wait_for_completion: true)
+      return nil if device_groups.is_a?(Array) && device_groups.empty?
+
       op = if all
              'commit'
            else
              { commit: { partial: [
                { 'admin': [XML.username] },
+               device_groups ? {'device-group': device_groups } : nil,
                'no-template',
                'no-template-stack',
                'no-log-collector',
@@ -227,9 +230,39 @@ module PaloAlto
                'no-wildfire-appliance-cluster',
                { 'device-and-network': 'excluded' },
                { 'shared-object': 'excluded' }
-             ] } }
+             ].compact } }
            end
-      Op.new.execute(op)
+      Op.new.execute(op).tap do |result|
+        if wait_for_completion
+          job_id = result.at_xpath('response/result/job')&.text
+          wait_for_job_completion(job_id) if job_id
+        end
+      end
+    end
+
+    def full_commit_required?
+      result = Op.new.execute({check: 'full-commit-required'})
+      return true unless result.at_xpath('response/result').text == 'no'
+
+      false
+    end
+
+    def check_for_changes(usernames: [XML.username])
+      result = Op.new.execute({show: {config: {list: {'change-summary': {partial: {admin: usernames}}}}}})
+      result.xpath('response/result/summary/device-group/member').map(&:inner_text)
+    end
+
+    def wait_for_job_completion(job_id, wait: 5, timeout: 300)
+      cmd = {show: {jobs: {id: job_id}}}
+      start = Time.now
+      begin
+        result = Op.new.execute(cmd)
+        unless result.at_xpath('response/result/job/status')&.text=='ACT'
+          return result
+        end
+        sleep wait
+      end while start+timeout > Time.now
+      return false
     end
 
     def revert!(all: false)

@@ -424,7 +424,7 @@ module PaloAlto
 				start_time=Time.now
 				result = self.parent_instance.dup.create!.clear!.external_set(data.xpath('//response/result').first)
 				if XML.debug.include?(:statistics)
-					puts "Elapsed for parsing #{result.length} results: #{Time.now-start_time} seconds"
+					warn "Elapsed for parsing #{result.length} results: #{Time.now-start_time} seconds"
 				end
 				result
 			end
@@ -472,7 +472,7 @@ module PaloAlto
 					self
 				end.tap do
 					if XML.debug.include?(:statistics)
-						puts "Elapsed for parsing: #{Time.now-start_time} seconds"
+						warn "Elapsed for parsing: #{Time.now-start_time} seconds"
 					end
 				end
 			end
@@ -530,9 +530,9 @@ module PaloAlto
 					when 'bool'
 						return true if ['yes', true].include?(value)
 						return false if ['no', false].include?(value)
-						raise ArgumentError, 'Not bool: ' + value.inspect
+						raise ArgumentError, "Not bool: #{value.inspect}"
 					when 'string', 'ipdiscontmask', 'iprangespec', 'ipspec', 'rangelistspec'
-						raise(ArgumentError, 'Not string') unless value.is_a?(String)
+						raise(ArgumentError, "Not string: #{value.inspect}") unless value.is_a?(String)
 						if prop_arr['regex']
 							raise ArgumentError, "Not matching regex: #{value.inspect} (#{prop_arr["regex"].inspect})" unless value.match(prop_arr["regex"])
 						end
@@ -666,26 +666,32 @@ module PaloAlto
 				elsif @external_values.has_key?(prop)
 					return @external_values[prop]
 				elsif my_prop.has_key?("default") && include_defaults
-					return enforce_type(my_prop, my_prop['default'])
+					return enforce_types(my_prop, my_prop['default'])
 				else
 					return nil
+				end
+			end
+
+			def enforce_types(prop_arr, values)
+				return if values.nil?
+
+				if has_multiple_values? && values.is_a?(String)
+					values = values.split(/\s+/)
+				end
+
+				if values.is_a?(Array) && has_multiple_values?
+					values.map{|v| enforce_type(prop_arr, v)}
+				elsif !has_multiple_values?
+					enforce_type(prop_arr, values)
+				else
+					raise(ArgumentError, 'Needs to be Array but is not, or vice versa')
 				end
 			end
 
 			def prop_set(prop, value)
 				my_prop = self.class.props[prop] or raise(InternalErrorException, "Unknown attribute for #{self.class}: #{prop}")
 
-				if has_multiple_values? && value.is_a?(String)
-					value = value.split(/\s+/)
-				end
-
-				if value.is_a?(Array)
-					@values[prop] = value.map{|v| enforce_type(my_prop, v)}
-				elsif value.nil?
-					@values[prop] = nil
-				else
-					@values[prop] = enforce_type(my_prop, value)
-				end
+				@values[prop] = enforce_types(my_prop, value)
 			end
 
 			def to_xml(changed_only:, full_tree:, include_root: )
