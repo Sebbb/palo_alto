@@ -197,7 +197,11 @@ module PaloAlto
         begin
           Helpers::Rest.execute(payload, headers: {'X-PAN-KEY': self.auth_key})
         rescue TemporaryException => e
-          unless retried
+          dont_continue_at = [
+            'Partial revert is not allowed. Full system commit must be completed.',
+            'Config for scope '
+          ]
+          unless retried || dont_continue_at.any? { |x| e.message.start_with?(x) }
             if XML.debug.include?(:warnings)
               warn "Got error #{e.inspect}; retrying"
             end
@@ -245,6 +249,69 @@ module PaloAlto
       return true unless result.at_xpath('response/result').text == 'no'
 
       false
+    end
+
+    def primary_active?
+      cmd = {show: {'high-availability': 'state'}}
+      state = Op.new.execute(cmd)
+      state.at_xpath("response/result/local-info/state").text == "primary-active"
+    end
+
+    # area: config, commit
+    def show_locks(area:)
+      cmd = {show: "#{area}-locks"}
+      ret = Op.new.execute(cmd)
+      ret.xpath("response/result/#{area}-locks/entry").map do |lock|
+        comment = lock.at_xpath('comment').inner_text
+        location = lock.at_xpath('name').inner_text
+        {
+          name: lock.attribute('name').value,
+          location: location == 'shared' ? nil : location,
+          type: lock.at_xpath('type').inner_text,
+          comment: comment == '(null)' ? nil : comment
+        }
+      end
+    end
+
+    # will execute block if given and unlock afterwards. returns false if lock could not be aquired
+    def lock(area:, comment: nil, type: nil, location: nil)
+      if block_given?
+        if lock(area: area, comment: comment, type: type, location: location)
+          begin
+            return yield
+          ensure
+            unlock(area: area, type: type, location: location)
+          end
+        else
+          return false
+        end
+      end
+
+      begin
+        cmd = {request: {"#{area}-lock": {add: {comment: comment || '(null)' }}}}
+        Op.new.execute(cmd, get_extra_argument(type: type, location: location))
+        true
+      rescue PaloAlto::InternalErrorException
+        false
+      end
+    end
+
+    def unlock(area:, type: nil, location: nil)
+      begin
+        cmd = {request: {"#{area}-lock": 'remove'}}
+        Op.new.execute(cmd, get_extra_argument(type: type, location: location))
+      rescue PaloAlto::InternalErrorException
+        return false
+      end
+      true
+    end
+
+    def remove_all_locks
+      %w(config commit).each do |area|
+        show_locks(area: area).each {|lock|
+          unlock(area: area, type: lock[:type], location: lock[:location])
+        }
+      end
     end
 
     def check_for_changes(usernames: [XML.username])
@@ -317,5 +384,17 @@ module PaloAlto
       xml_data = Helpers::Rest.execute(payload)
       self.auth_key = xml_data.xpath('//response/result/key')[0].content
     end
+
+    private
+
+    # used to limit an op command to a specifc dg/template
+    def get_extra_argument(type:, location:)
+      case type
+        when 'dg'  then {vsys: location}
+        when 'tpl' then raise
+        else {}
+      end
+    end
+
   end
 end
