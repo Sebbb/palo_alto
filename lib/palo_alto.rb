@@ -263,18 +263,6 @@ module PaloAlto
       end
     end
 
-    def execute_with_type(cmd, type:, location:)
-      if type == 'tpl'
-        run_with_template_scope(location) { Op.new.execute(cmd) }
-      elsif type == 'dg'
-        Op.new.execute(cmd, { vsys: location })
-      elsif !type || type == 'shared'
-        Op.new.execute(cmd)
-      else
-        raise(ArgumentError, "invalid type: #{type.inspect}")
-      end
-    end
-
     # will execute block if given and unlock afterwards. returns false if lock could not be aquired
     def lock(area:, comment: nil, type: nil, location: nil)
       if block_given?
@@ -291,7 +279,7 @@ module PaloAlto
 
       begin
         cmd = { request: { "#{area}-lock": { add: { comment: comment || '(null)' } } } }
-        execute_with_type(cmd, type: type, location: location)
+        Op.new.execute(cmd, type: type, location: location)
         true
       rescue PaloAlto::InternalErrorException
         false
@@ -305,7 +293,7 @@ module PaloAlto
               else
                 { request: { "#{area}-lock": 'remove' } }
               end
-        execute_with_type(cmd, type: type, location: location)
+        Op.new.execute(cmd, type: type, location: location)
       rescue PaloAlto::InternalErrorException
         return false
       end
@@ -315,28 +303,9 @@ module PaloAlto
     def remove_all_locks
       %w[config commit].each do |area|
         show_locks(area: area).each do |lock|
-          unlock(area: area, type: lock[:type], location: lock[:location], name: area=='commit' ? lock[:name] : nil )
+          unlock(area: area, type: lock[:type], location: lock[:location], name: area == 'commit' ? lock[:name] : nil)
         end
       end
-    end
-
-    def run_with_template_scope(name)
-      if block_given?
-        run_with_template_scope(name)
-        begin
-          return yield
-        ensure
-          run_with_template_scope(nil)
-        end
-      end
-
-      cmd = if name
-              { set: { system: { setting: { target: { template: { name: name } } } } } }
-            else
-              { set: { system: { setting: { target: 'none' } } } }
-            end
-
-      Op.new.execute(cmd)
     end
 
     def check_for_changes(usernames: [XML.username])
@@ -349,7 +318,8 @@ module PaloAlto
       start = Time.now
       loop do
         result = Op.new.execute(cmd)
-        return result unless result.at_xpath('response/result/job/status')&.text == 'ACT'
+        status = result.at_xpath('response/result/job/status')&.text
+        return result unless %w[ACT PEND].include?(status)
 
         sleep wait
         break unless start + timeout > Time.now
