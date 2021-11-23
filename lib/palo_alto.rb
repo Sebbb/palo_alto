@@ -99,7 +99,15 @@ module PaloAlto
 
         thread[:http].start unless thread[:http].started?
 
-        response = thread[:http].post('/api/', URI.encode_www_form(options[:payload]), options[:headers])
+        payload = options[:payload]
+        response = if payload.values.any? { |value| [IO, StringIO].any? { |t| value.is_a?(t) } }
+                     payload.values.select { |value| [IO, StringIO].any? { |t| value.is_a?(t) } }.each(&:rewind)
+                     post_req = Net::HTTP::Post.new('/api/', options[:headers])
+                     post_req.set_form payload.map { |k, v| [k.to_s, v] }, 'multipart/form-data'
+                     thread[:http].request(post_req)
+                   else
+                     thread[:http].post('/api/', URI.encode_www_form(payload), options[:headers])
+                   end
 
         case response.code
         when '200'
@@ -189,13 +197,14 @@ module PaloAlto
         begin
           Helpers::Rest.execute(payload, headers: { 'X-PAN-KEY': auth_key })
         rescue TemporaryException => e
-          dont_continue_at = [
+          dont_retry_at = [
             'Partial revert is not allowed. Full system commit must be completed.',
             'Config for scope ',
             'Config is not currently locked for scope ',
-            'Commit lock is not currently held by'
+            'Commit lock is not currently held by',
+            'You already own a config lock for scope '
           ]
-          if retried || dont_continue_at.any? { |x| e.message.start_with?(x) }
+          if retried || dont_retry_at.any? { |x| e.message.start_with?(x) }
             raise e
           else
             warn "Got error #{e.inspect}; retrying" if XML.debug.include?(:warnings)
@@ -266,14 +275,12 @@ module PaloAlto
     # will execute block if given and unlock afterwards. returns false if lock could not be aquired
     def lock(area:, comment: nil, type: nil, location: nil)
       if block_given?
-        if lock(area: area, comment: comment, type: type, location: location)
-          begin
-            return yield
-          ensure
-            unlock(area: area, type: type, location: location)
-          end
-        else
-          return false
+        return false unless lock(area: area, comment: comment, type: type, location: location)
+
+        begin
+          return yield
+        ensure
+          unlock(area: area, type: type, location: location)
         end
       end
 
@@ -309,8 +316,16 @@ module PaloAlto
     end
 
     def check_for_changes(usernames: [XML.username])
-      result = Op.new.execute({ show: { config: { list: { 'change-summary': { partial: { admin: usernames } } } } } })
-      result.xpath('response/result/summary/device-group/member').map(&:inner_text)
+      cmd = if usernames
+              { show: { config: { list: { 'change-summary': { partial: { admin: usernames } } } } } }
+            else
+              { show: { config: { list: 'change-summary' } } }
+            end
+      result = Op.new.execute(cmd)
+      {
+        device_groups: result.xpath('response/result/summary/device-group/member').map(&:inner_text),
+        templates: result.xpath('response/result/summary/template/member').map(&:inner_text)
+      }
     end
 
     def wait_for_job_completion(job_id, wait: 5, timeout: 300)
@@ -363,8 +378,6 @@ module PaloAlto
       # attempt to obtain the auth_key
       # raise 'Exception attempting to obtain the auth_key' if (self.class.auth_key = get_auth_key).nil?
       self.class.get_auth_key
-
-      self
     end
 
     # Perform a query to the API endpoint for an auth_key based on the credentials provided
