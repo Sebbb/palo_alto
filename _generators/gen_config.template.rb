@@ -602,12 +602,12 @@ module PaloAlto
           @subclasses.each do |k, subclass|
             if subclass.is_a?(Hash)
               subclass.each do |k2, subclass2|
-                xml.send(k, k2) do |xml2|
+                xml.public_send(k, k2) do |xml2|
                   subclass2.xml_builder(xml2, full_tree: full_tree, changed_only: changed_only)
                 end
               end
             else
-              xml.method_missing(k) do |xml2| # somehow .send does not work with k==:system
+              xml.public_send(k) do |xml2|
                 subclass.xml_builder(xml2, full_tree: full_tree, changed_only: changed_only)
               end
             end
@@ -720,7 +720,7 @@ module PaloAlto
 
       def to_xml(changed_only:, full_tree:, include_root:)
         builder = Nokogiri::XML::Builder.new do |xml|
-          xml.send(_section, begin
+          xml.public_send(_section, begin
             selector
           rescue StandardError
             nil
@@ -765,12 +765,12 @@ module PaloAlto
 
         builder = Nokogiri::XML::Builder.new do |xml|
           xml.root do
-            xml.send('selected-list') do
+            xml.public_send('selected-list') do
               xml.source(xpath: source) do
                 members.each { |member| xml.member member }
               end
             end
-            xml.send('all-errors', all_errors ? 'yes' : 'no')
+            xml.public_send('all-errors', all_errors ? 'yes' : 'no')
           end
         end
 
