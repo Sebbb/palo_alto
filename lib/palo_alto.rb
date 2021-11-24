@@ -100,14 +100,16 @@ module PaloAlto
         thread[:http].start unless thread[:http].started?
 
         payload = options[:payload]
-        response = if payload.values.any? { |value| [IO, StringIO].any? { |t| value.is_a?(t) } }
-                     payload.values.select { |value| [IO, StringIO].any? { |t| value.is_a?(t) } }.each(&:rewind)
-                     post_req = Net::HTTP::Post.new('/api/', options[:headers])
-                     post_req.set_form payload.map { |k, v| [k.to_s, v] }, 'multipart/form-data'
-                     thread[:http].request(post_req)
-                   else
-                     thread[:http].post('/api/', URI.encode_www_form(payload), options[:headers])
-                   end
+        post_req = Net::HTTP::Post.new('/api/', options[:headers])
+
+        if payload.values.any? { |value| [IO, StringIO].any? { |t| value.is_a?(t) } }
+          payload.values.select { |value| [IO, StringIO].any? { |t| value.is_a?(t) } }.each(&:rewind)
+          post_req.set_form payload.map { |k, v| [k.to_s, v] }, 'multipart/form-data'
+        else
+          post_req.set_form(payload)
+        end
+
+        response = thread[:http].request(post_req)
 
         case response.code
         when '200'
