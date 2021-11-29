@@ -3,6 +3,13 @@ require "pp"
 
 xml = Nokogiri::XML.parse(File.read('schema/cms-opschema.xml')).xpath("union[@name='operations']") ; nil
 
+class String
+  alias_method :_inspect, :inspect
+  def inspect
+    "'#{self.gsub("'","\\\\'")}'"
+  end
+end
+
 def iterate(xml)
   xml.children.inject({}){|hash, xml_child|
     if xml_child.is_a?(Nokogiri::XML::Element)

@@ -3,7 +3,13 @@
 require 'json'
 require 'pp'
 panorama_json = JSON.parse(File.read('schema/panorama.json'))
-nil
+
+class String
+  alias_method :_inspect, :inspect
+  def inspect
+    "'#{self.gsub("'","\\\\'")}'"
+  end
+end
 
 class String
   def camelcase(first_char: true)

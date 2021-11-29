@@ -1,83 +1,89 @@
+# frozen_string_literal: true
+
 module PaloAlto
-	class XML
+  # Palo Alto main class for XML
+  class XML
+    def log(*args)
+      args.last.merge!({ client: self })
+      Log.new(*args)
+    end
 
-		def log(*x)
-			Log.new(*x)
-		end
+    # Palo Alto main class for log access
+    class Log < Enumerator
+      def initialize(client:, query:, log_type:, nlogs: 20, dir: :backward, show_detail: false, days: 7) # rubocop:disable Metrics/MethodLength,Metrics/ParameterLists
+        @client = client
+        payload = {
+          type: 'log',
+          'log-type': log_type,
+          nlogs: nlogs,
+          query: query,
+          dir: dir,
+          'show-detail': show_detail ? 'yes' : 'no'
+        }
 
-		class Log < Enumerator
-			def initialize(query:, log_type:, nlogs: 20, dir: :backward, show_detail: false, days: 7)
+        if days
+          payload[:query] += " AND (receive_time geq '#{(Time.now - days * 3600 * 24).strftime('%Y/%m/%d %H:%M:%S')}')"
+        end
 
-				payload = {
-					type:       'log',
-					'log-type': log_type,
-					nlogs:      nlogs,
-					query:      !days ? query : query + " AND (receive_time geq '#{(Time.now-days*3600*24).strftime("%Y/%m/%d %H:%M:%S")}')",
-					dir:        dir,
-					'show-detail': show_detail ? 'yes' : 'no'
-				}
-				result = XML.execute(payload)
-				@job_id = result.at_xpath('response/result/job').text
-				@count=nil
-				@skip=0
-				@first_result = fetch_result
-				super
-			end
+        result = @client.execute(payload)
+        @job_id = result.at_xpath('response/result/job').text
+        @count = nil
+        @skip = 0
+        @first_result = fetch_result
+        super
+      end
 
-			def restore_first
-				@current_result = @first_result
-				@skip = @current_result.at_xpath("response/result/log/logs/@count").value.to_i
-			end
+      def restore_first
+        @current_result = @first_result
+        @skip = @current_result.at_xpath('response/result/log/logs/@count').value.to_i
+      end
 
-			def rewind
-				restore_first
-				super
-			end
+      def rewind
+        restore_first
+        super
+      end
 
-			def fetch_result
-				return nil if @count && @skip == @count
+      def fetch_result # rubocop:disable Metrics/MethodLength
+        return nil if @count && @skip == @count
 
-				payload = {
-					type:     'log',
-					action:   'get',
-					'job-id': @job_id,
-					skip:     @skip
-				}
+        payload = {
+          type: 'log',
+          action: 'get',
+          'job-id': @job_id,
+          skip: @skip
+        }
 
-				i=0
-				begin
-					sleep 0.5 if i>0
-					@current_result = XML.execute(payload)
-					i+=1
-				end until @current_result.at_xpath("response/result/job/status").text == 'FIN'
-				@count = @current_result.at_xpath("response/result/job/cached-logs").text.to_i
+        i = 0
+        loop do
+          sleep 0.5 if i.positive?
+          @current_result = @client.execute(payload)
+          i += 1
+          break if @current_result.at_xpath('response/result/job/status').text == 'FIN'
+        end
+        @count = @current_result.at_xpath('response/result/job/cached-logs').text.to_i
 
-				@skip += @current_result.at_xpath("response/result/log/logs/@count").value.to_i # skip now shown logs
-				@current_result
-			end
+        @skip += @current_result.at_xpath('response/result/log/logs/@count').value.to_i # skip now shown logs
+        @current_result
+      end
 
-			def count
-				@count
-			end
+      attr_reader :count
 
-			def each(&block)
-				# a bit buggy: after #to_a, without calling #rewind, I can't use #next reliable anymore
+      def each(&block) # rubocop:disable Metrics/MethodLength
+        # a bit buggy: after #to_a, without calling #rewind, I can't use #next reliable anymore
 
-				if @skip>0
-					restore_first
-				end
-				begin
-					@current_result.xpath("/response/result/log/logs/entry").each{|l|
-						result = l.children.inject({}){|h, child|
-							next h if child.is_a?(Nokogiri::XML::Text)
-							h[child.name] = child.text
-							h
-						}
-						block.call(result)
-					}
-				end while fetch_result
-			end
-		end
-	end
+        restore_first if @skip.positive?
+        loop do
+          @current_result.xpath('/response/result/log/logs/entry').each do |l|
+            result = l.children.each_with_object({}) do |child, h|
+              next h if child.is_a?(Nokogiri::XML::Text)
+
+              h[child.name] = child.text
+            end
+            block.call(result)
+          end
+          break unless fetch_result
+        end
+      end
+    end
+  end
 end
-

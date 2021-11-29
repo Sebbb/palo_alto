@@ -5,19 +5,23 @@ require 'nokogiri'
 module PaloAlto
   class XML
     def op
-      Op.new
+      @op ||= Op.new(client: self)
     end
 
     class Op
+      def initialize(client:)
+        @client = client
+      end
+
       def execute(cmd, type: nil, location: nil, additional_payload: {})
         payload = build_payload(cmd).merge(additional_payload)
 
         if type == 'tpl'
-          run_with_template_scope(location) { client.execute(payload) }
+          run_with_template_scope(location) { @client.execute(payload) }
         elsif type == 'dg'
-          client.execute(payload.merge({ vsys: location }))
+          @client.execute(payload.merge({ vsys: location }))
         elsif !type || type == 'shared'
-          client.execute(payload)
+          @client.execute(payload)
         else
           raise(ArgumentError, "invalid type: #{type.inspect}")
         end
