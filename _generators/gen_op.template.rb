@@ -13,11 +13,11 @@ module PaloAlto
         payload = build_payload(cmd).merge(additional_payload)
 
         if type == 'tpl'
-          run_with_template_scope(location) { XML.execute(payload) }
+          run_with_template_scope(location) { client.execute(payload) }
         elsif type == 'dg'
-          XML.execute(payload.merge({ vsys: location }))
+          client.execute(payload.merge({ vsys: location }))
         elsif !type || type == 'shared'
-          XML.execute(payload)
+          client.execute(payload)
         else
           raise(ArgumentError, "invalid type: #{type.inspect}")
         end

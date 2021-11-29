@@ -111,17 +111,17 @@ l = {
 }
 
 
-xml = PaloAlto::XML.new(host: "panorama-test", port: "443", username: "admin", password: "Admin123!", debug: [:sent, :received])
+client = PaloAlto::XML.new(host: "panorama-test", port: "443", username: "admin", password: "Admin123!", debug: [:sent, :received])
 
-#pp xml.op.execute(a)
-#pp xml.op.execute(b)
-#pp xml.op.execute(c)
-pp xml.op.execute(d)
+#pp client.op.execute(a)
+#pp client.op.execute(b)
+#pp client.op.execute(c)
+pp client.op.execute(d)
 puts "---------------------------"
-pp xml.op.execute(e)
+pp client.op.execute(e)
 puts "---------------------------"
 
-#pp xml.op.execute(f)
+#pp client.op.execute(f)
 
-pp xml.op.execute(k)
+pp client.op.execute(k)
 

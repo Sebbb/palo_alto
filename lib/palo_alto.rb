@@ -94,7 +94,7 @@ module PaloAlto
           thread[:http].use_ssl = true
           thread[:http].verify_mode = options[:verify_ssl]
           thread[:http].read_timeout = thread[:http].open_timeout = options[:timeout]
-          thread[:http].set_debug_output($stdout) if XML.debug.include?(:http)
+          thread[:http].set_debug_output($stdout) if options[:debug].include?(:http)
         end
 
         thread[:http].start unless thread[:http].started?
@@ -104,9 +104,9 @@ module PaloAlto
 
         if payload.values.any? { |value| [IO, StringIO].any? { |t| value.is_a?(t) } }
           payload.values.select { |value| [IO, StringIO].any? { |t| value.is_a?(t) } }.each(&:rewind)
-          post_req.set_form payload.map { |k, v| [k.to_s, v] }, 'multipart/form-data'
+          post_req.set_form(payload.map { |k, v| [k.to_s, v] }, 'multipart/form-data')
         else
-          post_req.set_form(payload)
+          post_req.set_form_data(payload)
         end
 
         response = thread[:http].request(post_req)
@@ -155,65 +155,64 @@ module PaloAlto
                 end
         raise error, message
       end
-
-      def self.execute(payload, headers: {})
-        retried = false
-        # configure options for the request
-        options = {}
-        options[:host]     = XML.host
-        options[:port]     = XML.port
-        options[:verify_ssl] = XML.verify_ssl
-        options[:payload] = payload
-        options[:headers] = headers
-
-        warn "sent: (#{Time.now}\n#{options.pretty_inspect}\n" if XML.debug.include?(:sent)
-
-        start_time = Time.now
-        text = Helpers::Rest.make_request(options)
-        if XML.debug.include?(:statistics)
-          warn "Elapsed for API call #{payload[:type]}/#{payload[:action] || '(unknown action)'}: #{Time.now - start_time} seconds"
-        end
-
-        warn "received: #{Time.now}\n#{text}\n" if XML.debug.include?(:received)
-
-        data = Nokogiri::XML.parse(text)
-        unless data.xpath('//response/@status').to_s == 'success'
-          warn "sent:\n#{options.inspect}\n" if XML.debug.include?(:sent_on_error)
-          warn "received:\n#{text.inspect}\n" if XML.debug.include?(:received_on_error)
-          code = data.at_xpath('//response/@code')&.value.to_i # sometimes there is no code :( e.g. for 'op' errors
-          message = data.xpath('/response/msg/line').map(&:text).map(&:strip).join("\n")
-          raise_error(code, message)
-        end
-
-        data
-      end
     end
   end
 
   class XML
-    class << self
-      attr_accessor :host, :port, :username, :password, :auth_key, :verify_ssl, :debug
+    attr_accessor :host, :port, :username, :password, :auth_key, :verify_ssl, :debug
 
-      def execute(payload)
-        retried = false
-        begin
-          Helpers::Rest.execute(payload, headers: { 'X-PAN-KEY': auth_key })
-        rescue TemporaryException => e
-          dont_retry_at = [
-            'Partial revert is not allowed. Full system commit must be completed.',
-            'Config for scope ',
-            'Config is not currently locked for scope ',
-            'Commit lock is not currently held by',
-            'You already own a config lock for scope '
-          ]
-          if retried || dont_retry_at.any? { |x| e.message.start_with?(x) }
-            raise e
-          else
-            warn "Got error #{e.inspect}; retrying" if XML.debug.include?(:warnings)
-            retried = true
-            get_auth_key if e.is_a?(SessionTimedOutException)
-            retry
-          end
+    def execute(payload)
+      retried = false
+      begin
+        # configure options for the request
+        options = {}
+        options[:host]       = host
+        options[:port]       = port
+        options[:verify_ssl] = verify_ssl
+        options[:payload]    = payload
+        options[:debug]      = debug
+        options[:headers]    = if payload[:type] == 'keygen'
+                                 {}
+                               else
+                                 { 'X-PAN-KEY': auth_key }
+                               end
+
+        warn "sent: (#{Time.now}\n#{options.pretty_inspect}\n" if debug.include?(:sent)
+
+        start_time = Time.now
+        text = Helpers::Rest.make_request(options)
+        if debug.include?(:statistics)
+          warn "Elapsed for API call #{payload[:type]}/#{payload[:action] || '(unknown action)'}: #{Time.now - start_time} seconds"
+        end
+
+        warn "received: #{Time.now}\n#{text}\n" if debug.include?(:received)
+
+        data = Nokogiri::XML.parse(text)
+        unless data.xpath('//response/@status').to_s == 'success'
+          warn "sent:\n#{options.inspect}\n" if debug.include?(:sent_on_error)
+          warn "received:\n#{text.inspect}\n" if debug.include?(:received_on_error)
+          code = data.at_xpath('//response/@code')&.value.to_i # sometimes there is no code :( e.g. for 'op' errors
+          message = data.xpath('/response/msg/line').map(&:text).map(&:strip).join("\n")
+          Helpers::Rest.raise_error(code, message)
+        end
+
+        data
+
+      rescue TemporaryException => e
+        dont_retry_at = [
+          'Partial revert is not allowed. Full system commit must be completed.',
+          'Config for scope ',
+          'Config is not currently locked for scope ',
+          'Commit lock is not currently held by',
+          'You already own a config lock for scope '
+        ]
+        if retried || dont_retry_at.any? { |x| e.message.start_with?(x) }
+          raise e
+        else
+          warn "Got error #{e.inspect}; retrying" if debug.include?(:warnings)
+          retried = true
+          get_auth_key if e.is_a?(SessionTimedOutException)
+          retry
         end
       end
     end
@@ -225,7 +224,7 @@ module PaloAlto
              'commit'
            else
              { commit: { partial: [
-               { 'admin': [XML.username] },
+               { 'admin': [username] },
                device_groups ? { 'device-group': device_groups } : nil,
                'no-template',
                'no-template-stack',
@@ -237,7 +236,7 @@ module PaloAlto
                { 'shared-object': 'excluded' }
              ].compact } }
            end
-      Op.new.execute(op).tap do |result|
+      op.execute(op).tap do |result|
         if wait_for_completion
           job_id = result.at_xpath('response/result/job')&.text
           wait_for_job_completion(job_id) if job_id
@@ -246,7 +245,7 @@ module PaloAlto
     end
 
     def full_commit_required?
-      result = Op.new.execute({ check: 'full-commit-required' })
+      result = op.execute({ check: 'full-commit-required' })
       return true unless result.at_xpath('response/result').text == 'no'
 
       false
@@ -254,14 +253,14 @@ module PaloAlto
 
     def primary_active?
       cmd = { show: { 'high-availability': 'state' } }
-      state = Op.new.execute(cmd)
+      state = op.execute(cmd)
       state.at_xpath('response/result/local-info/state').text == 'primary-active'
     end
 
     # area: config, commit
     def show_locks(area:)
       cmd = { show: "#{area}-locks" }
-      ret = Op.new.execute(cmd)
+      ret = op.execute(cmd)
       ret.xpath("response/result/#{area}-locks/entry").map do |lock|
         comment = lock.at_xpath('comment').inner_text
         location = lock.at_xpath('name').inner_text
@@ -288,7 +287,7 @@ module PaloAlto
 
       begin
         cmd = { request: { "#{area}-lock": { add: { comment: comment || '(null)' } } } }
-        Op.new.execute(cmd, type: type, location: location)
+        op.execute(cmd, type: type, location: location)
         true
       rescue PaloAlto::InternalErrorException
         false
@@ -302,7 +301,7 @@ module PaloAlto
               else
                 { request: { "#{area}-lock": 'remove' } }
               end
-        Op.new.execute(cmd, type: type, location: location)
+        op.execute(cmd, type: type, location: location)
       rescue PaloAlto::InternalErrorException
         return false
       end
@@ -317,13 +316,13 @@ module PaloAlto
       end
     end
 
-    def check_for_changes(usernames: [XML.username])
+    def check_for_changes(usernames: [username])
       cmd = if usernames
               { show: { config: { list: { 'change-summary': { partial: { admin: usernames } } } } } }
             else
               { show: { config: { list: 'change-summary' } } }
             end
-      result = Op.new.execute(cmd)
+      result = op.execute(cmd)
       {
         device_groups: result.xpath('response/result/summary/device-group/member').map(&:inner_text),
         templates: result.xpath('response/result/summary/template/member').map(&:inner_text)
@@ -334,7 +333,7 @@ module PaloAlto
       cmd = { show: { jobs: { id: job_id } } }
       start = Time.now
       loop do
-        result = Op.new.execute(cmd)
+        result = op.execute(cmd)
         status = result.at_xpath('response/result/job/status')&.text
         return result unless %w[ACT PEND].include?(status)
 
@@ -345,31 +344,31 @@ module PaloAlto
     end
 
     def revert!(all: false)
-      op = if all
-             { revert: 'config' }
-           else
-             { revert: { config: { partial: [
-               { 'admin': [XML.username] },
-               'no-template',
-               'no-template-stack',
-               'no-log-collector',
-               'no-log-collector-group',
-               'no-wildfire-appliance',
-               'no-wildfire-appliance-cluster',
-               { 'device-and-network': 'excluded' },
-               { 'shared-object': 'excluded' }
-             ] } } }
-           end
-      Op.new.execute(op)
+      cmd = if all
+              { revert: 'config' }
+            else
+              { revert: { config: { partial: [
+                { 'admin': [username] },
+                'no-template',
+                'no-template-stack',
+                'no-log-collector',
+                'no-log-collector-group',
+                'no-wildfire-appliance',
+                'no-wildfire-appliance-cluster',
+                { 'device-and-network': 'excluded' },
+                { 'shared-object': 'excluded' }
+              ] } } }
+            end
+      op.execute(cmd)
     end
 
     def initialize(host:, port:, username:, password:, debug: [])
-      self.class.host      = host
-      self.class.port      = port
-      self.class.username = username
-      self.class.password = password
-      self.class.verify_ssl = OpenSSL::SSL::VERIFY_NONE
-      self.class.debug = debug
+      self.host      = host
+      self.port      = port
+      self.username = username
+      self.password = password
+      self.verify_ssl = OpenSSL::SSL::VERIFY_NONE
+      self.debug = debug
 
       @subclasses = {}
 
@@ -379,18 +378,18 @@ module PaloAlto
 
       # attempt to obtain the auth_key
       # raise 'Exception attempting to obtain the auth_key' if (self.class.auth_key = get_auth_key).nil?
-      self.class.get_auth_key
+      self.get_auth_key
     end
 
     # Perform a query to the API endpoint for an auth_key based on the credentials provided
-    def self.get_auth_key
+    def get_auth_key
       # establish the required options for the key request
       payload = { type: 'keygen',
                   user: username,
                   password: password }
 
       # get and parse the response for the key
-      xml_data = Helpers::Rest.execute(payload)
+      xml_data = execute(payload)
       self.auth_key = xml_data.xpath('//response/result/key')[0].content
     end
   end

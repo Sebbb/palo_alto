@@ -135,10 +135,10 @@ def iter_sequence(section, json, indent:)
 
     indent_puts "def #{section.gsub('-', '_')}", indent: indent
     if indent == 2 # skip adding a parent_instance for the first level ("Config")
-      indent_puts "@subclasses['#{section}'] ||= #{section.camelcase}.new(parent_instance: nil, create_children: @create_children)",
+      indent_puts "@subclasses['#{section}'] ||= #{section.camelcase}.new(parent_instance: nil, client: self, create_children: @create_children)",
                   indent: indent + 1
     else
-      indent_puts "@subclasses['#{section}'] ||= #{section.camelcase}.new(parent_instance: self, create_children: @create_children)",
+      indent_puts "@subclasses['#{section}'] ||= #{section.camelcase}.new(parent_instance: self, client: @client, create_children: @create_children)",
                   indent: indent + 1
     end
     indent_puts 'end', indent: indent
@@ -208,10 +208,10 @@ def iter_array(section, json, indent:)
   indent_puts "end # class #{section.camelcase}", indent: indent
   indent_puts "def #{section.gsub('-', '_')}", indent: indent
   indent_puts 'if @create_children', indent: indent + 1
-  indent_puts "@subclasses['#{section}'] ||= #{section.camelcase}.new(parent_instance: self, create_children: @create_children)",
+  indent_puts "@subclasses['#{section}'] ||= #{section.camelcase}.new(parent_instance: self, client: @client, create_children: @create_children)",
               indent: indent + 2
   indent_puts 'else', indent: indent + 1
-  indent_puts "#{section.camelcase}.new(parent_instance: self)", indent: indent + 2
+  indent_puts "#{section.camelcase}.new(parent_instance: self, client: @client)", indent: indent + 2
   indent_puts 'end', indent: indent + 1
   indent_puts 'end', indent: indent
 end

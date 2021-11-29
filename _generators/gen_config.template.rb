@@ -394,7 +394,8 @@ module PaloAlto
       attr_reader :api_attributes, :subclasses, :parent_instance
       attr_accessor :parent_instance, :force_relative
 
-      def initialize(parent_instance:, create_children: false)
+      def initialize(parent_instance:, client:, create_children: false)
+        @client = client
         @parent_instance = parent_instance
         @subclasses = {}
         @values = {}
@@ -431,10 +432,10 @@ module PaloAlto
           xpath: to_xpath
         }
 
-        data = XML.execute(payload)
+        data = @client.execute(payload)
         start_time = Time.now
         result = parent_instance.dup.create!.clear!.external_set(data.xpath('//response/result').first)
-        if XML.debug.include?(:statistics)
+        if @client.debug.include?(:statistics)
           warn "Elapsed for parsing #{result.length} results: #{Time.now - start_time} seconds"
         end
         result
@@ -457,7 +458,7 @@ module PaloAlto
           xpath: xpath
         }
 
-        data = XML.execute(payload)
+        data = @client.execute(payload)
         start_time = Time.now
 
         if data.xpath('//response/result/*').length != 1 && (ignore_empty_result == false)
@@ -480,7 +481,7 @@ module PaloAlto
           end
           self
         end.tap do
-          warn "Elapsed for parsing: #{Time.now - start_time} seconds" if XML.debug.include?(:statistics)
+          warn "Elapsed for parsing: #{Time.now - start_time} seconds" if @client.debug.include?(:statistics)
         end
       end
 
@@ -623,7 +624,7 @@ module PaloAlto
                 'wrong number of arguments (expected one argument or block)')
         end
 
-        entry = klass.new(parent_instance: self, create_children: @create_children)
+        entry = klass.new(parent_instance: self, client: @client, create_children: @create_children)
         if block
           obj = child(section.to_sym).where(PaloAlto.instance_eval(&block))
           entry.expression = obj.expression
@@ -744,7 +745,7 @@ module PaloAlto
           xpath: to_xpath,
           element: xml_str
         }
-        XML.execute(payload)
+        @client.execute(payload)
       end
 
       def delete_child(name)
@@ -757,7 +758,7 @@ module PaloAlto
           action: 'delete',
           xpath: to_xpath
         }
-        XML.execute(payload)
+        @client.execute(payload)
       end
 
       def multimove!(dst:, members:, all_errors: false)
@@ -783,7 +784,7 @@ module PaloAlto
           element: element
         }
 
-        XML.execute(payload)
+        @client.execute(payload)
       end
     end
 
@@ -799,7 +800,7 @@ module PaloAlto
         }
         payload[:dst] = dst if dst
 
-        XML.execute(payload)
+        @client.execute(payload)
       end
 
       def set_xpath_from_selector(selector: @selector)
@@ -821,7 +822,7 @@ module PaloAlto
             newname: new_name
           }
 
-          XML.execute(payload)
+          @client.execute(payload)
         end
 
         # now update also the internal value to the new name
