@@ -2,7 +2,7 @@
 
 require 'json'
 require 'pp'
-panorama_json = JSON.parse(File.read('panorama.json'))
+panorama_json = JSON.parse(File.read('schema/panorama.json'))
 nil
 
 class String

@@ -1,0 +1,31 @@
+--- panorama.json	2021-05-20 12:02:15.587746753 +0200
++++ panorama.json	2021-07-08 17:04:58.000000000 +0200
+@@ -129317,20 +129317,28 @@
+                     },
+                     "issuer-hash": {
+                       "@attr": {
+                         "node-type": "element",
+                         "optional": "yes",
+                         "type": "string",
+                         "minlen": "0",
+                         "maxlen": "255"
+                       }
+                     },
++                    "public-key": {
++                      "@attr": {
++                        "node-type": "element",
++                        "optional": "yes",
++                        "type": "string",
++                        "maxlen": "16384"
++                      }
++                    },
+                     "choice": {
+                       "@attr": {
+                         "node-type": "choice"
+                       },
+                       "private-key": {
+                         "@attr": {
+                           "node-type": "element",
+                           "optional": "yes",
+                           "type": "string",
+                           "maxlen": "16384",
