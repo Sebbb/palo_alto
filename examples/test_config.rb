@@ -1,5 +1,4 @@
 require 'palo_alto'
-require "byebug"
 
 client = PaloAlto::XML.new(host: "panorama-test", port: "443", username: "admin", password: "Admin123!", debug: [:sent, :received, :statistics])
 dg = 'PLAYGROUND'
@@ -24,6 +23,17 @@ new_tag.push!
 #
 # rules = client.config.devices.entry(name:'localhost.localdomain').device_group.entry(name: 'PLAYGROUND').pre_rulebase.security.rules
 #               .entry{filter}.get_all
+#
+# also more advanced filters are possible:
+# PaloAlto.not(PaloAlto.child(:'profile-setting').child(:group).child(:member) == 'IPS-Policy').and(
+#   PaloAlto.parenthesis(
+#     (PaloAlto.child(:tag).child(:member) == 'ips_enabled').or(
+#       PaloAlto.child(:tag).child(:member) == 'ips_force_enabled'
+#     )
+#   )
+# ).to_xpath
+#
+# => not(./profile-setting/group/member='IPS-Policy')and(./tag/member='ips_enabled'or./tag/member='ips_force_enabled')
 
 rules = client.config.devices.entry(name: 'localhost.localdomain').device_group.entry(name: dg).pre_rulebase.security.rules.entry{}.get_all
 
