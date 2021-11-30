@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require 'openssl'
 require 'nokogiri'
 
@@ -392,7 +390,7 @@ module PaloAlto
   class XML
     class ConfigClass < Expression
       attr_reader :api_attributes, :subclasses, :parent_instance
-      attr_accessor :parent_instance, :force_relative
+      attr_accessor :parent_instance
 
       def initialize(parent_instance:, client:, create_children: false)
         @client = client
@@ -408,6 +406,12 @@ module PaloAlto
           xpath_argument = @parent_instance
           @arguments = [xpath_argument, [_section]]
         end
+      end
+
+      def maybe_register_subclass(name, instance)
+        return instance unless instance.create_children
+
+        @subclasses[name] ||= instance
       end
 
       class << self

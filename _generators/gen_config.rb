@@ -4,6 +4,8 @@ require 'json'
 require 'pp'
 panorama_json = JSON.parse(File.read('schema/panorama.json'))
 
+$debug = false
+
 class String
   alias _inspect inspect
   def inspect
@@ -27,7 +29,11 @@ end
 
 def indent_puts(str, indent:)
   str.split("\n").each do |line|
-    $f.puts(("\t" * indent + line).rstrip)
+    if $debug
+      $f.puts(('  ' * indent + line).rstrip)
+    else
+      $f.puts(line.strip) if line!=''
+    end
   end
 end
 
@@ -93,6 +99,17 @@ def iter(child_key, child, indent:)
   [child_classes, props]
 end
 
+def puts_section(section, indent)
+  indent_puts('def _section', indent: indent + 1)
+  section_str = if section.include?('-')
+                  ":'#{section}'"
+                else
+                  ":#{section}"
+                end
+  indent_puts(section_str, indent: indent + 2)
+  indent_puts('end', indent: indent + 1)
+end
+
 def iter_sequence(section, json, indent:)
   attr = json.delete('@attr')
   raise unless attr['node-type'] == 'sequence'
@@ -105,9 +122,7 @@ def iter_sequence(section, json, indent:)
   indent_puts 'false', indent: indent + 2
   indent_puts 'end', indent: indent + 1
 
-  indent_puts('def _section', indent: indent + 1)
-  indent_puts(":'#{section}'", indent: indent + 2)
-  indent_puts('end', indent: indent + 1)
+  puts_section(section, indent)
 
   child_classes = []
   props = []
@@ -132,7 +147,7 @@ def iter_sequence(section, json, indent:)
 
     str = <<~EOS
       def #{section.gsub('-', '_')}(*args, &block)
-      	array_class_setter(*args, klass: #{section.camelcase}, section: '#{section}', &block)
+        array_class_setter(*args, klass: #{section.camelcase}, section: '#{section}', &block)
       end
     EOS
 
@@ -159,8 +174,8 @@ def create_prop_methods(props_array, indent:)
 
     v['regex'] = '^[^\]\'\[]*$' if v['regex'] == "^[^]'[]*$"
   end
-
-  indent_puts "@props=#{props.pretty_inspect}", indent: indent + 1
+  props.map { |_k, v| v.delete('memberof'); v.delete('autocomplete'); v.delete('loose-membership') }
+  indent_puts "@props = #{props.inspect}", indent: indent + 1
 
   props.each_key do |prop|
     ruby_prop_name = prop.gsub('-', '_').gsub(/^@/, '')
@@ -190,9 +205,7 @@ def iter_array(section, json, indent:)
   indent_puts 'true', indent: indent + 2
   indent_puts 'end', indent: indent + 1
 
-  indent_puts('def _section', indent: indent + 1)
-  indent_puts(":'#{section}'", indent: indent + 2)
-  indent_puts('end', indent: indent + 1)
+  puts_section(section, indent + 1)
 
   child_classes = []
   props = []
@@ -213,18 +226,13 @@ def iter_array(section, json, indent:)
 
   indent_puts "end # class #{section.camelcase}", indent: indent
   indent_puts "def #{section.gsub('-', '_')}", indent: indent
-  indent_puts 'if @create_children', indent: indent + 1
-  indent_puts "@subclasses['#{section}'] ||= #{section.camelcase}.new(parent_instance: self, client: @client, create_children: @create_children)",
-              indent: indent + 2
-  indent_puts 'else', indent: indent + 1
-  indent_puts "#{section.camelcase}.new(parent_instance: self, client: @client)", indent: indent + 2
-  indent_puts 'end', indent: indent + 1
+  indent_puts "maybe_register_subclass('#{section}', #{section.camelcase}.new(parent_instance: self, client: @client, create_children: @create_children))", indent: indent + 1
   indent_puts 'end', indent: indent
 end
 
 File.open("#{__dir__}/../lib/palo_alto/config.rb", 'w') do |f|
   $f = f
-  f.write("# generated: #{Time.now}\n")
+  f.write("# frozen_string_literal: true\n# generated: #{Time.now}\n")
   indent_puts(File.read('gen_config.template.rb'), indent: 0)
 
   iter_sequence('config', panorama_json['config'], indent: 2)

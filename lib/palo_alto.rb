@@ -220,23 +220,23 @@ module PaloAlto
     def commit!(all: false, device_groups: nil, wait_for_completion: true)
       return nil if device_groups.is_a?(Array) && device_groups.empty?
 
-      op = if all
-             'commit'
-           else
-             { commit: { partial: [
-               { 'admin': [username] },
-               device_groups ? { 'device-group': device_groups } : nil,
-               'no-template',
-               'no-template-stack',
-               'no-log-collector',
-               'no-log-collector-group',
-               'no-wildfire-appliance',
-               'no-wildfire-appliance-cluster',
-               { 'device-and-network': 'excluded' },
-               { 'shared-object': 'excluded' }
-             ].compact } }
-           end
-      op.execute(op).tap do |result|
+      cmd = if all
+              'commit'
+            else
+              { commit: { partial: [
+                { 'admin': [username] },
+                device_groups ? { 'device-group': device_groups } : nil,
+                'no-template',
+                'no-template-stack',
+                'no-log-collector',
+                'no-log-collector-group',
+                'no-wildfire-appliance',
+                'no-wildfire-appliance-cluster',
+                { 'device-and-network': 'excluded' },
+                { 'shared-object': 'excluded' }
+              ].compact } }
+            end
+      op.execute(cmd).tap do |result|
         if wait_for_completion
           job_id = result.at_xpath('response/result/job')&.text
           wait_for_job_completion(job_id) if job_id
