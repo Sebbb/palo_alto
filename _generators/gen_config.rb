@@ -5,13 +5,13 @@ require 'pp'
 panorama_json = JSON.parse(File.read('schema/panorama.json'))
 
 class String
-  alias_method :_inspect, :inspect
+  alias _inspect inspect
   def inspect
-    "'#{self.gsub("'","\\\\'")}'"
-  end
-end
+    return _inspect if match(/[\t\n]/)
 
-class String
+    "'#{gsub("'", "\\\\'")}'"
+  end
+
   def camelcase(first_char: true)
     match(/\A[a-zA-Z0-9_-]*\z/) or raise 'invalid character'
     str = dup
