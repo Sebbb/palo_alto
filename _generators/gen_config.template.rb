@@ -409,7 +409,7 @@ module PaloAlto
       end
 
       def maybe_register_subclass(name, instance)
-        return instance unless instance.create_children
+        return instance unless instance_variable_get('@create_children')
 
         @subclasses[name] ||= instance
       end
@@ -424,7 +424,7 @@ module PaloAlto
       end
 
       def inspect
-        to_s[0..-1] + ' ' + values(full_tree: false).map { |k, v| "#{k}: #{v.inspect}" }.join(', ') + '>'
+        to_s[0...-1] + ' ' + values(full_tree: false).map { |k, v| "#{k}: #{v.inspect}" }.join(', ') + '>'
       end
 
       def get_all
