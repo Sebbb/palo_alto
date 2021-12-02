@@ -595,7 +595,7 @@ module PaloAlto
           next if k.start_with?('@')
 
           v = prop_get(k, include_defaults: false)
-          next unless v
+          next if v.nil?
 
           Array(v).each do |val|
             val = 'yes' if val == true
