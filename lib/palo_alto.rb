@@ -189,6 +189,7 @@ module PaloAlto
 
         data = Nokogiri::XML.parse(text)
         unless data.xpath('//response/@status').to_s == 'success'
+          warn 'command failed'
           warn "sent:\n#{options.inspect}\n" if debug.include?(:sent_on_error)
           warn "received:\n#{text.inspect}\n" if debug.include?(:received_on_error)
           code = data.at_xpath('//response/@code')&.value.to_i # sometimes there is no code :( e.g. for 'op' errors
@@ -197,7 +198,6 @@ module PaloAlto
         end
 
         data
-
       rescue TemporaryException => e
         dont_retry_at = [
           'Partial revert is not allowed. Full system commit must be completed.',
@@ -236,12 +236,12 @@ module PaloAlto
                 { 'shared-object': 'excluded' }
               ].compact } }
             end
-      op.execute(cmd).tap do |result|
-        if wait_for_completion
-          job_id = result.at_xpath('response/result/job')&.text
-          wait_for_job_completion(job_id) if job_id
-        end
-      end
+      result = op.execute(cmd)
+
+      return result unless wait_for_completion
+
+      job_id = result.at_xpath('response/result/job')&.text
+      wait_for_job_completion(job_id) if job_id
     end
 
     def full_commit_required?
@@ -378,7 +378,7 @@ module PaloAlto
 
       # attempt to obtain the auth_key
       # raise 'Exception attempting to obtain the auth_key' if (self.class.auth_key = get_auth_key).nil?
-      self.get_auth_key
+      get_auth_key
     end
 
     # Perform a query to the API endpoint for an auth_key based on the credentials provided
