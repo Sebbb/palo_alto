@@ -390,7 +390,6 @@ module PaloAlto
   class XML
     class ConfigClass < Expression
       attr_reader :api_attributes, :subclasses, :parent_instance
-      attr_accessor :parent_instance
 
       def initialize(parent_instance:, client:, create_children: false)
         @client = client

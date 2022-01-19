@@ -43,8 +43,10 @@ def iter(child_key, child, indent:)
   child_classes = []
 
   props = [] # name, validator
-
   child_attr = child['@attr']
+
+  return if child_attr['prune-on']&.include?('non-fips-mode') || child_attr['prune-on']&.include?('non-cc-only-mode')
+
   case child_attr['node-type']
   when 'sequence'
     iter_sequence(child_key, child, indent: indent)
@@ -111,6 +113,9 @@ def puts_section(section, indent)
 end
 
 def iter_sequence(section, json, indent:)
+  if section.include?('__')
+    section = section.split('__').first
+  end
   attr = json.delete('@attr')
   raise unless attr['node-type'] == 'sequence'
 
@@ -129,6 +134,8 @@ def iter_sequence(section, json, indent:)
 
   json.each do |section, child|
     my_child_classes, my_props = iter(section, child, indent: indent + 1)
+
+    next unless my_child_classes
 
     # TODO: change to .merge.. needs some adjustmens, also e.g. for .inject({})
     child_classes += my_child_classes
@@ -171,9 +178,15 @@ def create_prop_methods(props_array, indent:)
 
   props.each do |_k, v|
     next unless v.key?('regex')
+    next if v['prune-on']&.include?('non-fips-mode') || v['prune-on']&.include?('non-cc-only-mode')
 
     v['regex'] = '^[^\]\'\[]*$' if v['regex'] == "^[^]'[]*$"
   end
+
+  props.transform_keys! do |key|
+    key.split('__').first
+  end
+
   props.map { |_k, v| v.delete('memberof'); v.delete('autocomplete'); v.delete('loose-membership') }
   indent_puts "@props = #{props.inspect}", indent: indent + 1
 
