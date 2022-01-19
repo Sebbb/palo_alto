@@ -123,9 +123,7 @@ def iter_sequence(section, json, indent:)
 
   indent_puts "class #{section.camelcase} < " + class_type, indent: indent
 
-  indent_puts 'def has_multiple_values?', indent: indent + 1
-  indent_puts 'false', indent: indent + 2
-  indent_puts 'end', indent: indent + 1
+  indent_puts 'def has_multiple_values?; false; end', indent: indent + 1
 
   puts_section(section, indent)
 
@@ -214,9 +212,7 @@ def iter_array(section, json, indent:)
   # here we need to create the class for the array-class (e.g. "devices")
   indent_puts "class #{section.camelcase} < XML::ConfigClass", indent: indent
 
-  indent_puts 'def has_multiple_values?', indent: indent + 1
-  indent_puts 'true', indent: indent + 2
-  indent_puts 'end', indent: indent + 1
+  indent_puts 'def has_multiple_values?; true; end', indent: indent + 1
 
   puts_section(section, indent + 1)
 
@@ -238,6 +234,7 @@ def iter_array(section, json, indent:)
   create_prop_methods(props, indent: indent)
 
   indent_puts "end # class #{section.camelcase}", indent: indent
+
   indent_puts "def #{section.gsub('-', '_')}", indent: indent
   indent_puts "maybe_register_subclass('#{section}', #{section.camelcase}.new(parent_instance: self, client: @client, create_children: @create_children))", indent: indent + 1
   indent_puts 'end', indent: indent

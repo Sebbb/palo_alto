@@ -1,3 +1,4 @@
+# rubocop:disable Style/FrozenStringLiteralComment
 require 'openssl'
 require 'nokogiri'
 
@@ -86,6 +87,7 @@ module PaloAlto
       function(:position)
     end
 
+    # rubocop:disable Lint/BooleanSymbol
     METHODS = [
       # node set
       :count, :id, :local_name, :namespace_uri,
@@ -98,6 +100,7 @@ module PaloAlto
       # number
       :number, :sum, :floor, :ceiling, :round
     ].freeze
+    # rubocop:enable Lint/BooleanSymbol
 
     METHODS.each do |key|
       name = key.to_s.tr('_', '-').to_sym
@@ -163,8 +166,8 @@ module PaloAlto
       function(:concat, ' ', current.normalize_space, ' ').contains(" #{word} ")
     end
 
-    UPPERCASE_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞŸŽŠŒ'
-    LOWERCASE_LETTERS = 'abcdefghijklmnopqrstuvwxyzàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿžšœ'
+    UPPERCASE_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞŸŽŠŒ'.freeze
+    LOWERCASE_LETTERS = 'abcdefghijklmnopqrstuvwxyzàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿžšœ'.freeze
 
     def lowercase
       method(:translate, UPPERCASE_LETTERS, LOWERCASE_LETTERS)
@@ -516,7 +519,7 @@ module PaloAlto
       def external_set(data)
         data.element_children.map do |child|
           child.name.match(/\A[a-zA-Z0-9_-]*\z/) or raise 'invalid character'
-          if prop = self.class.props[child.name]
+          if (prop = self.class.props[child.name])
             if has_multiple_values?
               @external_values[child.name] ||= []
               @external_values[child.name] << enforce_type(prop, child.text)
@@ -558,7 +561,9 @@ module PaloAlto
             raise ArgumentError,
                   "Not matching regex: #{value.inspect} (#{prop_arr['regex'].inspect})"
           end
-          raise ArgumentError, 'Too long' if prop_arr['maxlen'] && (value.length > prop_arr['maxlen'].to_i)
+          if prop_arr['maxlen'] && (value.length > prop_arr['maxlen'].to_i)
+            raise(ArgumentError, "Too long, max. #{prop_arr['maxlen'].to_i} characters allowed")
+          end
 
           value
         when 'enum'
@@ -620,6 +625,7 @@ module PaloAlto
         xml
       end
 
+      # used for Array classes (e.g. 'entry')
       def array_class_setter(*args, klass:, section:, &block)
         # either we have a selector or a block
         unless (args.length == 1 && !block) || (args.empty? && block)
@@ -628,8 +634,12 @@ module PaloAlto
         end
 
         entry = klass.new(parent_instance: self, client: @client, create_children: @create_children)
+
         if block
-          obj = child(section.to_sym).where(PaloAlto.instance_eval(&block))
+          expression = PaloAlto.instance_eval(&block)
+          raise(ArgumentError, 'Block is not an expression!') unless expression.is_a?(PaloAlto::Expression) || expression.nil?
+
+          obj = child(section.to_sym).where(expression)
           entry.expression = obj.expression
           entry.arguments = obj.arguments
           entry
@@ -637,9 +647,14 @@ module PaloAlto
           selector = args[0]
           @subclasses[section] ||= {}
 
-          entry.instance_variable_get('@external_values').merge!({ "@#{selector.keys.first}" => selector.values.first })
+          selector_key = "@#{selector.keys.first}"
+          prop = klass.props[selector_key] or raise(ArgumentError, 'Selector does not exist')
+
+          selector_value = enforce_type(prop, selector.values.first)
+
+          entry.instance_variable_get('@external_values').merge!({ selector_key => selector_value })
           entry.selector = selector
-          entry.set_xpath_from_selector
+          entry.set_xpath_from_selector!
 
           if @create_children
             @subclasses[section][selector] ||= entry
@@ -806,7 +821,7 @@ module PaloAlto
         @client.execute(payload)
       end
 
-      def set_xpath_from_selector(selector: @selector)
+      def set_xpath_from_selector!(selector: @selector)
         xpath = parent_instance.child(_section)
         k, v = selector.first
         obj = xpath.where(PaloAlto.xpath_attr(k.to_sym) == v)
@@ -831,7 +846,7 @@ module PaloAlto
         # now update also the internal value to the new name
         selector.transform_values! { new_name }
         @external_values["@#{selector.keys.first}"] = new_name
-        set_xpath_from_selector
+        set_xpath_from_selector!
       end
     end
 
