@@ -111,7 +111,7 @@ l = {
 }
 
 
-client = PaloAlto::XML.new(host: "panorama-test", port: "443", username: "admin", password: "Admin123!", debug: [:sent, :received])
+client = PaloAlto::XML.new(host: "panorama-test", username: "admin", password: "Admin123!", debug: [:sent, :received])
 
 #pp client.op.execute(a)
 #pp client.op.execute(b)

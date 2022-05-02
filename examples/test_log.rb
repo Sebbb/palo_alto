@@ -1,6 +1,6 @@
 require 'palo_alto'
 
-client = PaloAlto::XML.new(host: "panorama-test", port: "443", username: "admin", password: "Admin123!", debug: [:statistics, :warnings, :_sent, :_received])
+client = PaloAlto::XML.new(host: "panorama-test", username: "admin", password: "Admin123!", debug: [:statistics, :warnings, :_sent, :_received])
 
 query = "( full-path contains '/config/devices/entry[@name=\\'localhost.localdomain\\']/device-group/entry[@name=\\'gr\\']/address/entry[@name=\\'Blah_19\\']' )"
 l=client.log(query: query, log_type: 'config', nlogs: 50, show_detail: true, days: nil)
