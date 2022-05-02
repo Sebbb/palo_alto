@@ -74,30 +74,35 @@ module PaloAlto
 
   module Helpers
     class Rest
+      @http_clients = {} # will include [http_client, lock]
+      @global_lock = Mutex.new
+
       def self.make_request(opts)
         options = {}
-        options[:verify_ssl] = OpenSSL::SSL::VERIFY_PEER
-        options[:timeout] = 60
+        options[:verify_ssl] ||= OpenSSL::SSL::VERIFY_PEER
 
-        headers                  = {}
-        headers['User-Agent']    = 'ruby-keystone-client'
-        headers['Accept']        = 'application/xml'
-        headers['Content-Type'] = 'application/x-www-form-urlencoded'
+        headers = {
+          'User-Agent': 'ruby-keystone-client',
+          'Accept': 'application/xml',
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
 
         # merge in settings from method caller
         options = options.merge(opts)
         options[:headers].merge!(headers)
 
-        thread = Thread.current
-        unless thread[:http]
-          thread[:http] = Net::HTTP.new(options[:host], options[:port])
-          thread[:http].use_ssl = true
-          thread[:http].verify_mode = options[:verify_ssl]
-          thread[:http].read_timeout = thread[:http].open_timeout = options[:timeout]
-          thread[:http].set_debug_output($stdout) if options[:debug].include?(:http)
-        end
+        http_client = lock = nil
 
-        thread[:http].start unless thread[:http].started?
+        @global_lock.synchronize do
+          unless (http_client, lock = @http_clients[options[:host]])
+            http_client = Net::HTTP.new(options[:host], 443)
+            http_client.use_ssl = true
+            http_client.verify_mode = options[:verify_ssl]
+            http_client.read_timeout = http_client.open_timeout = (options[:timeout] || 60)
+            http_client.set_debug_output(options[:debug].include?(:http) ? $stdout : nil)
+            @http_clients[options[:host]] = [http_client, (lock = Mutex.new)]
+          end
+        end
 
         payload = options[:payload]
         post_req = Net::HTTP::Post.new('/api/', options[:headers])
@@ -109,7 +114,11 @@ module PaloAlto
           post_req.set_form_data(payload)
         end
 
-        response = thread[:http].request(post_req)
+        response = lock.synchronize do
+          http_client.start unless http_client.started?
+
+          http_client.request(post_req)
+        end
 
         case response.code
         when '200'
@@ -159,7 +168,7 @@ module PaloAlto
   end
 
   class XML
-    attr_accessor :host, :port, :username, :password, :auth_key, :verify_ssl, :debug
+    attr_accessor :host, :username, :password, :auth_key, :verify_ssl, :debug, :timeout
 
     def execute(payload)
       retried = false
@@ -167,10 +176,10 @@ module PaloAlto
         # configure options for the request
         options = {}
         options[:host]       = host
-        options[:port]       = port
         options[:verify_ssl] = verify_ssl
         options[:payload]    = payload
         options[:debug]      = debug
+        options[:timeout]    = timeout || 180
         options[:headers]    = if payload[:type] == 'keygen'
                                  {}
                                else
@@ -206,18 +215,16 @@ module PaloAlto
           'Commit lock is not currently held by',
           'You already own a config lock for scope '
         ]
-        if retried || dont_retry_at.any? { |x| e.message.start_with?(x) }
-          raise e
-        else
-          warn "Got error #{e.inspect}; retrying" if debug.include?(:warnings)
-          retried = true
-          get_auth_key if e.is_a?(SessionTimedOutException)
-          retry
-        end
+        raise e if retried || dont_retry_at.any? { |x| e.message.start_with?(x) }
+
+        warn "Got error #{e.inspect}; retrying" if debug.include?(:warnings)
+        retried = true
+        get_auth_key if e.is_a?(SessionTimedOutException)
+        retry
       end
     end
 
-    def commit!(all: false, device_groups: nil, wait_for_completion: true)
+    def commit!(all: false, device_groups: nil, wait_for_completion: true, wait: 5, timeout: 480)
       return nil if device_groups.is_a?(Array) && device_groups.empty?
 
       cmd = if all
@@ -238,10 +245,11 @@ module PaloAlto
             end
       result = op.execute(cmd)
 
-      return result unless wait_for_completion
-
       job_id = result.at_xpath('response/result/job')&.text
-      wait_for_job_completion(job_id) if job_id
+
+      return result unless job_id && wait_for_completion
+
+      wait_for_job_completion(job_id, wait: wait, timeout: timeout) if job_id
     end
 
     def full_commit_required?
@@ -329,7 +337,7 @@ module PaloAlto
       }
     end
 
-    def wait_for_job_completion(job_id, wait: 5, timeout: 300)
+    def wait_for_job_completion(job_id, wait: 5, timeout: 480)
       cmd = { show: { jobs: { id: job_id } } }
       start = Time.now
       loop do
@@ -343,7 +351,8 @@ module PaloAlto
       false
     end
 
-    def revert!(all: false)
+    # wait: how long revert is retried (every 10 seconds)
+    def revert!(all: false, wait: 60)
       cmd = if all
               { revert: 'config' }
             else
@@ -359,16 +368,25 @@ module PaloAlto
                 { 'shared-object': 'excluded' }
               ] } } }
             end
-      op.execute(cmd)
+
+      waited = 0
+      begin
+        op.execute(cmd)
+      rescue StandardError => e
+        puts 'Revert failed; waiting and retrying'
+        sleep 10
+        waited += 1
+        retry while waited < wait
+        raise e
+      end
     end
 
-    def initialize(host:, port:, username:, password:, debug: [])
-      self.host      = host
-      self.port      = port
-      self.username = username
-      self.password = password
-      self.verify_ssl = OpenSSL::SSL::VERIFY_NONE
-      self.debug = debug
+    def initialize(host:, username:, password:, verify_ssl: OpenSSL::SSL::VERIFY_NONE, debug: [])
+      self.host       = host
+      self.username   = username
+      self.password   = password
+      self.verify_ssl = verify_ssl
+      self.debug      = debug
 
       @subclasses = {}
 
@@ -377,7 +395,6 @@ module PaloAlto
       @arguments = [Expression.new(:this_node), []]
 
       # attempt to obtain the auth_key
-      # raise 'Exception attempting to obtain the auth_key' if (self.class.auth_key = get_auth_key).nil?
       get_auth_key
     end
 
