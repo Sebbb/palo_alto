@@ -146,11 +146,13 @@ def iter_sequence(section, json, indent:)
   indent_puts "end # class #{section.camelcase}", indent: indent
 
   if class_type == 'ArrayConfigClass'
-    indent_puts("def #{section.camelcase(first_char: false).pluralize}", indent: indent)
-    indent_puts("return @subclasses['#{section}']", indent: indent + 1)
-    indent_puts('end', indent: indent)
-
     str = <<~EOS
+      def selector_subclasses
+        ['#{section}']
+      end
+      def #{section.camelcase(first_char: false).pluralize}
+        return @subclasses['#{section}']
+      end
       def #{section.gsub('-', '_')}(*args, &block)
         array_class_setter(*args, klass: #{section.camelcase}, section: '#{section}', &block)
       end

@@ -416,6 +416,10 @@ module PaloAlto
         @subclasses[name] ||= instance
       end
 
+      def selector_subclasses
+        []
+      end
+
       class << self
         attr_accessor :props
       end
@@ -693,7 +697,13 @@ module PaloAlto
         create!
         h.each do |k, v|
           if v.is_a?(Hash)
-            send(k.to_s.gsub('-', '_')).set_values(v, external: external)
+            if selector_subclasses.include?(k.to_s.gsub('-', '_'))
+              v.each do |selector, content|
+                send(k.to_s.gsub('-', '_'), selector).set_values(content, external: external)
+              end
+            else
+              send(k.to_s.gsub('-', '_')).set_values(v, external: external)
+            end
           elsif external
             @external_values[k] = v
           else
