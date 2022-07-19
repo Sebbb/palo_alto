@@ -517,7 +517,7 @@ module PaloAlto
         # check for class name in camelcase format
         self.class.const_get(child.name.capitalize.gsub(/-(.)/) { Regexp.last_match(1).upcase })
       rescue NameError
-        raise "Child not found: #{child.name}"
+        raise "Child not found for #{self.class.to_s}: #{child.name}"
       end
 
       def external_set(data)

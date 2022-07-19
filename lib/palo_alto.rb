@@ -297,7 +297,9 @@ module PaloAlto
         cmd = { request: { "#{area}-lock": { add: { comment: comment || '(null)' } } } }
         op.execute(cmd, type: type, location: location)
         true
-      rescue PaloAlto::InternalErrorException
+      rescue PaloAlto::InternalErrorException => e
+        return true if e.message.start_with?('You already own a config lock for scope ')
+
         false
       end
     end
