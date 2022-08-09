@@ -1,0 +1,391 @@
+--- panorama.json-stock	2022-01-05 18:34:46.301113469 +0100
++++ panorama.json	2022-01-05 18:35:28.036494147 +0100
+@@ -129317,20 +129317,28 @@
+                     },
+                     "issuer-hash": {
+                       "@attr": {
+                         "node-type": "element",
+                         "optional": "yes",
+                         "type": "string",
+                         "minlen": "0",
+                         "maxlen": "255"
+                       }
+                     },
++                    "public-key": {
++                      "@attr": {
++                        "node-type": "element",
++                        "optional": "yes",
++                        "type": "string",
++                        "maxlen": "16384"
++                      }
++                    },
+                     "choice": {
+                       "@attr": {
+                         "node-type": "choice"
+                       },
+                       "private-key": {
+                         "@attr": {
+                           "node-type": "element",
+                           "optional": "yes",
+                           "type": "string",
+                           "maxlen": "16384",
+@@ -180619,21 +180627,21 @@
+                           "@attr": {
+                             "node-type": "sequence",
+                             "optional": "yes",
+                             "help-string": "Equal Cost Multipath configuration"
+                           },
+                           "enable": {
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "enable Equal Cost Multipath routing, change this configuration will result in a virtual router restart"
+                             }
+                           },
+                           "algorithm": {
+                             "@attr": {
+                               "node-type": "sequence",
+                               "optional": "yes",
+                               "default": "ip-modulo",
+                               "help-string": "load balancing algorithm"
+                             },
+@@ -180650,31 +180658,31 @@
+                               "ip-hash": {
+                                 "@attr": {
+                                   "node-type": "sequence",
+                                   "help-string": "Hash based on IP addresses and optionally port numbers"
+                                 },
+                                 "src-only": {
+                                   "@attr": {
+                                     "node-type": "element",
+                                     "optional": "yes",
+                                     "type": "bool",
+-                                    "default": "false",
++                                    "default": "no",
+                                     "help-string": "only use source address for hash",
+                                     "uiHint-fieldLabel": "Use Source Address Only"
+                                   }
+                                 },
+                                 "use-port": {
+                                   "@attr": {
+                                     "node-type": "element",
+                                     "optional": "yes",
+                                     "type": "bool",
+-                                    "default": "false",
++                                    "default": "no",
+                                     "help-string": "use source/destination port for hash"
+                                   }
+                                 },
+                                 "hash-seed": {
+                                   "@attr": {
+                                     "node-type": "element",
+                                     "optional": "yes",
+                                     "type": "rangedint",
+                                     "min": "0",
+                                     "max": "4294967295",
+@@ -180740,30 +180748,30 @@
+                               "max": "4",
+                               "default": "2",
+                               "help-string": "Maxmum number of ECMP paths supported, change this configuration will result in a virtual router restart"
+                             }
+                           },
+                           "symmetric-return": {
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "allows return packets to egress out of the ingress interface of the flow"
+                             }
+                           },
+                           "strict-source-path": {
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "force VPN traffic to exit interface that the source-ip belongs to"
+                             }
+                           }
+                         }
+                       }
+                     },
+                     "logical-router": {
+                       "@attr": {
+                         "node-type": "array",
+                         "optional": "yes",
+@@ -182018,21 +182026,21 @@
+                               "@attr": {
+                                 "node-type": "sequence",
+                                 "optional": "yes",
+                                 "help-string": "Equal Cost Multipath configuration"
+                               },
+                               "enable": {
+                                 "@attr": {
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "enable Equal Cost Multipath routing, change this configuration will result in a virtual router restart"
+                                 }
+                               },
+                               "algorithm": {
+                                 "@attr": {
+                                   "node-type": "sequence",
+                                   "optional": "yes",
+                                   "default": "ip-modulo",
+                                   "help-string": "load balancing algorithm"
+                                 },
+@@ -182049,31 +182057,31 @@
+                                   "ip-hash": {
+                                     "@attr": {
+                                       "node-type": "sequence",
+                                       "help-string": "Hash based on IP addresses and optionally port numbers"
+                                     },
+                                     "src-only": {
+                                       "@attr": {
+                                         "node-type": "element",
+                                         "optional": "yes",
+                                         "type": "bool",
+-                                        "default": "false",
++                                        "default": "no",
+                                         "help-string": "only use source address for hash",
+                                         "uiHint-fieldLabel": "Use Source Address Only"
+                                       }
+                                     },
+                                     "use-port": {
+                                       "@attr": {
+                                         "node-type": "element",
+                                         "optional": "yes",
+                                         "type": "bool",
+-                                        "default": "false",
++                                        "default": "no",
+                                         "help-string": "use source/destination port for hash"
+                                       }
+                                     },
+                                     "hash-seed": {
+                                       "@attr": {
+                                         "node-type": "element",
+                                         "optional": "yes",
+                                         "type": "rangedint",
+                                         "min": "0",
+                                         "max": "4294967295",
+@@ -182139,30 +182147,30 @@
+                                   "max": "4",
+                                   "default": "2",
+                                   "help-string": "Maxmum number of ECMP paths supported, change this configuration will result in a virtual router restart"
+                                 }
+                               },
+                               "symmetric-return": {
+                                 "@attr": {
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "allows return packets to egress out of the ingress interface of the flow"
+                                 }
+                               },
+                               "strict-source-path": {
+                                 "@attr": {
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "force VPN traffic to exit interface that the source-ip belongs to"
+                                 }
+                               }
+                             }
+                           }
+                         }
+                       }
+                     },
+                     "routing-profile": {
+                       "@attr": {
+@@ -263194,21 +263202,21 @@
+                           "@attr": {
+                             "node-type": "sequence",
+                             "optional": "yes",
+                             "help-string": "Equal Cost Multipath configuration"
+                           },
+                           "enable": {
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "enable Equal Cost Multipath routing, change this configuration will result in a virtual router restart"
+                             }
+                           },
+                           "algorithm": {
+                             "@attr": {
+                               "node-type": "sequence",
+                               "optional": "yes",
+                               "default": "ip-modulo",
+                               "help-string": "load balancing algorithm"
+                             },
+@@ -263225,31 +263233,31 @@
+                               "ip-hash": {
+                                 "@attr": {
+                                   "node-type": "sequence",
+                                   "help-string": "Hash based on IP addresses and optionally port numbers"
+                                 },
+                                 "src-only": {
+                                   "@attr": {
+                                     "node-type": "element",
+                                     "optional": "yes",
+                                     "type": "bool",
+-                                    "default": "false",
++                                    "default": "no",
+                                     "help-string": "only use source address for hash",
+                                     "uiHint-fieldLabel": "Use Source Address Only"
+                                   }
+                                 },
+                                 "use-port": {
+                                   "@attr": {
+                                     "node-type": "element",
+                                     "optional": "yes",
+                                     "type": "bool",
+-                                    "default": "false",
++                                    "default": "no",
+                                     "help-string": "use source/destination port for hash"
+                                   }
+                                 },
+                                 "hash-seed": {
+                                   "@attr": {
+                                     "node-type": "element",
+                                     "optional": "yes",
+                                     "type": "rangedint",
+                                     "min": "0",
+                                     "max": "4294967295",
+@@ -263315,30 +263323,30 @@
+                               "max": "4",
+                               "default": "2",
+                               "help-string": "Maxmum number of ECMP paths supported, change this configuration will result in a virtual router restart"
+                             }
+                           },
+                           "symmetric-return": {
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "allows return packets to egress out of the ingress interface of the flow"
+                             }
+                           },
+                           "strict-source-path": {
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "force VPN traffic to exit interface that the source-ip belongs to"
+                             }
+                           }
+                         }
+                       }
+                     },
+                     "logical-router": {
+                       "@attr": {
+                         "node-type": "array",
+                         "optional": "yes",
+@@ -264593,21 +264601,21 @@
+                               "@attr": {
+                                 "node-type": "sequence",
+                                 "optional": "yes",
+                                 "help-string": "Equal Cost Multipath configuration"
+                               },
+                               "enable": {
+                                 "@attr": {
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "enable Equal Cost Multipath routing, change this configuration will result in a virtual router restart"
+                                 }
+                               },
+                               "algorithm": {
+                                 "@attr": {
+                                   "node-type": "sequence",
+                                   "optional": "yes",
+                                   "default": "ip-modulo",
+                                   "help-string": "load balancing algorithm"
+                                 },
+@@ -264624,31 +264632,31 @@
+                                   "ip-hash": {
+                                     "@attr": {
+                                       "node-type": "sequence",
+                                       "help-string": "Hash based on IP addresses and optionally port numbers"
+                                     },
+                                     "src-only": {
+                                       "@attr": {
+                                         "node-type": "element",
+                                         "optional": "yes",
+                                         "type": "bool",
+-                                        "default": "false",
++                                        "default": "no",
+                                         "help-string": "only use source address for hash",
+                                         "uiHint-fieldLabel": "Use Source Address Only"
+                                       }
+                                     },
+                                     "use-port": {
+                                       "@attr": {
+                                         "node-type": "element",
+                                         "optional": "yes",
+                                         "type": "bool",
+-                                        "default": "false",
++                                        "default": "no",
+                                         "help-string": "use source/destination port for hash"
+                                       }
+                                     },
+                                     "hash-seed": {
+                                       "@attr": {
+                                         "node-type": "element",
+                                         "optional": "yes",
+                                         "type": "rangedint",
+                                         "min": "0",
+                                         "max": "4294967295",
+@@ -264714,30 +264722,30 @@
+                                   "max": "4",
+                                   "default": "2",
+                                   "help-string": "Maxmum number of ECMP paths supported, change this configuration will result in a virtual router restart"
+                                 }
+                               },
+                               "symmetric-return": {
+                                 "@attr": {
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "allows return packets to egress out of the ingress interface of the flow"
+                                 }
+                               },
+                               "strict-source-path": {
+                                 "@attr": {
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "force VPN traffic to exit interface that the source-ip belongs to"
+                                 }
+                               }
+                             }
+                           }
+                         }
+                       }
+                     },
+                     "routing-profile": {
+                       "@attr": {
