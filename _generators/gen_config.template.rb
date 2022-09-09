@@ -433,13 +433,13 @@ module PaloAlto
         to_s[0...-1] + ' ' + values(full_tree: false).map { |k, v| "#{k}: #{v.inspect}" }.join(', ') + '>'
       end
 
-      def get_all
+      def get_all(xpath: to_xpath)
         raise(InvalidCommandException, "please use 'get' here") if self.class.superclass != ArrayConfigClass
 
         payload = {
           type: 'config',
           action: 'get',
-          xpath: to_xpath
+          xpath: xpath
         }
 
         data = @client.execute(payload)
@@ -514,8 +514,10 @@ module PaloAlto
       end
 
       def get_class_from_child_str(child)
-        # check for class name in camelcase format
-        self.class.const_get(child.name.capitalize.gsub(/-(.)/) { Regexp.last_match(1).upcase })
+        str = child.name.dup
+        str[0] = str[0].upcase
+        name = str.gsub(/-(.)/) { |_e| Regexp.last_match(1).upcase }
+        self.class.const_get(name)
       rescue NameError
         raise "Child not found for #{self.class.to_s}: #{child.name}"
       end
@@ -526,9 +528,9 @@ module PaloAlto
           if (prop = self.class.props[child.name])
             if has_multiple_values?
               @external_values[child.name] ||= []
-              @external_values[child.name] << enforce_type(prop, child.text)
+              @external_values[child.name] << enforce_type(prop, child.text, skip_validation: true)
             else
-              @external_values[child.name] = enforce_type(prop, child.text)
+              @external_values[child.name] = enforce_type(prop, child.text, skip_validation: true)
             end
 
           elsif (new_class = get_class_from_child_str(child))
@@ -551,7 +553,7 @@ module PaloAlto
         end
       end
 
-      def enforce_type(prop_arr, value, value_type: prop_arr['type'])
+      def enforce_type(prop_arr, value, value_type: prop_arr['type'], skip_validation: false)
         case value_type
         when 'bool'
           return true if ['yes', true].include?(value)
@@ -563,10 +565,10 @@ module PaloAlto
 
           if prop_arr['regex'] && !value.match(prop_arr['regex']) && !value.match(prop_arr['regex'])
             raise ArgumentError,
-                  "Not matching regex: #{value.inspect} (#{prop_arr['regex'].inspect})"
+                  "Not matching regex: #{value.inspect} (#{prop_arr['regex'].inspect})" unless skip_validation
           end
           if prop_arr['maxlen'] && (value.length > prop_arr['maxlen'].to_i)
-            raise(ArgumentError, "Too long, max. #{prop_arr['maxlen'].to_i} characters allowed")
+            raise(ArgumentError, "Too long, max. #{prop_arr['maxlen'].to_i} characters allowed") unless skip_validation
           end
 
           value
@@ -596,8 +598,8 @@ module PaloAlto
         end
       end
 
-      def xml_builder(xml, full_tree: false, changed_only: true)
-        keys = changed_only ? @values.keys : self.class.props.keys
+      def xml_builder(xml, full_tree: false)
+        keys = self.class.props.keys
 
         keys.map do |k|
           next if k.start_with?('@')
@@ -616,12 +618,13 @@ module PaloAlto
             if subclass.is_a?(Hash)
               subclass.each do |k2, subclass2|
                 xml.public_send(k, k2) do |xml2|
-                  subclass2.xml_builder(xml2, full_tree: full_tree, changed_only: changed_only)
+                  subclass2.xml_builder(xml2, full_tree: full_tree)
                 end
               end
             else
+              k = 'method_' if k=='method'
               xml.public_send(k) do |xml2|
-                subclass.xml_builder(xml2, full_tree: full_tree, changed_only: changed_only)
+                subclass.xml_builder(xml2, full_tree: full_tree)
               end
             end
           end
@@ -721,7 +724,7 @@ module PaloAlto
           @values[prop] = @external_values[prop].dup
         elsif @external_values.key?(prop)
           @external_values[prop]
-        elsif my_prop.key?('default') && include_defaults
+        elsif my_prop.key?('default') && ( my_prop['optional'] != 'yes' || include_defaults )
           enforce_types(my_prop, my_prop['default'])
         end
       end
@@ -747,14 +750,14 @@ module PaloAlto
         @values[prop] = enforce_types(my_prop, value)
       end
 
-      def to_xml(changed_only:, full_tree:, include_root:)
+      def to_xml(full_tree:, include_root:)
         builder = Nokogiri::XML::Builder.new do |xml|
           xml.public_send(_section, begin
             selector
           rescue StandardError
             nil
           end) do
-            xml_builder(xml, changed_only: changed_only, full_tree: full_tree)
+            xml_builder(xml, full_tree: full_tree)
           end
         end
         if include_root
@@ -765,7 +768,7 @@ module PaloAlto
       end
 
       def push!
-        xml_str = to_xml(changed_only: false, full_tree: true, include_root: true)
+        xml_str = to_xml(full_tree: true, include_root: true)
 
         payload = {
           type: 'config',
@@ -842,21 +845,24 @@ module PaloAlto
 
       def rename!(new_name, internal_only: false)
         # https://docs.paloaltonetworks.com/pan-os/10-1/pan-os-panorama-api/pan-os-xml-api-request-types/configuration-api/rename-configuration.html
-        unless internal_only
-          payload = {
-            type: 'config',
-            action: 'rename',
-            xpath: to_xpath,
-            newname: new_name
-          }
+        result = if internal_only
+                   true
+                 else
+                   payload = {
+                     type: 'config',
+                     action: 'rename',
+                     xpath: to_xpath,
+                     newname: new_name
+                   }
 
-          @client.execute(payload)
-        end
+                   @client.execute(payload)
+                 end
 
         # now update also the internal value to the new name
         selector.transform_values! { new_name }
         @external_values["@#{selector.keys.first}"] = new_name
         set_xpath_from_selector!
+        result
       end
     end
 

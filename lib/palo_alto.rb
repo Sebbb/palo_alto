@@ -74,7 +74,6 @@ module PaloAlto
 
   module Helpers
     class Rest
-      @http_clients = {} # will include [http_client, lock]
       @global_lock = Mutex.new
 
       def self.make_request(opts)
@@ -91,16 +90,18 @@ module PaloAlto
         options = options.merge(opts)
         options[:headers].merge!(headers)
 
-        http_client = lock = nil
+        http_client = nil
 
         @global_lock.synchronize do
-          unless (http_client, lock = @http_clients[options[:host]])
+          Thread.current[:http_clients] ||= {}
+
+          unless (http_client = Thread.current[:http_clients][options[:host]])
             http_client = Net::HTTP.new(options[:host], 443)
             http_client.use_ssl = true
             http_client.verify_mode = options[:verify_ssl]
             http_client.read_timeout = http_client.open_timeout = (options[:timeout] || 60)
             http_client.set_debug_output(options[:debug].include?(:http) ? $stdout : nil)
-            @http_clients[options[:host]] = [http_client, (lock = Mutex.new)]
+            Thread.current[:http_clients][options[:host]] = http_client
           end
         end
 
@@ -114,11 +115,9 @@ module PaloAlto
           post_req.set_form_data(payload)
         end
 
-        response = lock.synchronize do
-          http_client.start unless http_client.started?
+        http_client.start unless http_client.started?
 
-          http_client.request(post_req)
-        end
+        response = http_client.request(post_req)
 
         case response.code
         when '200'
@@ -168,9 +167,17 @@ module PaloAlto
   end
 
   class XML
-    attr_accessor :host, :username, :password, :auth_key, :verify_ssl, :debug, :timeout
+    attr_accessor :host, :username, :auth_key, :verify_ssl, :debug, :timeout
 
-    def execute(payload)
+    def pretty_print_instance_variables
+      super - [:@password, :@subclasses, :@subclasses, :@expression, :@arguments]
+    end
+
+    def execute(payload, skip_authentication: false)
+      if !auth_key && !skip_authentication
+        get_auth_key
+      end
+
       retried = false
       begin
         # configure options for the request
@@ -191,14 +198,14 @@ module PaloAlto
         start_time = Time.now
         text = Helpers::Rest.make_request(options)
         if debug.include?(:statistics)
-          warn "Elapsed for API call #{payload[:type]}/#{payload[:action] || '(unknown action)'}: #{Time.now - start_time} seconds"
+          warn "Elapsed for API call #{payload[:type]}/#{payload[:action] || '(unknown action)'} on #{host}: #{Time.now - start_time} seconds"
         end
 
         warn "received: #{Time.now}\n#{text}\n" if debug.include?(:received)
 
         data = Nokogiri::XML.parse(text)
         unless data.xpath('//response/@status').to_s == 'success'
-          warn 'command failed'
+          warn "command failed on host #{host} at #{Time.now}"
           warn "sent:\n#{options.inspect}\n" if debug.include?(:sent_on_error)
           warn "received:\n#{text.inspect}\n" if debug.include?(:received_on_error)
           code = data.at_xpath('//response/@code')&.value.to_i # sometimes there is no code :( e.g. for 'op' errors
@@ -232,8 +239,12 @@ module PaloAlto
             else
               { commit: { partial: [
                 { 'admin': [username] },
-                device_groups ? ( device_groups.empty? ? 'no-device-group' : { 'device-group': device_groups } ) : nil,
-                templates ? ( templates.empty? ? 'no-template' : { 'template': templates } ) : nil,
+                if device_groups
+                  device_groups.empty? ? 'no-device-group' : { 'device-group': device_groups }
+                end,
+                if templates
+                  templates.empty? ? 'no-template' : { 'template': templates }
+                end,
                 'no-template-stack',
                 'no-log-collector',
                 'no-log-collector-group',
@@ -339,14 +350,17 @@ module PaloAlto
       }
     end
 
-    def wait_for_job_completion(job_id, wait: 5, timeout: 480)
+    def wait_for_job_completion(job_id, wait: 5, timeout: 600)
       cmd = { show: { jobs: { id: job_id } } }
       start = Time.now
       loop do
-        result = op.execute(cmd)
-        status = result.at_xpath('response/result/job/status')&.text
-        return result unless %w[ACT PEND].include?(status)
-
+        begin
+          result = op.execute(cmd)
+          status = result.at_xpath('response/result/job/status')&.text
+          return result unless %w[ACT PEND].include?(status)
+        rescue => e
+          warn [:job_query_error, e].inspect
+        end
         sleep wait
         break unless start + timeout > Time.now
       end
@@ -384,20 +398,17 @@ module PaloAlto
     end
 
     def initialize(host:, username:, password:, verify_ssl: OpenSSL::SSL::VERIFY_NONE, debug: [])
-      self.host       = host
-      self.username   = username
-      self.password   = password
-      self.verify_ssl = verify_ssl
-      self.debug      = debug
+      @host       = host
+      @username   = username
+      @password   = password
+      @verify_ssl = verify_ssl
+      @debug      = debug
 
       @subclasses = {}
 
       # xpath
       @expression = :root
       @arguments = [Expression.new(:this_node), []]
-
-      # attempt to obtain the auth_key
-      get_auth_key
     end
 
     # Perform a query to the API endpoint for an auth_key based on the credentials provided
@@ -405,10 +416,10 @@ module PaloAlto
       # establish the required options for the key request
       payload = { type: 'keygen',
                   user: username,
-                  password: password }
+                  password: @password }
 
       # get and parse the response for the key
-      xml_data = execute(payload)
+      xml_data = execute(payload, skip_authentication: true)
       self.auth_key = xml_data.xpath('//response/result/key')[0].content
     end
   end

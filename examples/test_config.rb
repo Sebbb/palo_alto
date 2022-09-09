@@ -1,6 +1,7 @@
 require 'palo_alto'
 
-client = PaloAlto::XML.new(host: "panorama-test", username: "admin", password: "Admin123!", debug: [:sent, :received, :statistics])
+client = PaloAlto::XML.new(host: 'panorama-test', username: 'admin', password: 'Admin123!',
+                           debug: %i[sent received statistics])
 dg = 'PLAYGROUND'
 
 # create a tag
@@ -43,7 +44,7 @@ pp rules
 pp rules.length
 
 pp rules.first.api_attributes # attributes like uuid and loc
-pp rules.first.values() # values as hash
+pp rules.first.values # values as hash
 
 rule = rules.first
 rule.tag.member = [new_tag.name]
@@ -59,5 +60,5 @@ pp rule.name
 exit 0
 
 # create a new template
-new_template = client.config.devices.entry(name:'localhost.localdomain').template.entry(name: 'testtemplate').create!
+new_template = client.config.devices.entry(name: 'localhost.localdomain').template.entry(name: 'testtemplate').create!
 new_template.push!

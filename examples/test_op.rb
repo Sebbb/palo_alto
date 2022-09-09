@@ -1,63 +1,62 @@
 require 'palo_alto'
 
-a= {commit: { partial:[
-  {'admin': ['admin']},
-   'no-template',
-   'no-template-stack',
-   'no-log-collector',
-   'no-log-collector-group',
-   'no-wildfire-appliance',
-   'no-wildfire-appliance-cluster',
-   {'device-and-network': 'excluded'},
-   {'shared-object': 'excluded'}
- ]}}
+a = { commit: { partial: [
+  { admin: ['admin'] },
+  'no-template',
+  'no-template-stack',
+  'no-log-collector',
+  'no-log-collector-group',
+  'no-wildfire-appliance',
+  'no-wildfire-appliance-cluster',
+  { 'device-and-network': 'excluded' },
+  { 'shared-object': 'excluded' }
+] } }
 
-b= { show: {devices: 'all' } }
+b = { show: { devices: 'all' } }
 
-c = {revert: { config: {
- partial:[
-  {'admin': ['admin']},
-   'no-template',
-   'no-template-stack',
-   'no-log-collector',
-   'no-log-collector-group',
-   'no-wildfire-appliance',
-   'no-wildfire-appliance-cluster',
-   {'device-and-network': 'excluded'},
-   {'shared-object': 'excluded'}
- ]}}}
+c = { revert: { config: {
+  partial: [
+    { admin: ['admin'] },
+    'no-template',
+    'no-template-stack',
+    'no-log-collector',
+    'no-log-collector-group',
+    'no-wildfire-appliance',
+    'no-wildfire-appliance-cluster',
+    { 'device-and-network': 'excluded' },
+    { 'shared-object': 'excluded' }
+  ]
+} } }
 
-d = {commit: nil}
+d = { commit: nil }
 
 e = 'commit'
 
-f = {revert: 'config'}
+f = { revert: 'config' }
 
-g= {show: 'templates'}
+g = { show: 'templates' }
 
-h= {show: 'devicegroups'}
+h = { show: 'devicegroups' }
 
-j={show: {jobs: {id: 12431}}}
+j = { show: { jobs: { id: 12_431 } } }
 
-k={check: 'full-commit-required'}
+k = { check: 'full-commit-required' }
 
-push_to_device={	'commit-all': { 'shared-policy': { 'device-group': [{name:'TEST-DG'}]}}}
+push_to_device = {	'commit-all': { 'shared-policy': { 'device-group': [{ name: 'TEST-DG' }] } } }
 
-#validate:
-p={	'commit-all': 
-	{
-		'shared-policy': [
-			{'device-group': [{name:'PLAYGROUND'}]},
-			{'include-template':'yes'},
-			{'merge-with-candidate-cfg':'yes'},
-			{'force-template-values':'no'},
-			{'validate-only':'yes'}
-		]
-	}
-}
+# validate:
+p = {	'commit-all':
+  {
+    'shared-policy': [
+      { 'device-group': [{ name: 'PLAYGROUND' }] },
+      { 'include-template': 'yes' },
+      { 'merge-with-candidate-cfg': 'yes' },
+      { 'force-template-values': 'no' },
+      { 'validate-only': 'yes' }
+    ]
+  } }
 
-i = {show: {query: {result: {id: 10438 }}}}
-
+i = { show: { query: { result: { id: 10_438 } } } }
 
 # hit counts:
 device_group = 'PLAYGROUND'
@@ -69,11 +68,11 @@ l = {
         entry: [{
           name: device_group
         }, {
-          "pre-rulebase": [{
+          'pre-rulebase': [{
             entry: [{
               name: 'security'
             }, {
-              'rules': 'all'
+              rules: 'all'
             }]
           }]
         }]
@@ -83,7 +82,7 @@ l = {
 }
 
 # hit count for one rule, with more details:
-rule_name = "Rule 27"
+rule_name = 'Rule 27'
 l = {
   show: {
     'rule-hit-count': [{
@@ -91,12 +90,12 @@ l = {
         entry: [{
           name: device_group
         }, {
-          "pre-rulebase": [{
+          'pre-rulebase': [{
             entry: [{
               name: 'security'
             }, {
-              'rules': {
-                "rule-name": [{
+              rules: {
+                'rule-name': [{
                   entry: [{
                     name: rule_name
                   }]
@@ -110,18 +109,16 @@ l = {
   }
 }
 
+client = PaloAlto::XML.new(host: 'panorama-test', username: 'admin', password: 'Admin123!', debug: %i[sent received])
 
-client = PaloAlto::XML.new(host: "panorama-test", username: "admin", password: "Admin123!", debug: [:sent, :received])
-
-#pp client.op.execute(a)
-#pp client.op.execute(b)
-#pp client.op.execute(c)
+# pp client.op.execute(a)
+# pp client.op.execute(b)
+# pp client.op.execute(c)
 pp client.op.execute(d)
-puts "---------------------------"
+puts '---------------------------'
 pp client.op.execute(e)
-puts "---------------------------"
+puts '---------------------------'
 
-#pp client.op.execute(f)
+# pp client.op.execute(f)
 
 pp client.op.execute(k)
-
