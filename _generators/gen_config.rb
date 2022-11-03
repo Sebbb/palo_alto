@@ -32,7 +32,8 @@ def indent_puts(str, indent:)
     if $debug
       $f.puts(('  ' * indent + line).rstrip)
     else
-      $f.puts(line.strip) if line!=''
+      line = line&.split(' # ', 2).first unless line&.include?('rubocop:') || line&.include?("'")
+      $f.puts(line.strip) if line && line&.strip != ''
     end
   end
 end
