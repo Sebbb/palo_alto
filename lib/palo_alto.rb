@@ -170,12 +170,36 @@ module PaloAlto
     attr_accessor :host, :username, :auth_key, :verify_ssl, :debug, :timeout
 
     def pretty_print_instance_variables
-      super - [:@password, :@subclasses, :@subclasses, :@expression, :@arguments]
+      super - [:@password, :@subclasses, :@subclasses, :@expression, :@arguments, :@cache]
     end
 
-    def execute(payload, skip_authentication: false)
+    def execute(payload, skip_authentication: false, skip_cache: false)
       if !auth_key && !skip_authentication
         get_auth_key
+      end
+
+      if payload[:type] == 'config' && !skip_cache
+        if payload[:action] == 'get'
+          start_time = Time.now
+          @cache.each do |cached_xpath, cache|
+            search_xpath = payload[:xpath].sub('/descendant::device-group[1]/', '/device-group/')
+            next unless search_xpath.start_with?(cached_xpath)
+
+            remove = cached_xpath.split('/')[1...-1].join('/').length
+            new_xpath = 'response/result/' + search_xpath[(remove+2)..]
+
+            results = cache.xpath(new_xpath)
+						xml = Nokogiri.parse("<?xml version=\"1.0\"?><response><result>#{results.to_s}</result></response>")
+
+            if debug.include?(:statistics)
+              warn "Elapsed for parsing cache: #{Time.now - start_time} seconds"
+            end
+
+            return xml
+          end
+        else
+          @cache = {}
+        end
       end
 
       retried = false
@@ -198,7 +222,7 @@ module PaloAlto
         start_time = Time.now
         text = Helpers::Rest.make_request(options)
         if debug.include?(:statistics)
-          warn "Elapsed for API call #{payload[:type]}/#{payload[:action] || '(unknown action)'} on #{host}: #{Time.now - start_time} seconds"
+          warn "Elapsed for API call #{payload[:type]}/#{payload[:action] || '(unknown action)'} on #{host}: #{Time.now - start_time} seconds, #{text.length} bytes"
         end
 
         warn "received: #{Time.now}\n#{text}\n" if debug.include?(:received)
@@ -229,6 +253,23 @@ module PaloAlto
         get_auth_key if e.is_a?(SessionTimedOutException)
         retry
       end
+    end
+
+    def clear_cache!
+      @cache = {}
+    end
+
+    def cache!(xpath)
+      cached_xpath = xpath.is_a?(String) ? xpath : xpath.to_xpath
+
+      payload = {
+        type: 'config',
+        action: 'get',
+        xpath: cached_xpath
+      }
+
+      @cache[cached_xpath] = execute(payload, skip_cache: true)
+      true
     end
 
     def commit!(all: false, device_groups: nil, templates: nil, wait_for_completion: true, wait: 5, timeout: 480)
@@ -405,6 +446,8 @@ module PaloAlto
       @debug      = debug
 
       @subclasses = {}
+
+      @cache = {}
 
       # xpath
       @expression = :root
