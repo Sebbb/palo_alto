@@ -614,16 +614,18 @@ module PaloAlto
           end
         end
         if full_tree
-          @subclasses.each do |k, subclass|
+          @subclasses.each do |tag_name, subclass|
             if subclass.is_a?(Hash)
               subclass.each do |k2, subclass2|
-                xml.public_send(k, k2) do |xml2|
+                tag_attr = k2.merge(subclass2.api_attributes.select { |attr, _| %w(uuid).include?(attr)})
+                # put received uuid into XML
+                xml.public_send(tag_name, tag_attr) do |xml2|
                   subclass2.xml_builder(xml2, full_tree: full_tree)
                 end
               end
             else
-              k = 'method_' if k=='method'
-              xml.public_send(k) do |xml2|
+              tag_name = 'method_' if tag_name=='method'
+              xml.public_send(tag_name) do |xml2|
                 subclass.xml_builder(xml2, full_tree: full_tree)
               end
             end
