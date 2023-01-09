@@ -554,6 +554,9 @@ module PaloAlto
       end
 
       def enforce_type(prop_arr, value, value_type: prop_arr['type'], skip_validation: false)
+        if prop_arr['ui-field-hint'] == 'type: "bool"'
+          value_type = 'bool'
+        end
         case value_type
         when 'bool'
           return true if ['yes', true].include?(value)
@@ -769,13 +772,27 @@ module PaloAlto
         end
       end
 
-      def push!
+      def edit!
         xml_str = to_xml(full_tree: true, include_root: true)
 
         payload = {
           type: 'config',
           action: 'edit',
           xpath: to_xpath,
+          element: xml_str
+        }
+        @client.execute(payload)
+      end
+
+      alias :push! :edit!
+
+      def set! # TODO: make fields to push selectable
+        xml_str = to_xml(full_tree: true, include_root: true)
+
+        payload = {
+          type: 'config',
+          action: 'set',
+          xpath: parent_instance.to_xpath,
           element: xml_str
         }
         @client.execute(payload)
