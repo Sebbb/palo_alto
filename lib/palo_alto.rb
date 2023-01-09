@@ -277,14 +277,17 @@ module PaloAlto
       true
     end
 
-    def commit!(all: false, device_groups: nil, templates: nil, wait_for_completion: true, wait: 5, timeout: 480)
+    def commit!(all: false, device_groups: nil, templates: nil,
+                admins: [username],
+                raw_result: false,
+                wait_for_completion: true, wait: 5, timeout: 480)
       return nil if device_groups.is_a?(Array) && device_groups.empty? && templates.is_a?(Array) && templates.empty?
 
       cmd = if all
               'commit'
             else
               { commit: { partial: [
-                { 'admin': [username] },
+                { 'admin': admins },
                 if device_groups
                   device_groups.empty? ? 'no-device-group' : { 'device-group': device_groups }
                 end,
@@ -302,8 +305,9 @@ module PaloAlto
             end
       result = op.execute(cmd)
 
-      job_id = result.at_xpath('response/result/job')&.text
+      return result if raw_result
 
+      job_id = result.at_xpath('response/result/job')&.text
       return result unless job_id && wait_for_completion
 
       wait_for_job_completion(job_id, wait: wait, timeout: timeout) if job_id
@@ -340,6 +344,7 @@ module PaloAlto
 
     # will execute block if given and unlock afterwards. returns false if lock could not be aquired
     def lock(area:, comment: nil, type: nil, location: nil)
+      raise MalformedCommandException, 'No type specified' if location && !type
       if block_given?
         return false unless lock(area: area, comment: comment, type: type, location: location)
 
@@ -355,7 +360,8 @@ module PaloAlto
         op.execute(cmd, type: type, location: location)
         true
       rescue PaloAlto::InternalErrorException => e
-        return true if e.message.start_with?('You already own a config lock for scope ')
+        return true if e.message.start_with?('You already own a config lock for scope ') ||
+                       e.message == "Config for scope shared is currently locked by #{username}"
 
         false
       end
@@ -383,9 +389,9 @@ module PaloAlto
       end
     end
 
-    def check_for_changes(usernames: [username])
-      cmd = if usernames
-              { show: { config: { list: { 'change-summary': { partial: { admin: usernames } } } } } }
+    def check_for_changes(admins: [username])
+      cmd = if admins
+              { show: { config: { list: { 'change-summary': { partial: { admin: admins } } } } } }
             else
               { show: { config: { list: 'change-summary' } } }
             end
@@ -394,6 +400,42 @@ module PaloAlto
         device_groups: result.xpath('response/result/summary/device-group/member').map(&:inner_text),
         templates: result.xpath('response/result/summary/template/member').map(&:inner_text)
       }
+    end
+
+    # returns nil if job isn't finished yet, otherwise the job result
+    def query_and_parse_job(job_id)
+      cmd = { show: { jobs: { id: job_id } } }
+      result = op.execute(cmd)
+      status = result.at_xpath('response/result/job/status')&.text
+      return result unless %w[ACT PEND].include?(status)
+
+      nil
+    rescue => e
+      warn [:job_query_error, e].inspect
+      false
+    end
+
+    # returns true if successful
+    # returns nil if not completed yet
+    # otherwise returns the error
+    def commit_successful?(commit_result)
+      if commit_result.at_xpath('response/msg')&.text&.start_with?('The result of this commit would be the same as the previous commit queued/processed') ||
+         commit_result.at_xpath('response/msg')&.text == 'There are no changes to commit.'
+        return true
+      end
+
+      job_id = commit_result.at_xpath('response/result/job')&.text
+      unless job_id
+        warn [:no_job_id, result].inspect
+        return false
+      end
+
+      job_result = query_and_parse_job(job_id)
+      return job_result if !job_result # can be either nil or false (errored)
+
+      return true if job_result.xpath('response/result/job/details/line').text&.include?('Configuration committed successfully')
+
+      job_result
     end
 
     def wait_for_job_completion(job_id, wait: 5, timeout: 600)
