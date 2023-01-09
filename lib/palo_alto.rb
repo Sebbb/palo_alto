@@ -197,7 +197,7 @@ module PaloAlto
 
             return xml
           end
-        else
+        elsif !@keep_cache_on_edit
           @cache = {}
         end
       end
@@ -257,6 +257,11 @@ module PaloAlto
 
     def clear_cache!
       @cache = {}
+      @keep_cache_on_edit = nil
+    end
+
+    def keep_cache_on_edit!
+      @keep_cache_on_edit = true
     end
 
     def cache!(xpath)
