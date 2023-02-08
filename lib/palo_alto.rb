@@ -30,13 +30,16 @@ module PaloAlto
   class UnknownCommandException < PermanentException
   end
 
-  class InternalErrorsException < TemporaryException
+  class UnknownErrorException < TemporaryException
   end
 
   class BadXpathException < PermanentException
   end
 
   class ObjectNotPresentException < PermanentException
+  end
+
+  class ObjectNotFoundException < PermanentException
   end
 
   class ObjectNotUniqueException < PermanentException
@@ -122,6 +125,8 @@ module PaloAlto
         case response.code
         when '200'
           return response.body
+        when '401'
+          raise SessionTimedOutException
         when '400', '403'
           begin
             data = Nokogiri::XML.parse(response.body)
@@ -145,13 +150,12 @@ module PaloAlto
                 when 400 then BadRequestException
                 when 403 then ForbiddenException
                 when 1 then UnknownCommandException
-                when 2..5 then InternalErrorsException
                 when 6 then BadXpathException
                 when 7 then ObjectNotPresentException
                 when 8 then ObjectNotUniqueException
                 when 10 then ReferenceCountNotZeroException
-                when 0, 11, 21 then InternalErrorException # also if there is no code..
                 when 12 then InvalidObjectException
+                when 13 then ObjectNotFoundException
                 when 14 then OperationNotPossibleException
                 when 15 then OperationDeniedException
                 when 16 then UnauthorizedException
@@ -159,7 +163,8 @@ module PaloAlto
                 when 18 then MalformedCommandException
                 when 19..20 then SuccessException
                 when 22 then SessionTimedOutException
-                else InternalErrorException
+                when 2..5, 11, 21 then InternalErrorException
+                else UnknownErrorException
                 end
         raise error, message
       end
@@ -170,7 +175,7 @@ module PaloAlto
     attr_accessor :host, :username, :auth_key, :verify_ssl, :debug, :timeout
 
     def pretty_print_instance_variables
-      super - [:@password, :@subclasses, :@subclasses, :@expression, :@arguments, :@cache]
+      super - [:@password, :@subclasses, :@subclasses, :@expression, :@arguments, :@cache, :@op, :@auth_key]
     end
 
     def execute(payload, skip_authentication: false, skip_cache: false)
@@ -229,9 +234,11 @@ module PaloAlto
 
         data = Nokogiri::XML.parse(text)
         unless data.xpath('//response/@status').to_s == 'success'
-          warn "command failed on host #{host} at #{Time.now}"
-          warn "sent:\n#{options.inspect}\n" if debug.include?(:sent_on_error)
-          warn "received:\n#{text.inspect}\n" if debug.include?(:received_on_error)
+          unless %w[op commit].include?(payload[:type]) # here we fail silent
+            warn "command failed on host #{host} at #{Time.now}"
+            warn "sent:\n#{options.inspect}\n" if debug.include?(:sent_on_error)
+            warn "received:\n#{text.inspect}\n" if debug.include?(:received_on_error)
+          end
           code = data.at_xpath('//response/@code')&.value.to_i # sometimes there is no code :( e.g. for 'op' errors
           message = data.xpath('/response/msg/line').map(&:text).map(&:strip).join("\n")
           Helpers::Rest.raise_error(code, message)
@@ -244,7 +251,10 @@ module PaloAlto
           'Config for scope ',
           'Config is not currently locked for scope ',
           'Commit lock is not currently held by',
-          'You already own a config lock for scope '
+          'You already own a config lock for scope ',
+          'This operation is blocked because of ',
+          'Other administrators are holding config locks ',
+          'Configuration is locked by '
         ]
         raise e if retried || dont_retry_at.any? { |x| e.message.start_with?(x) }
 
@@ -359,7 +369,7 @@ module PaloAlto
         cmd = { request: { "#{area}-lock": { add: { comment: comment || '(null)' } } } }
         op.execute(cmd, type: type, location: location)
         true
-      rescue PaloAlto::InternalErrorException => e
+      rescue PaloAlto::UnknownErrorException => e
         return true if e.message.start_with?('You already own a config lock for scope ') ||
                        e.message == "Config for scope shared is currently locked by #{username}"
 
