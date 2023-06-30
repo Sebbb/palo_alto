@@ -254,7 +254,8 @@ module PaloAlto
           'You already own a config lock for scope ',
           'This operation is blocked because of ',
           'Other administrators are holding config locks ',
-          'Configuration is locked by '
+          'Configuration is locked by ',
+          ' device-group' #  device-group -> ... is already in use
         ]
         raise e if retried || dont_retry_at.any? { |x| e.message.start_with?(x) }
 
@@ -290,7 +291,7 @@ module PaloAlto
     def commit!(all: false, device_groups: nil, templates: nil,
                 admins: [username],
                 raw_result: false,
-                wait_for_completion: true, wait: 5, timeout: 480)
+                wait_for_completion: true, wait: 5, timeout: 60 * 20)
       return nil if device_groups.is_a?(Array) && device_groups.empty? && templates.is_a?(Array) && templates.empty?
 
       cmd = if all
@@ -371,7 +372,8 @@ module PaloAlto
         true
       rescue PaloAlto::UnknownErrorException => e
         return true if e.message.start_with?('You already own a config lock for scope ') ||
-                       e.message == "Config for scope shared is currently locked by #{username}"
+                       e.message == "Config for scope shared is currently locked by #{username}" ||
+                       e.message == "Config for scope #{location} is currently locked by #{username}"
 
         false
       end
@@ -385,7 +387,9 @@ module PaloAlto
                 { request: { "#{area}-lock": 'remove' } }
               end
         op.execute(cmd, type: type, location: location)
-      rescue PaloAlto::InternalErrorException
+      rescue PaloAlto::UnknownErrorException => e
+        return true if e.message.start_with?('Config is not currently locked')
+
         return false
       end
       true
@@ -448,7 +452,7 @@ module PaloAlto
       job_result
     end
 
-    def wait_for_job_completion(job_id, wait: 5, timeout: 600)
+    def wait_for_job_completion(job_id, wait: 5, timeout: 20 * 60)
       cmd = { show: { jobs: { id: job_id } } }
       start = Time.now
       loop do
