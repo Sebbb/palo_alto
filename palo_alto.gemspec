@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = 'Palo Alto API for Ruby'
   spec.homepage      = 'https://github.com/Sebbb/'
-  spec.license       = 'artistic-2.0'
+  spec.license       = 'Artistic-2.0'
   spec.required_ruby_version = '>= 2.7.0'
 
   spec.metadata['homepage_uri'] = spec.homepage
