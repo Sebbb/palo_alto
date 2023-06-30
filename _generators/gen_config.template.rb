@@ -457,6 +457,16 @@ module PaloAlto
         self
       end
 
+      def complete(xpath:)
+        payload = {
+          type: 'config',
+          action: 'complete',
+          xpath: xpath
+        }
+
+        @client.execute(payload)
+      end
+
       def get(ignore_empty_result: false, xpath: to_xpath, return_only: false)
         if self.class.superclass == ArrayConfigClass && !@selector
           raise(InvalidCommandException, "Please use 'get_all' here")
