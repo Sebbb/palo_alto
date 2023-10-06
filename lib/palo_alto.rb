@@ -141,7 +141,7 @@ module PaloAlto
         end
 
         nil
-      rescue Net::OpenTimeout, Errno::ECONNREFUSED => e
+      rescue Net::OpenTimeout, Errno::ECONNREFUSED, Errno::ETIMEDOUT => e
         raise ConnectionErrorException, e.message
       end
 
@@ -207,7 +207,7 @@ module PaloAlto
         end
       end
 
-      retried = false
+      retried = 0
       begin
         # configure options for the request
         options = {}
@@ -245,6 +245,20 @@ module PaloAlto
         end
 
         data
+      rescue EOFError, Net::ReadTimeout => e
+        max_retries = if %w[keygen config].include?(payload[:type])
+                        # TODO: only retry on config, when it's get or edit, otherwise you may get strange errors
+                        3
+                      else
+                        0
+                      end
+
+        raise e if retried >= max_retries
+
+        retried += 1
+        warn "Got error #{e.inspect}; retrying (try #{retried})" if debug.include?(:warnings)
+        sleep 10
+        retry
       rescue TemporaryException => e
         dont_retry_at = [
           'Partial revert is not allowed. Full system commit must be completed.',
@@ -257,10 +271,20 @@ module PaloAlto
           'Configuration is locked by ',
           ' device-group' #  device-group -> ... is already in use
         ]
-        raise e if retried || dont_retry_at.any? { |x| e.message.start_with?(x) }
 
-        warn "Got error #{e.inspect}; retrying" if debug.include?(:warnings)
-        retried = true
+        max_retries = if dont_retry_at.any? { |str| e.message.start_with?(str) }
+                        0
+                      elsif e.message.start_with?('Timed out while getting config lock. Please try again.')
+                        10
+                      else
+                        1
+                      end
+
+        raise e if retried >= max_retries
+
+        retried += 1
+        warn "Got error #{e.inspect}; retrying (try #{retried})" if debug.include?(:warnings)
+
         get_auth_key if e.is_a?(SessionTimedOutException)
         retry
       end
@@ -425,7 +449,7 @@ module PaloAlto
 
       nil
     rescue => e
-      warn [:job_query_error, e].inspect
+      warn [:job_query_error, @host, e].inspect
       false
     end
 
@@ -461,11 +485,13 @@ module PaloAlto
           status = result.at_xpath('response/result/job/status')&.text
           return result unless %w[ACT PEND].include?(status)
         rescue => e
-          warn [:job_query_error, e].inspect
+          warn [:job_query_error, Time.now, @host, e].inspect
+          return false if e.message =~ /\Ajob \d+ not found\z/
         end
         sleep wait
         break unless start + timeout > Time.now
       end
+      warn [:job_query_error, Time.now, @host, :timeout].inspect
       false
     end
 
