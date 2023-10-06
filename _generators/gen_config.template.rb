@@ -393,6 +393,7 @@ module PaloAlto
   class XML
     class ConfigClass < Expression
       attr_reader :api_attributes, :subclasses, :parent_instance
+      alias :_class :class
 
       def initialize(parent_instance:, client:, create_children: false)
         @client = client
@@ -434,7 +435,7 @@ module PaloAlto
       end
 
       def get_all(xpath: to_xpath)
-        raise(InvalidCommandException, "please use 'get' here") if self.class.superclass != ArrayConfigClass
+        raise(InvalidCommandException, "please use 'get' here") if self._class.superclass != ArrayConfigClass
 
         payload = {
           type: 'config',
@@ -468,7 +469,7 @@ module PaloAlto
       end
 
       def get(ignore_empty_result: false, xpath: to_xpath, return_only: false)
-        if self.class.superclass == ArrayConfigClass && !@selector
+        if self._class.superclass == ArrayConfigClass && !@selector
           raise(InvalidCommandException, "Please use 'get_all' here")
         end
 
@@ -495,7 +496,7 @@ module PaloAlto
             external_set(n.first)
 
             if is_a?(ArrayConfigClass)
-              primary_key = get_primary_key(n.first.attribute_nodes, self.class.props)
+              primary_key = get_primary_key(n.first.attribute_nodes, self._class.props)
               set_array_class_attributes(n.first, primary_key) # primary key, api_attributes
             end
           end
@@ -525,17 +526,18 @@ module PaloAlto
 
       def get_class_from_child_str(child)
         str = child.name.dup
+        str[0] = 'K' if str == 'class'
         str[0] = str[0].upcase
         name = str.gsub(/-(.)/) { |_e| Regexp.last_match(1).upcase }
-        self.class.const_get(name)
+        self._class.const_get(name)
       rescue NameError
-        raise "Child not found for #{self.class.to_s}: #{child.name}"
+        raise "Child not found for #{self._class.to_s}: #{child.name}"
       end
 
       def external_set(data)
         data.element_children.map do |child|
           child.name.match(/\A[a-zA-Z0-9_-]*\z/) or raise 'invalid character'
-          if (prop = self.class.props[child.name])
+          if (prop = self._class.props[child.name])
             if has_multiple_values?
               @external_values[child.name] ||= []
               @external_values[child.name] << enforce_type(prop, child.text, skip_validation: true)
@@ -563,8 +565,8 @@ module PaloAlto
         end
       end
 
-      def enforce_type(prop_arr, value, value_type: prop_arr['type'], skip_validation: false)
-        if prop_arr['ui-field-hint'] == 'type: "bool"'
+      def enforce_type(prop_hash, value, value_type: prop_hash['type'], skip_validation: false)
+        if prop_hash.is_a?(Hash) && prop_hash['ui-field-hint'] == 'type: "bool"'
           value_type = 'bool'
         end
         case value_type
@@ -576,20 +578,20 @@ module PaloAlto
         when 'string', 'ipdiscontmask', 'iprangespec', 'ipspec', 'rangelistspec'
           raise(ArgumentError, "Not string: #{value.inspect}") unless value.is_a?(String)
 
-          if prop_arr['regex'] && !value.match(prop_arr['regex']) && !value.match(prop_arr['regex'])
+          if prop_hash['regex'] && !value.match(prop_hash['regex']) && !value.match(prop_hash['regex'])
             raise ArgumentError,
-                  "Not matching regex: #{value.inspect} (#{prop_arr['regex'].inspect})" unless skip_validation
+                  "#{self._class} - Not matching regex: #{value.inspect} (#{prop_hash['regex'].inspect})" unless skip_validation
           end
-          if prop_arr['maxlen'] && (value.length > prop_arr['maxlen'].to_i)
-            raise(ArgumentError, "Too long, max. #{prop_arr['maxlen'].to_i} characters allowed") unless skip_validation
+          if prop_hash['maxlen'] && (value.length > prop_hash['maxlen'].to_i)
+            raise(ArgumentError, "Too long, max. #{prop_hash['maxlen'].to_i} characters allowed") unless skip_validation
           end
 
           value
         when 'enum'
-          accepted_values = if prop_arr.is_a?(Hash)
-                              prop_arr['enum'].map { |x| x['value'] }
+          accepted_values = if prop_hash.is_a?(Hash)
+                              prop_hash['enum'].map { |x| x['value'] }
                             else
-                              prop_arr.map { |x| x['value'] } # is an array if part of value_type 'multiple'
+                              prop_hash.map { |x| x['value'] } # is an array if part of value_type 'multiple'
                             end
           return value if accepted_values.include?(value)
 
@@ -598,21 +600,22 @@ module PaloAlto
           Float(value)
         when 'rangedint'
           number = Integer(value)
-          return number if number >= prop_arr['min'].to_i && number <= prop_arr['max'].to_i
+          return number if number >= prop_hash['min'].to_i && number <= prop_hash['max'].to_i
 
-          raise ArgumentError, "not in range #{prop_arr['min']}..#{prop_arr['max']}: #{number}"
+          raise ArgumentError, "not in range #{prop_hash['min']}..#{prop_hash['max']}: #{number}"
         when 'multiple'
-          prop_arr['multi-types'].each_key do |key|
-            return enforce_type(prop_arr['multi-types'][key], value, value_type: key)
+          prop_hash['multi-types'].each_key do |key|
+            # TODO: prop_hash['multi-types'][key] might be an Array, handle that better and provide the correct format to enforce_type
+            return enforce_type(prop_hash['multi-types'][key], value, value_type: key)
           rescue StandardError
             false
           end
-          raise(ArgumentError, "Nothing matching found for #{value.inspect} (#{prop_arr.inspect})")
+          raise(ArgumentError, "Nothing matching found for #{value.inspect} (#{prop_hash.inspect})")
         end
       end
 
       def xml_builder(xml, full_tree: false)
-        keys = self.class.props.keys
+        keys = self._class.props.keys
 
         keys.map do |k|
           next if k.start_with?('@')
@@ -688,7 +691,7 @@ module PaloAlto
 
       def values(full_tree: true, include_defaults: true)
         h = {}
-        self.class.props.keys.map do |k|
+        self._class.props.keys.map do |k|
           prop = prop_get(k, include_defaults: include_defaults)
           h[k] = prop if prop
         end
@@ -732,7 +735,7 @@ module PaloAlto
       end
 
       def prop_get(prop, include_defaults: true)
-        my_prop = self.class.props[prop]
+        my_prop = self._class.props[prop]
         if @values.key?(prop)
           @values[prop]
         elsif @external_values.key?(prop) && @external_values[prop].is_a?(Array)
@@ -744,23 +747,23 @@ module PaloAlto
         end
       end
 
-      def enforce_types(prop_arr, values)
+      def enforce_types(prop_hash, values)
         return if values.nil?
 
         values = values.split(/\s+/) if has_multiple_values? && values.is_a?(String)
 
         if values.is_a?(Array) && has_multiple_values?
-          values.map { |v| enforce_type(prop_arr, v) }
+          values.map { |v| enforce_type(prop_hash, v) }
         elsif !has_multiple_values?
-          enforce_type(prop_arr, values)
+          enforce_type(prop_hash, values)
         else
           raise(ArgumentError, 'Needs to be Array but is not, or vice versa')
         end
       end
 
       def prop_set(prop, value)
-        my_prop = self.class.props[prop] or raise(InternalErrorException,
-                                                  "Unknown attribute for #{self.class}: #{prop}")
+        my_prop = self._class.props[prop] or raise(InternalErrorException,
+                                                  "Unknown attribute for #{self._class}: #{prop}")
 
         @values[prop] = enforce_types(my_prop, value)
       end

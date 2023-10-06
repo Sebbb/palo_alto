@@ -17,6 +17,7 @@ class String
   def camelcase(first_char: true)
     match(/\A[a-zA-Z0-9_-]*\z/) or raise 'invalid character'
     str = dup
+    str[0] = 'K'.dup if str == 'class'
     str[0] = str[0].upcase if first_char
     str.gsub(/-(.)/) { |_e| Regexp.last_match(1).upcase }
   end
