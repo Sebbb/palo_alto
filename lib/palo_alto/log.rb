@@ -12,7 +12,7 @@ module PaloAlto
     class Log < Enumerator
       def initialize(client:, query:, log_type:, nlogs: 20, dir: :backward, show_detail: false, days: 7) # rubocop:disable Metrics/MethodLength,Metrics/ParameterLists
         @client = client
-        payload = {
+        @log_query_payload = {
           type: 'log',
           'log-type': log_type,
           nlogs: nlogs,
@@ -22,15 +22,22 @@ module PaloAlto
         }
 
         if days
-          payload[:query] += " AND (receive_time geq '#{(Time.now - days * 3600 * 24).strftime('%Y/%m/%d %H:%M:%S')}')"
+          @log_query_payload[:query] += " AND (receive_time geq '#{(Time.now - days * 3600 * 24).strftime('%Y/%m/%d %H:%M:%S')}')"
         end
 
-        result = @client.execute(payload)
-        @job_id = result.at_xpath('response/result/job').text
-        @count = nil
-        @skip = 0
+        run_query
+
         @first_result = fetch_result
         super
+      end
+
+      def run_query
+        result = @client.execute(@log_query_payload)
+        @job_id = result.at_xpath('response/result/job').text
+        warn "#{@client.host} #{Time.now}: Got job id #{@job_id} for log query"
+
+        @count = nil
+        @skip = 0
       end
 
       def restore_first
@@ -46,17 +53,24 @@ module PaloAlto
       def fetch_result # rubocop:disable Metrics/MethodLength
         return nil if @count && @skip == @count
 
-        payload = {
-          type: 'log',
-          action: 'get',
-          'job-id': @job_id,
-          skip: @skip
-        }
-
         i = 0
         loop do
           sleep 0.5 if i.positive?
-          @current_result = @client.execute(payload)
+          begin
+            payload = {
+              type: 'log',
+              action: 'get',
+              'job-id': @job_id,
+              skip: @skip
+            }
+            @current_result = @client.execute(payload)
+          rescue PaloAlto::UnknownErrorException => e
+            if e.message == 'Query timed out'
+              warn 'Retrying log query'
+              run_query
+              retry
+            end
+          end
           i += 1
           break if @current_result.at_xpath('response/result/job/status').text == 'FIN'
         end
