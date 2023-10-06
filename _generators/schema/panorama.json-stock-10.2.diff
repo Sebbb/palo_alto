@@ -1,5 +1,5 @@
 --- panorama.json-stock-10.2	2023-06-30 15:54:02.205758688 +0200
-+++ panorama.json	2023-06-30 15:54:56.394335133 +0200
++++ panorama.json	2023-09-04 14:33:19.941543877 +0200
 @@ -41284,6 +41284,14 @@
                    "optional": "yes",
                    "memberof": []
@@ -150,7 +150,23 @@
                                    "help-string": "force VPN traffic to exit interface that the source-ip belongs to"
                                  }
                                }
-@@ -289808,7 +289840,7 @@
+@@ -219588,6 +219620,15 @@
+                               "maxlen": "1023"
+                             }
+                           },
++                          "public-key": {
++                            "@attr": {
++                              "node-type": "element",
++                              "optional": "yes",
++                              "type": "string",
++                              "minlen": "0",
++                              "maxlen": "16384"
++                            }
++                          },
+                           "subject-hash": {
+                             "@attr": {
+                               "node-type": "element",
+@@ -289808,7 +289849,7 @@
                                "node-type": "element",
                                "optional": "yes",
                                "type": "bool",
@@ -159,7 +175,7 @@
                                "help-string": "enable Equal Cost Multipath routing, change this configuration will result in a virtual router restart"
                              }
                            },
-@@ -289839,7 +289871,7 @@
+@@ -289839,7 +289880,7 @@
                                      "node-type": "element",
                                      "optional": "yes",
                                      "type": "bool",
@@ -168,7 +184,7 @@
                                      "help-string": "only use source address for hash",
                                      "uiHint-fieldLabel": "Use Source Address Only"
                                    }
-@@ -289849,7 +289881,7 @@
+@@ -289849,7 +289890,7 @@
                                      "node-type": "element",
                                      "optional": "yes",
                                      "type": "bool",
@@ -177,7 +193,7 @@
                                      "help-string": "use source/destination port for hash"
                                    }
                                  },
-@@ -289929,7 +289961,7 @@
+@@ -289929,7 +289970,7 @@
                                "node-type": "element",
                                "optional": "yes",
                                "type": "bool",
@@ -186,7 +202,7 @@
                                "help-string": "allows return packets to egress out of the ingress interface of the flow"
                              }
                            },
-@@ -289938,7 +289970,7 @@
+@@ -289938,7 +289979,7 @@
                                "node-type": "element",
                                "optional": "yes",
                                "type": "bool",
@@ -195,7 +211,7 @@
                                "help-string": "force VPN traffic to exit interface that the source-ip belongs to"
                              }
                            }
-@@ -294132,7 +294164,7 @@
+@@ -294132,7 +294173,7 @@
                                    "node-type": "element",
                                    "optional": "yes",
                                    "type": "bool",
@@ -204,7 +220,7 @@
                                    "help-string": "enable Equal Cost Multipath routing, change this configuration will result in a virtual router restart"
                                  }
                                },
-@@ -294163,7 +294195,7 @@
+@@ -294163,7 +294204,7 @@
                                          "node-type": "element",
                                          "optional": "yes",
                                          "type": "bool",
@@ -213,7 +229,7 @@
                                          "help-string": "only use source address for hash",
                                          "uiHint-fieldLabel": "Use Source Address Only"
                                        }
-@@ -294173,7 +294205,7 @@
+@@ -294173,7 +294214,7 @@
                                          "node-type": "element",
                                          "optional": "yes",
                                          "type": "bool",
@@ -222,7 +238,7 @@
                                          "help-string": "use source/destination port for hash"
                                        }
                                      },
-@@ -294253,7 +294285,7 @@
+@@ -294253,7 +294294,7 @@
                                    "node-type": "element",
                                    "optional": "yes",
                                    "type": "bool",
@@ -231,7 +247,7 @@
                                    "help-string": "allows return packets to egress out of the ingress interface of the flow"
                                  }
                                },
-@@ -294262,7 +294294,7 @@
+@@ -294262,7 +294303,7 @@
                                    "node-type": "element",
                                    "optional": "yes",
                                    "type": "bool",
@@ -240,7 +256,7 @@
                                    "help-string": "force VPN traffic to exit interface that the source-ip belongs to"
                                  }
                                }
-@@ -352717,6 +352749,80 @@
+@@ -352717,6 +352758,80 @@
            "@attr": {
              "node-type": "sequence",
              "optional": "yes"
