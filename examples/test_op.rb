@@ -42,6 +42,8 @@ j = { show: { jobs: { id: 12_431 } } }
 
 k = { check: 'full-commit-required' }
 
+l = { show: { config: { 'commit-scope': { partial: { admin: ['admin'] } } } } }
+
 push_to_device = {	'commit-all': { 'shared-policy': { 'device-group': [{ name: 'TEST-DG' }] } } }
 
 # validate:
