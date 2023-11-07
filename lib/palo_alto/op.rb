@@ -428,7 +428,8 @@ module PaloAlto
               {nil=>
                 {:obj=>:enum,
                  :attributes=>
-                  {'value'=>'sdwan', 'help-string'=>'sdwan policy'}},
+                  {'value'=>'network-packet-broker',
+                   'help-string'=>'network packet broker policy'}},
                :obj=>:"attr-req",
                :attributes=>{'name'=>'name', 'type'=>'enum'}},
              'rules'=>
@@ -576,6 +577,21 @@ module PaloAlto
        'skip-validation'=>'yes',
        'handler'=>'clear_rule_hit_handler',
        'help-string'=>'Clear policy rule hit-count information'}},
+   'device-status'=>
+    {'deviceid'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'deviceid',
+         'type'=>'string',
+         'maxlen'=>'64',
+         'complete-handler'=>'$config/mgt-config/devices/entry/@name'}},
+     :obj=>:sequence,
+     :attributes=>
+      {'name'=>'device-status',
+       'roles'=>'superuser,panorama-admin',
+       'help-string'=>'clear device status',
+       'hidden'=>'yes',
+       'handler'=>'clear_dev_state'}},
    'plugins'=>
     {:obj=>:union,
      :attributes=>
@@ -916,6 +932,7 @@ module PaloAlto
        :attributes=>
         {'name'=>'user',
          'type'=>'string',
+         'maxlen'=>'64',
          'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$',
          'help-string'=>'User name'}},
      'users'=>
@@ -924,6 +941,7 @@ module PaloAlto
          :attributes=>
           {'name'=>'member',
            'type'=>'string',
+           'maxlen'=>'63',
            'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$'}},
        :obj=>:array,
        :attributes=>{'name'=>'users', 'help-string'=>'User list'}},
@@ -1058,7 +1076,28 @@ module PaloAlto
      :obj=>:sequence,
      :attributes=>{'name'=>'wildfire-appliance-config'}},
    'shared-policy'=>
-    {'device-group'=>
+    {'admin'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'member',
+           'type'=>'string',
+           'optional'=>'yes',
+           'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$',
+           'maxlen'=>'63'}},
+       :obj=>:array,
+       :attributes=>
+        {'name'=>'admin',
+         'optional'=>'yes',
+         'help-string'=>'Admin/s whose changes you want to push'}},
+     'exclude-other-admins'=>
+      {:obj=>:element,
+       :attributes=>
+        {'optional'=>'yes',
+         'name'=>'exclude-other-admins',
+         'type'=>'bool',
+         'default'=>'no'}},
+     'device-group'=>
       {'entry'=>
         {'name'=>
           {:obj=>:"attr-req",
@@ -1139,7 +1178,18 @@ module PaloAlto
           'Validate changes on selected devices with committed configuration'}},
      'validate-partial'=>
       {'partial'=>
-        {'admin'=>
+        {'object-xpaths'=>
+          {'member'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'member',
+               'type'=>'string',
+               'regex'=>'.*',
+               'maxlen'=>'1024'}},
+           :obj=>:array,
+           :attributes=>
+            {'name'=>'object-xpaths', 'optional'=>'yes', 'default'=>'all'}},
+         'admin'=>
           {'member'=>
             {:obj=>:element,
              :attributes=>
@@ -1237,6 +1287,16 @@ module PaloAlto
            :obj=>:array,
            :attributes=>
             {'name'=>'wildfire-appliance-cluster', 'optional'=>'yes'}},
+         'no-plugins'=>
+          {:obj=>:sequence,
+           :attributes=>{'name'=>'no-plugins', 'optional'=>'yes'}},
+         'plugins'=>
+          {'member'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+           :obj=>:array,
+           :attributes=>{'name'=>'plugins', 'optional'=>'yes'}},
          :obj=>:sequence,
          :attributes=>{'name'=>'partial', 'optional'=>'yes'}},
        :obj=>:sequence,
@@ -1304,7 +1364,18 @@ module PaloAlto
           'Validate changes on selected devices with committed configuration'}},
      'validate-partial'=>
       {'partial'=>
-        {'admin'=>
+        {'object-xpaths'=>
+          {'member'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'member',
+               'type'=>'string',
+               'regex'=>'.*',
+               'maxlen'=>'1024'}},
+           :obj=>:array,
+           :attributes=>
+            {'name'=>'object-xpaths', 'optional'=>'yes', 'default'=>'all'}},
+         'admin'=>
           {'member'=>
             {:obj=>:element,
              :attributes=>
@@ -1402,6 +1473,16 @@ module PaloAlto
            :obj=>:array,
            :attributes=>
             {'name'=>'wildfire-appliance-cluster', 'optional'=>'yes'}},
+         'no-plugins'=>
+          {:obj=>:sequence,
+           :attributes=>{'name'=>'no-plugins', 'optional'=>'yes'}},
+         'plugins'=>
+          {'member'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+           :obj=>:array,
+           :attributes=>{'name'=>'plugins', 'optional'=>'yes'}},
          :obj=>:sequence,
          :attributes=>{'name'=>'partial', 'optional'=>'yes'}},
        :obj=>:sequence,
@@ -1430,6 +1511,27 @@ module PaloAlto
          'help-string'=>'template name',
          'complete-handler'=>
           '$config/devices/entry/template-stack/entry/@name'}},
+     'admin'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'member',
+           'type'=>'string',
+           'optional'=>'yes',
+           'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$',
+           'maxlen'=>'63'}},
+       :obj=>:array,
+       :attributes=>
+        {'name'=>'admin',
+         'optional'=>'yes',
+         'help-string'=>'Admin/s whose changes you want to push'}},
+     'exclude-other-admins'=>
+      {:obj=>:element,
+       :attributes=>
+        {'optional'=>'yes',
+         'name'=>'exclude-other-admins',
+         'type'=>'bool',
+         'default'=>'no'}},
      'device'=>
       {'member'=>
         {:obj=>:element,
@@ -1468,7 +1570,18 @@ module PaloAlto
           'Validate changes on selected devices with committed configuration'}},
      'validate-partial'=>
       {'partial'=>
-        {'admin'=>
+        {'object-xpaths'=>
+          {'member'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'member',
+               'type'=>'string',
+               'regex'=>'.*',
+               'maxlen'=>'1024'}},
+           :obj=>:array,
+           :attributes=>
+            {'name'=>'object-xpaths', 'optional'=>'yes', 'default'=>'all'}},
+         'admin'=>
           {'member'=>
             {:obj=>:element,
              :attributes=>
@@ -1566,6 +1679,16 @@ module PaloAlto
            :obj=>:array,
            :attributes=>
             {'name'=>'wildfire-appliance-cluster', 'optional'=>'yes'}},
+         'no-plugins'=>
+          {:obj=>:sequence,
+           :attributes=>{'name'=>'no-plugins', 'optional'=>'yes'}},
+         'plugins'=>
+          {'member'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+           :obj=>:array,
+           :attributes=>{'name'=>'plugins', 'optional'=>'yes'}},
          :obj=>:sequence,
          :attributes=>{'name'=>'partial', 'optional'=>'yes'}},
        :obj=>:sequence,
@@ -1595,7 +1718,18 @@ module PaloAlto
      'help-string'=>'Shared policy commit operations'}},
  'diff-all-partial'=>
   {'partial'=>
-    {'admin'=>
+    {'object-xpaths'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'member',
+           'type'=>'string',
+           'regex'=>'.*',
+           'maxlen'=>'1024'}},
+       :obj=>:array,
+       :attributes=>
+        {'name'=>'object-xpaths', 'optional'=>'yes', 'default'=>'all'}},
+     'admin'=>
       {'member'=>
         {:obj=>:element,
          :attributes=>
@@ -1684,6 +1818,15 @@ module PaloAlto
          :attributes=>{'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
        :obj=>:array,
        :attributes=>{'name'=>'wildfire-appliance-cluster', 'optional'=>'yes'}},
+     'no-plugins'=>
+      {:obj=>:sequence,
+       :attributes=>{'name'=>'no-plugins', 'optional'=>'yes'}},
+     'plugins'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>{'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+       :obj=>:array,
+       :attributes=>{'name'=>'plugins', 'optional'=>'yes'}},
      :obj=>:sequence,
      :attributes=>{'name'=>'partial', 'optional'=>'yes'}},
    'shared-policy'=>
@@ -1866,7 +2009,21 @@ module PaloAlto
       'View diff between previous and current merged config on device'}},
  'diff-all'=>
   {'shared-policy'=>
-    {'device-group'=>
+    {'admin'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'member',
+           'type'=>'string',
+           'optional'=>'yes',
+           'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$',
+           'maxlen'=>'63'}},
+       :obj=>:array,
+       :attributes=>
+        {'name'=>'admin',
+         'optional'=>'yes',
+         'help-string'=>'Admin/s whose changes you want to push'}},
+     'device-group'=>
       {:obj=>:element,
        :attributes=>
         {'name'=>'device-group',
@@ -1971,7 +2128,21 @@ module PaloAlto
      :attributes=>
       {'name'=>'template', 'handler'=>'diff_all_template', 'optional'=>'yes'}},
    'template-stack'=>
-    {'name'=>
+    {'admin'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'member',
+           'type'=>'string',
+           'optional'=>'yes',
+           'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$',
+           'maxlen'=>'63'}},
+       :obj=>:array,
+       :attributes=>
+        {'name'=>'admin',
+         'optional'=>'yes',
+         'help-string'=>'Admin/s whose changes you want to push'}},
+     'name'=>
       {:obj=>:element,
        :attributes=>
         {'name'=>'name',
@@ -2035,7 +2206,18 @@ module PaloAlto
          'optional'=>'yes',
          'help-string'=>'number of lines of context in the diff'}},
      'partial'=>
-      {'admin'=>
+      {'object-xpaths'=>
+        {'member'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'member',
+             'type'=>'string',
+             'regex'=>'.*',
+             'maxlen'=>'1024'}},
+         :obj=>:array,
+         :attributes=>
+          {'name'=>'object-xpaths', 'optional'=>'yes', 'default'=>'all'}},
+       'admin'=>
         {'member'=>
           {:obj=>:element,
            :attributes=>
@@ -2125,6 +2307,15 @@ module PaloAlto
          :obj=>:array,
          :attributes=>
           {'name'=>'wildfire-appliance-cluster', 'optional'=>'yes'}},
+       'no-plugins'=>
+        {:obj=>:sequence,
+         :attributes=>{'name'=>'no-plugins', 'optional'=>'yes'}},
+       'plugins'=>
+        {'member'=>
+          {:obj=>:element,
+           :attributes=>{'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+         :obj=>:array,
+         :attributes=>{'name'=>'plugins', 'optional'=>'yes'}},
        :obj=>:sequence,
        :attributes=>{'name'=>'partial', 'optional'=>'yes'}},
      :obj=>:sequence,
@@ -2705,7 +2896,14 @@ module PaloAlto
      'target'=>'mgmt',
      'help-string'=>'Remove files from hard disk'}},
  'show'=>
-  {'container'=>
+  {'upgrade-history'=>
+    {:obj=>:sequence,
+     :attributes=>
+      {'name'=>'upgrade-history',
+       'target'=>'dagger',
+       'handler'=>'upgrade_history.local_history_raw',
+       'help-string'=>'Show the software versions installed on the device.'}},
+   'container'=>
     {'dp-info'=>
       {'device'=>
         {:obj=>:element,
@@ -3185,6 +3383,13 @@ module PaloAlto
           {'name'=>'device_name',
            'type'=>'string',
            'help-string'=>'Device name'}},
+       'sessionid'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'sessionid',
+           'type'=>'string',
+           'regex'=>'^[0-9]+$',
+           'help-string'=>'Session ID (numeric string)'}},
        :obj=>:sequence,
        :attributes=>
         {'name'=>'gtppcap',
@@ -4038,7 +4243,9 @@ module PaloAlto
           {'name'=>
             {nil=>
               {:obj=>:enum,
-               :attributes=>{'value'=>'sdwan', 'help-string'=>'sdwan policy'}},
+               :attributes=>
+                {'value'=>'network-packet-broker',
+                 'help-string'=>'network packet broker policy'}},
              :obj=>:"attr-req",
              :attributes=>{'name'=>'name', 'type'=>'enum'}},
            'rules'=>
@@ -4082,7 +4289,9 @@ module PaloAlto
           {'name'=>
             {nil=>
               {:obj=>:enum,
-               :attributes=>{'value'=>'sdwan', 'help-string'=>'sdwan policy'}},
+               :attributes=>
+                {'value'=>'network-packet-broker',
+                 'help-string'=>'network packet broker policy'}},
              :obj=>:"attr-req",
              :attributes=>{'name'=>'name', 'type'=>'enum'}},
            'rules'=>
@@ -4189,7 +4398,8 @@ module PaloAlto
               {nil=>
                 {:obj=>:enum,
                  :attributes=>
-                  {'value'=>'sdwan', 'help-string'=>'sdwan policy'}},
+                  {'value'=>'network-packet-broker',
+                   'help-string'=>'network packet broker policy'}},
                :obj=>:"attr-req",
                :attributes=>{'name'=>'name', 'type'=>'enum'}},
              'rules'=>
@@ -4237,7 +4447,8 @@ module PaloAlto
               {nil=>
                 {:obj=>:enum,
                  :attributes=>
-                  {'value'=>'sdwan', 'help-string'=>'sdwan policy'}},
+                  {'value'=>'network-packet-broker',
+                   'help-string'=>'network packet broker policy'}},
                :obj=>:"attr-req",
                :attributes=>{'name'=>'name', 'type'=>'enum'}},
              'rules'=>
@@ -4531,6 +4742,22 @@ module PaloAlto
       {:obj=>:sequence,
        :attributes=>
         {'name'=>'installed', 'handler'=>'show-installed-plugin-handler'}},
+     'dependencies'=>
+      {'name'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'name',
+           'optional'=>'yes',
+           'type'=>'string',
+           'complete-handler'=>'get-installed-plugin-completer',
+           'help-string'=>'Plugin name'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'dependencies',
+         'target'=>'script',
+         'handler'=>
+          '/usr/bin/python /opt/plugins/bin/check_plugin_compat.py show $name',
+         'help-string'=>'show plugin dependencies'}},
      'devicegroups'=>
       {'dynamic'=>
         {:obj=>:sequence,
@@ -4705,13 +4932,28 @@ module PaloAlto
            'type'=>'string',
            'help-string'=>'Authentication profile',
            'complete-handler'=>
-            '$config/panorama/authentication-profile/entry/@name'}},
+            '$config/panorama/authentication-profile/entry[single-sign-on/kerberos-keytab]/@name'}},
        :obj=>:sequence,
        :attributes=>
         {'name'=>'service-principal',
          'handler'=>'show_sso_service_principal_handler',
          'help-string'=>
           'Show service principal in the keytab of auth profile'}},
+     'service-principals'=>
+      {'authentication-profile'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'authentication-profile',
+           'type'=>'string',
+           'help-string'=>'Authentication profile',
+           'complete-handler'=>
+            '$config/panorama/authentication-profile/entry[single-sign-on/kerberos-keytab]/@name'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'service-principals',
+         'handler'=>'show_sso_service_principals_handler',
+         'help-string'=>
+          'Show all service principals in the keytab of auth profile, including their realms'}},
      'allowlist'=>
       {:obj=>:sequence,
        :attributes=>
@@ -4784,6 +5026,81 @@ module PaloAlto
          'handler'=>'/usr/local/bin/sdb -e -n cfg.auth.strict_check '}},
      :obj=>:sequence,
      :attributes=>{'name'=>'auth', 'help-string'=>'auth state variables'}},
+   'cloud-auth-service-regions'=>
+    {'force_refresh'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'force_refresh',
+         'optional'=>'yes',
+         'type'=>'bool',
+         'default'=>'no',
+         'help-string'=>'Refresh CAS regions, even if still valid'}},
+     :obj=>:sequence,
+     :attributes=>
+      {'name'=>'cloud-auth-service-regions',
+       'target'=>'mgmt',
+       'handler'=>'show_cloud_auth_service_regions_handler',
+       'help-string'=>'Get cloud authentication service deployed regions'}},
+   'cloud-auth-service-metadata'=>
+    {'region_id'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'region_id',
+         'type'=>'string',
+         'complete-handler'=>'cas-region-custom-completer',
+         'help-string'=>'Region name'}},
+     'force_refresh'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'force_refresh',
+         'optional'=>'yes',
+         'type'=>'bool',
+         'default'=>'no',
+         'help-string'=>'Refresh region metadata, even if still valid'}},
+     :obj=>:sequence,
+     :attributes=>
+      {'name'=>'cloud-auth-service-metadata',
+       'target'=>'mgmt',
+       'handler'=>'show_cloud_auth_service_metadata_handler',
+       'help-string'=>
+        'Get cloud authentication service metadata for a region'}},
+   'cloud-auth-service-tenants'=>
+    {'region_id'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'region_id',
+         'type'=>'string',
+         'complete-handler'=>'cas-region-custom-completer',
+         'help-string'=>'Region name'}},
+     :obj=>:sequence,
+     :attributes=>
+      {'name'=>'cloud-auth-service-tenants',
+       'target'=>'mgmt',
+       'handler'=>'show_cloud_auth_service_tenants_handler',
+       'help-string'=>
+        'Get cloud authentication service tenants for a region'}},
+   'cloud-auth-service-profiles'=>
+    {'tenant_id'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'tenant_id',
+         'type'=>'string',
+         'complete-handler'=>'cas-tenant-custom-completer',
+         'help-string'=>'Tenant name'}},
+     'region_id'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'region_id',
+         'type'=>'string',
+         'complete-handler'=>'cas-region-custom-completer',
+         'help-string'=>'Region name'}},
+     :obj=>:sequence,
+     :attributes=>
+      {'name'=>'cloud-auth-service-profiles',
+       'target'=>'mgmt',
+       'handler'=>'show_cloud_auth_service_profiles_handler',
+       'help-string'=>
+        'Get cloud authentication service profiles of a tenant for a region'}},
    'object'=>
     {'static'=>
       {'ip'=>
@@ -5156,10 +5473,206 @@ module PaloAlto
        'target'=>'mgmt',
        'handler'=>'show_sctp_value_list'}},
    'config'=>
-    {'list'=>
+    {'commit-scope'=>
+      {'partial'=>
+        {'object-xpaths'=>
+          {'member'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'member',
+               'type'=>'string',
+               'regex'=>'.*',
+               'maxlen'=>'1024'}},
+           :obj=>:array,
+           :attributes=>
+            {'name'=>'object-xpaths', 'optional'=>'yes', 'default'=>'all'}},
+         'admin'=>
+          {'member'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'member',
+               'type'=>'string',
+               'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$',
+               'maxlen'=>'63'}},
+           :obj=>:array,
+           :attributes=>
+            {'name'=>'admin', 'optional'=>'yes', 'default'=>'all'}},
+         'shared-object'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'shared-object', 'type'=>'enum', 'optional'=>'yes'}},
+         'device-and-network'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'device-and-network', 'type'=>'enum', 'optional'=>'yes'}},
+         'shared-object-write'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'shared-object-write',
+             'internal'=>'yes',
+             'type'=>'enum',
+             'optional'=>'yes'}},
+         'no-device-group'=>
+          {:obj=>:sequence,
+           :attributes=>{'name'=>'no-device-group', 'optional'=>'yes'}},
+         'device-group'=>
+          {'member'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+           :obj=>:array,
+           :attributes=>{'name'=>'device-group', 'optional'=>'yes'}},
+         'no-template'=>
+          {:obj=>:sequence,
+           :attributes=>{'name'=>'no-template', 'optional'=>'yes'}},
+         'template'=>
+          {'member'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+           :obj=>:array,
+           :attributes=>{'name'=>'template', 'optional'=>'yes'}},
+         'no-template-stack'=>
+          {:obj=>:sequence,
+           :attributes=>{'name'=>'no-template-stack', 'optional'=>'yes'}},
+         'template-stack'=>
+          {'member'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+           :obj=>:array,
+           :attributes=>{'name'=>'template-stack', 'optional'=>'yes'}},
+         'no-log-collector'=>
+          {:obj=>:sequence,
+           :attributes=>{'name'=>'no-log-collector', 'optional'=>'yes'}},
+         'log-collector'=>
+          {'member'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+           :obj=>:array,
+           :attributes=>{'name'=>'log-collector', 'optional'=>'yes'}},
+         'no-log-collector-group'=>
+          {:obj=>:sequence,
+           :attributes=>{'name'=>'no-log-collector-group', 'optional'=>'yes'}},
+         'log-collector-group'=>
+          {'member'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+           :obj=>:array,
+           :attributes=>{'name'=>'log-collector-group', 'optional'=>'yes'}},
+         'no-wildfire-appliance'=>
+          {:obj=>:sequence,
+           :attributes=>{'name'=>'no-wildfire-appliance', 'optional'=>'yes'}},
+         'wildfire-appliance'=>
+          {'member'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+           :obj=>:array,
+           :attributes=>{'name'=>'wildfire-appliance', 'optional'=>'yes'}},
+         'no-wildfire-appliance-cluster'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'no-wildfire-appliance-cluster', 'optional'=>'yes'}},
+         'wildfire-appliance-cluster'=>
+          {'member'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+           :obj=>:array,
+           :attributes=>
+            {'name'=>'wildfire-appliance-cluster', 'optional'=>'yes'}},
+         'no-plugins'=>
+          {:obj=>:sequence,
+           :attributes=>{'name'=>'no-plugins', 'optional'=>'yes'}},
+         'plugins'=>
+          {'member'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+           :obj=>:array,
+           :attributes=>{'name'=>'plugins', 'optional'=>'yes'}},
+         :obj=>:sequence,
+         :attributes=>{'name'=>'partial', 'optional'=>'yes'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'optional'=>'yes',
+         'name'=>'commit-scope',
+         'help-string'=>'Commit Scope',
+         'handler'=>'show_partial_commit_scope_handler'}},
+     'push-scope'=>
+      {'admin'=>
+        {'member'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'member',
+             'optional'=>'yes',
+             'type'=>'string',
+             'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$',
+             'help-string'=>'Admin who committed the change'}},
+         :obj=>:array,
+         :attributes=>{'name'=>'admin', 'optional'=>'yes'}},
+       'device-group'=>
+        {'member'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'member',
+             'optional'=>'yes',
+             'type'=>'string',
+             'help-string'=>'Location of the committed change',
+             'complete-handler'=>
+              '$config/devices/entry/device-group/entry/@name'}},
+         :obj=>:array,
+         :attributes=>{'name'=>'device-group', 'optional'=>'yes'}},
+       'template-stack'=>
+        {'member'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'member',
+             'optional'=>'yes',
+             'type'=>'string',
+             'help-string'=>'Location of the committed change',
+             'complete-handler'=>
+              '$config/devices/entry/template-stack/entry/@name'}},
+         :obj=>:array,
+         :attributes=>{'name'=>'template-stack', 'optional'=>'yes'}},
+       'pushed-changes'=>
+        {:obj=>:element,
+         :attributes=>
+          {'optional'=>'yes',
+           'name'=>'pushed-changes',
+           'type'=>'bool',
+           'default'=>'no'}},
+       'list-admins'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'optional'=>'yes',
+           'name'=>'list-admins',
+           'help-string'=>'Selective push admins',
+           'handler'=>'show_config_push_admins'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'optional'=>'yes',
+         'name'=>'push-scope',
+         'help-string'=>'Push Scope',
+         'handler'=>'show_partial_push_scope_handler'}},
+     'list'=>
       {'admins'=>
         {'partial'=>
-          {'admin'=>
+          {'object-xpaths'=>
+            {'member'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'member',
+                 'type'=>'string',
+                 'regex'=>'.*',
+                 'maxlen'=>'1024'}},
+             :obj=>:array,
+             :attributes=>
+              {'name'=>'object-xpaths', 'optional'=>'yes', 'default'=>'all'}},
+           'admin'=>
             {'member'=>
               {:obj=>:element,
                :attributes=>
@@ -5261,6 +5774,16 @@ module PaloAlto
              :obj=>:array,
              :attributes=>
               {'name'=>'wildfire-appliance-cluster', 'optional'=>'yes'}},
+           'no-plugins'=>
+            {:obj=>:sequence,
+             :attributes=>{'name'=>'no-plugins', 'optional'=>'yes'}},
+           'plugins'=>
+            {'member'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+             :obj=>:array,
+             :attributes=>{'name'=>'plugins', 'optional'=>'yes'}},
            :obj=>:sequence,
            :attributes=>{'name'=>'partial', 'optional'=>'yes'}},
          :obj=>:sequence,
@@ -5271,7 +5794,18 @@ module PaloAlto
            'handler'=>'admins_in_access_domain_handler'}},
        'changes'=>
         {'partial'=>
-          {'admin'=>
+          {'object-xpaths'=>
+            {'member'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'member',
+                 'type'=>'string',
+                 'regex'=>'.*',
+                 'maxlen'=>'1024'}},
+             :obj=>:array,
+             :attributes=>
+              {'name'=>'object-xpaths', 'optional'=>'yes', 'default'=>'all'}},
+           'admin'=>
             {'member'=>
               {:obj=>:element,
                :attributes=>
@@ -5373,6 +5907,16 @@ module PaloAlto
              :obj=>:array,
              :attributes=>
               {'name'=>'wildfire-appliance-cluster', 'optional'=>'yes'}},
+           'no-plugins'=>
+            {:obj=>:sequence,
+             :attributes=>{'name'=>'no-plugins', 'optional'=>'yes'}},
+           'plugins'=>
+            {'member'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+             :obj=>:array,
+             :attributes=>{'name'=>'plugins', 'optional'=>'yes'}},
            :obj=>:sequence,
            :attributes=>{'name'=>'partial', 'optional'=>'yes'}},
          :obj=>:sequence,
@@ -6848,7 +7392,11 @@ module PaloAlto
          :obj=>:union,
          :attributes=>{'name'=>'pcap-dump', 'optional'=>'yes'}},
        :obj=>:sequence,
-       :attributes=>{'name'=>'gtp', 'help-string'=>'Show GTP logs'}},
+       :attributes=>
+        {'name'=>'gtp',
+         'prune-on-sdb'=>
+          'cfg.platform.model=PA-3410,cfg.platform.model=PA-3420',
+         'help-string'=>'Show GTP logs'}},
      'sctp'=>
       {'direction'=>
         {'equal'=>
@@ -11841,6 +12389,81 @@ module PaloAlto
        :obj=>:sequence,
        :attributes=>
         {'name'=>'globalprotect', 'help-string'=>'Show globalprotect logs'}},
+     'trace'=>
+      {'direction'=>
+        {'equal'=>
+          {:obj=>:element, :attributes=>{'name'=>'equal', 'type'=>'enum'}},
+         :obj=>:union,
+         :attributes=>{'name'=>'direction', 'optional'=>'yes'}},
+       'csv-output'=>
+        {'equal'=>
+          {:obj=>:element, :attributes=>{'name'=>'equal', 'type'=>'enum'}},
+         :obj=>:union,
+         :attributes=>{'name'=>'csv-output', 'optional'=>'yes'}},
+       'query'=>
+        {'equal'=>
+          {:obj=>:element, :attributes=>{'name'=>'equal', 'type'=>'string'}},
+         :obj=>:union,
+         :attributes=>{'name'=>'query', 'optional'=>'yes'}},
+       'receive_time'=>
+        {'in'=>{:obj=>:element, :attributes=>{'name'=>'in', 'type'=>'enum'}},
+         :obj=>:union,
+         :attributes=>{'name'=>'receive_time', 'optional'=>'yes'}},
+       'start-time'=>
+        {'equal'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'equal',
+             'type'=>'string',
+             'help-string'=>
+              'Datetime YYYY/MM/DD@hh:mm:ss (e.g. 2006/08/01@10:00:00)',
+             'regex'=>
+              '2[0-9][0-9][0-9]/([0][1-9]|[1][0-2])/([1-2][0-9]|0[1-9]|[3][0-1])@([01][0-9]|[2][0-3]):([0-5][0-9]):([0-5][0-9])',
+             'minlen'=>'12',
+             'maxlen'=>'20'}},
+         :obj=>:union,
+         :attributes=>{'name'=>'start-time', 'optional'=>'yes'}},
+       'end-time'=>
+        {'equal'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'equal',
+             'type'=>'string',
+             'help-string'=>
+              'Datetime YYYY/MM/DD@hh:mm:ss (e.g. 2006/08/01@10:00:00)',
+             'regex'=>
+              '2[0-9][0-9][0-9]/([0][1-9]|[1][0-2])/([1-2][0-9]|0[1-9]|[3][0-1])@([01][0-9]|[2][0-3]):([0-5][0-9]):([0-5][0-9])',
+             'minlen'=>'12',
+             'maxlen'=>'20'}},
+         :obj=>:union,
+         :attributes=>{'name'=>'end-time', 'optional'=>'yes'}},
+       'serial'=>
+        {'equal'=>
+          {:obj=>:element, :attributes=>{'name'=>'equal', 'type'=>'string'}},
+         'not-equal'=>
+          {:obj=>:element,
+           :attributes=>{'name'=>'not-equal', 'type'=>'string'}},
+         :obj=>:union,
+         :attributes=>{'name'=>'serial', 'optional'=>'yes'}},
+       'sessionid'=>
+        {'equal'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'equal',
+             'type'=>'rangedint',
+             'min'=>'0',
+             'max'=>'4294967295'}},
+         'not-equal'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'not-equal',
+             'type'=>'rangedint',
+             'min'=>'0',
+             'max'=>'4294967295'}},
+         :obj=>:union,
+         :attributes=>{'name'=>'sessionid', 'optional'=>'yes'}},
+       :obj=>:sequence,
+       :attributes=>{'name'=>'trace', 'help-string'=>'Show trace logs'}},
      :obj=>:union,
      :attributes=>
       {'name'=>'log',
@@ -12637,6 +13260,15 @@ module PaloAlto
          'maxlen'=>'126',
          'target'=>'mgmt',
          'help-string'=>'direction (ascending/descending)'}},
+     'mode'=>
+      {:obj=>:element,
+       :attributes=>
+        {'optional'=>'yes',
+         'name'=>'mode',
+         'type'=>'string',
+         'maxlen'=>'126',
+         'target'=>'mgmt',
+         'help-string'=>'mode (get-all/app-seen-only/rule-name-only)'}},
      'recordInfo'=>
       {:obj=>:element,
        :attributes=>
@@ -12730,6 +13362,48 @@ module PaloAlto
        'target'=>'mgmt',
        'handler'=>'show_policy_app_details',
        'help-string'=>'Show Policy App details'}},
+   'policy-app-match'=>
+    {'apps'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'member',
+           'type'=>'string',
+           'maxlen'=>'31',
+           'regex'=>'[0-9a-zA-Z._-]'}},
+       :obj=>:array,
+       :attributes=>{'name'=>'apps', 'help-string'=>'List of Apps'}},
+     'type'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'type',
+         'type'=>'string',
+         'maxlen'=>'512',
+         'target'=>'mgmt',
+         'help-string'=>'Rulebase-Type'}},
+     'position'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'position',
+         'type'=>'string',
+         'maxlen'=>'512',
+         'target'=>'mgmt',
+         'help-string'=>'Position'}},
+     'vsysName'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'vsysName',
+         'type'=>'string',
+         'maxlen'=>'512',
+         'target'=>'mgmt',
+         'help-string'=>'Device Group Name'}},
+     :obj=>:sequence,
+     :attributes=>
+      {'name'=>'policy-app-match',
+       'hidden'=>'yes',
+       'target'=>'mgmt',
+       'handler'=>'show_policy_app_match',
+       'help-string'=>'Show Policy App Matches'}},
    'policy-app-statistics'=>
     {'vsysName'=>
       {:obj=>:element,
@@ -13335,6 +14009,14 @@ module PaloAlto
          'help-string'=>'List important files in the system',
          'target'=>'script',
          'handler'=>'/bin/ls -lhRtr /var/cores/ /opt/panlogs/cores/'}},
+     'pancfg-directory-usage'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'pancfg-directory-usage',
+         'help-string'=>
+          'List directory usage in the pancfg partition with max-depth three',
+         'target'=>'script',
+         'handler'=>'/bin/du -hx --max-depth=3 /opt/pancfg | sort -rh'}},
      'state'=>
       {'filter'=>
         {:obj=>:element,
@@ -13447,6 +14129,27 @@ module PaloAlto
      :attributes=>
       {'name'=>'deployment-update-schedule',
        'help-string'=>'Show deployment update schedule'}},
+   'push-schedule'=>
+    {'status'=>
+      {'name'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'name',
+           'type'=>'string',
+           'maxlen'=>'63',
+           'help-string'=>'Name of pushschedule',
+           'complete-handler'=>
+            '$config/devices/entry/deviceconfig/system/push-schedule/entry/@name'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'status',
+         'handler'=>'show_push_schedule_status',
+         'help-string'=>'Show push schedule status'}},
+     :obj=>:union,
+     :attributes=>
+      {'name'=>'push-schedule',
+       'help-string'=>'Show push schedule',
+       'feature'=>'sched-policy-push'}},
    'dhcp'=>
     {'mgmt-interface-state'=>
       {:obj=>:element,
@@ -13732,6 +14435,7 @@ module PaloAlto
           {'name'=>'match-user',
            'type'=>'string',
            'regex'=>'^[^[:cntrl:]]+$',
+           'maxlen'=>'64',
            'optional'=>'yes',
            'help-string'=>'Show only the user(s) that match the string'}},
        :obj=>:sequence,
@@ -13804,6 +14508,60 @@ module PaloAlto
          'target'=>'useridd',
          'handler'=>'show_ldap_device_serialno',
          'help-string'=>'Show devices in ldap device serial number database'}},
+     'cloud-identity-engine'=>
+      {'status'=>
+        {'all'=>
+          {:obj=>:sequence,
+           :attributes=>{'name'=>'all', 'help-string'=>'Show all'}},
+         'name'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'name',
+             'type'=>'string',
+             'help-string'=>'name',
+             'complete-handler'=>
+              '$config/panorama/cloud-identity-engine/entry/@name'}},
+         :obj=>:union,
+         :attributes=>
+          {'name'=>'status',
+           'handler'=>'show_dirsync_status',
+           'timeout'=>'120',
+           'help-string'=>'Show status of one or all'}},
+       'statistics'=>
+        {'all'=>
+          {:obj=>:sequence,
+           :attributes=>{'name'=>'all', 'help-string'=>'Show all'}},
+         'name'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'name',
+             'type'=>'string',
+             'help-string'=>'name',
+             'complete-handler'=>
+              '$config/panorama/cloud-identity-engine/entry/@name'}},
+         :obj=>:union,
+         :attributes=>
+          {'name'=>'statistics',
+           'handler'=>'show_dirsync_stats',
+           'timeout'=>'120',
+           'help-string'=>'Show cloud identity engine statistics'}},
+       'client'=>
+        {'statistics'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'statistics',
+             'help-string'=>'Show cloud identity engine client statistics'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'client',
+           'handler'=>'show_dirsync_client',
+           'timeout'=>'120',
+           'help-string'=>'Show cloud identity engine client'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'cloud-identity-engine',
+         'needvsys'=>'yes',
+         'help-string'=>'Show cloud identity engine status'}},
      :obj=>:union,
      :attributes=>
       {'name'=>'user',
@@ -13861,7 +14619,10 @@ module PaloAlto
      'type'=>
       {:obj=>:element,
        :attributes=>
-        {'optional'=>'yes', 'name'=>'type', 'type'=>'string', 'maxlen'=>'31'}},
+        {'optional'=>'yes',
+         'name'=>'type',
+         'type'=>'multiple',
+         'maxlen'=>'31'}},
      :obj=>:sequence,
      :attributes=>
       {'name'=>'usergroup',
@@ -13891,7 +14652,10 @@ module PaloAlto
      'type'=>
       {:obj=>:element,
        :attributes=>
-        {'optional'=>'yes', 'name'=>'type', 'type'=>'string', 'maxlen'=>'31'}},
+        {'optional'=>'yes',
+         'name'=>'type',
+         'type'=>'multiple',
+         'maxlen'=>'31'}},
      :obj=>:sequence,
      :attributes=>
       {'name'=>'all-usergroups',
@@ -13963,7 +14727,8 @@ module PaloAlto
          :attributes=>
           {'name'=>'member',
            'type'=>'string',
-           'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$'}},
+           'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$',
+           'maxlen'=>'63'}},
        :obj=>:array,
        :attributes=>
         {'optional'=>'yes', 'name'=>'users', 'help-string'=>'user list'}},
@@ -13982,6 +14747,144 @@ module PaloAlto
        'needvsys'=>'yes',
        'handler'=>'show_usergroup_tags',
        'help-string'=>'Show user group tags completions by substring'}},
+   'cloud-identity-engine-userid'=>
+    {'vsys'=>
+      {:obj=>:element,
+       :attributes=>{'name'=>'vsys', 'type'=>'string', 'maxlen'=>'31'}},
+     'profiles'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'member',
+           'type'=>'string',
+           'complete-handler'=>
+            '$config/panorama/cloud-identity-engine/entry/@name'}},
+       :obj=>:array,
+       :attributes=>
+        {'name'=>'profiles',
+         'optional'=>'yes',
+         'help-string'=>'cloud identity engine profile list'}},
+     'substring'=>
+      {:obj=>:element,
+       :attributes=>
+        {'optional'=>'yes',
+         'name'=>'substring',
+         'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$',
+         'type'=>'string',
+         'maxlen'=>'63'}},
+     'max-count'=>
+      {:obj=>:element,
+       :attributes=>
+        {'optional'=>'yes',
+         'name'=>'max-count',
+         'type'=>'rangedint',
+         'min'=>'1',
+         'max'=>'65535',
+         'default'=>'100'}},
+     :obj=>:sequence,
+     :attributes=>
+      {'name'=>'cloud-identity-engine-userid',
+       'internal'=>'yes',
+       'target'=>'useridd',
+       'needvsys'=>'yes',
+       'timeout'=>'120',
+       'handler'=>'show_dirsync_username',
+       'help-string'=>'Show userid completions by substring'}},
+   'cloud-identity-engine-usergroup'=>
+    {'vsys'=>
+      {:obj=>:element,
+       :attributes=>{'name'=>'vsys', 'type'=>'string', 'maxlen'=>'31'}},
+     'profiles'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'member',
+           'type'=>'string',
+           'complete-handler'=>
+            '$config/panorama/cloud-identity-engine/entry/@name'}},
+       :obj=>:array,
+       :attributes=>
+        {'name'=>'profiles',
+         'optional'=>'yes',
+         'help-string'=>'cloud identity engine profile list'}},
+     'substring'=>
+      {:obj=>:element,
+       :attributes=>
+        {'optional'=>'yes',
+         'name'=>'substring',
+         'type'=>'string',
+         'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$',
+         'maxlen'=>'63'}},
+     'max-count'=>
+      {:obj=>:element,
+       :attributes=>
+        {'optional'=>'yes',
+         'name'=>'max-count',
+         'type'=>'rangedint',
+         'min'=>'1',
+         'max'=>'65535',
+         'default'=>'100'}},
+     :obj=>:sequence,
+     :attributes=>
+      {'name'=>'cloud-identity-engine-usergroup',
+       'internal'=>'yes',
+       'target'=>'useridd',
+       'needvsys'=>'yes',
+       'timeout'=>'120',
+       'handler'=>'show_dirsync_usergroup',
+       'help-string'=>'Show user group completions by substring'}},
+   'cloud-identity-engine-all-usergroups'=>
+    {'substring'=>
+      {:obj=>:element,
+       :attributes=>
+        {'optional'=>'yes',
+         'name'=>'substring',
+         'type'=>'string',
+         'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$',
+         'maxlen'=>'63'}},
+     'max-count'=>
+      {:obj=>:element,
+       :attributes=>
+        {'optional'=>'yes',
+         'name'=>'max-count',
+         'type'=>'rangedint',
+         'min'=>'1',
+         'max'=>'65535',
+         'default'=>'100'}},
+     'profiles'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'member',
+           'type'=>'string',
+           'complete-handler'=>
+            '$config/panorama/cloud-identity-engine/entry/@name'}},
+       :obj=>:array,
+       :attributes=>
+        {'name'=>'profiles',
+         'optional'=>'yes',
+         'help-string'=>'cloud identity engine list'}},
+     :obj=>:sequence,
+     :attributes=>
+      {'name'=>'cloud-identity-engine-all-usergroups',
+       'internal'=>'yes',
+       'target'=>'useridd',
+       'timeout'=>'120',
+       'handler'=>'show_dirsync_usergroup_all',
+       'help-string'=>'Show all user group completions'}},
+   'cloud-identity-engine-region-count'=>
+    {'vsys'=>
+      {:obj=>:element,
+       :attributes=>{'name'=>'vsys', 'type'=>'string', 'maxlen'=>'31'}},
+     :obj=>:sequence,
+     :attributes=>
+      {'name'=>'cloud-identity-engine-region-count',
+       'internal'=>'yes',
+       'target'=>'useridd',
+       'needvsys'=>'yes',
+       'timeout'=>'120',
+       'handler'=>'show_dirsync_region_count',
+       'help-string'=>'Show total number of available regions'}},
    'redistribution'=>
     {'agent'=>
       {'statistics'=>
@@ -14132,6 +15035,12 @@ module PaloAlto
             {'name'=>'verdict',
              'optional'=>'yes',
              'help-string'=>'Show verdict counters'}},
+         'conn-status'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'conn-status',
+             'optional'=>'yes',
+             'help-string'=>'Show gRPC connection status'}},
          :obj=>:sequence,
          :attributes=>
           {'name'=>'statistics',
@@ -14154,6 +15063,436 @@ module PaloAlto
       {'name'=>'iot',
        'help-string'=>'Show iot information',
        'target'=>'iotd'}},
+   'policy-recommendation'=>
+    {'iot'=>
+      {'max-count'=>
+        {:obj=>:element,
+         :attributes=>
+          {'optional'=>'yes',
+           'name'=>'max-count',
+           'type'=>'rangedint',
+           'min'=>'1',
+           'max'=>'200',
+           'default'=>'100'}},
+       'start'=>
+        {:obj=>:element,
+         :attributes=>
+          {'optional'=>'yes',
+           'name'=>'start',
+           'type'=>'rangedint',
+           'min'=>'0',
+           'default'=>'0'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'iot',
+         'target'=>'iotd',
+         'handler'=>'show_policy_recommendation_iot',
+         'timeout'=>'120',
+         'help-string'=>'Show IoT policy recommendation'}},
+     'saas'=>
+      {'max-count'=>
+        {:obj=>:element,
+         :attributes=>
+          {'optional'=>'yes',
+           'name'=>'max-count',
+           'type'=>'rangedint',
+           'min'=>'1',
+           'max'=>'200',
+           'default'=>'100'}},
+       'start'=>
+        {:obj=>:element,
+         :attributes=>
+          {'optional'=>'yes',
+           'name'=>'start',
+           'type'=>'rangedint',
+           'min'=>'0',
+           'default'=>'0'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'saas',
+         'target'=>'iotd',
+         'handler'=>'show_policy_recommendation_saas',
+         'timeout'=>'120',
+         'help-string'=>'Show SAAS policy recommendation'}},
+     :obj=>:union,
+     :attributes=>
+      {'name'=>'policy-recommendation',
+       'help-string'=>'Show policy-recommendation information',
+       'target'=>'iotd'}},
+   'cloud-appid'=>
+    {'application'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'application',
+         'type'=>'multiple',
+         'help-string'=>'Show Application info for UI'}},
+     'connection-to-cloud'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'connection-to-cloud',
+         'optional'=>'yes',
+         'help-string'=>
+          'Show gRPC connection status to cloud application server'}},
+     'version'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'version',
+         'optional'=>'yes',
+         'help-string'=>'Show Cloud-AppID version'}},
+     'application-filter'=>
+      {'all'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'all',
+           'optional'=>'yes',
+           'help-string'=>'Show cloud apps in all application-filters'}},
+       'option'=>
+        {'vsys'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'vsys',
+             'type'=>'string',
+             'help-string'=>'Virtual System',
+             'complete-handler'=>'$device/vsys/entry/@name'}},
+         'name'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'name',
+             'type'=>'string',
+             'maxlen'=>'64',
+             'help-string'=>'Application filter name'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'option',
+           'optional'=>'yes',
+           'help-string'=>'Show cloud apps matching specific filter'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'application-filter',
+         'optional'=>'yes',
+         'help-string'=>'Show cloud apps in application-filters'}},
+     'app-to-filtergroup-mapping'=>
+      {'all'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'all',
+           'optional'=>'yes',
+           'help-string'=>'Show all mappings'}},
+       'count'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'count',
+           'optional'=>'yes',
+           'help-string'=>'Show number of mappings'}},
+       'statistics'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'statistics',
+           'optional'=>'yes',
+           'help-string'=>'Show all mappings'}},
+       'batch-idx'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'batch-idx',
+           'optional'=>'yes',
+           'type'=>'rangedint',
+           'min'=>'1',
+           'max'=>'1000000',
+           'help-string'=>
+            'Index in multiples of 500. Ex: 0-500 is batch-idx 1'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'app-to-filtergroup-mapping',
+         'optional'=>'yes',
+         'help-string'=>'Show application to matched filter and groups'}},
+     'application-group'=>
+      {'all'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'all',
+           'optional'=>'yes',
+           'help-string'=>'Show cloud apps in all application-groups'}},
+       'option'=>
+        {'vsys'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'vsys',
+             'type'=>'string',
+             'help-string'=>'Virtual System',
+             'complete-handler'=>'$device/vsys/entry/@name'}},
+         'name'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'name',
+             'type'=>'string',
+             'maxlen'=>'64',
+             'help-string'=>'Application-group name'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'option',
+           'optional'=>'yes',
+           'help-string'=>'Show cloud apps in specific group'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'application-group',
+         'optional'=>'yes',
+         'help-string'=>'Show cloud apps in application-groups'}},
+     'task'=>
+      {'all'=>
+        {'option'=>
+          {:obj=>:element,
+           :attributes=>{'name'=>'option', 'type'=>'enum', 'optional'=>'yes'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'all',
+           'optional'=>'yes',
+           'help-string'=>'Show all cloud application tasks'}},
+       'statistics'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'statistics',
+           'help-string'=>'statistics of task management'}},
+       'task-index'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'task-index',
+           'optional'=>'yes',
+           'type'=>'string',
+           'maxlen'=>'8',
+           'help-string'=>'task index'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'task', 'help-string'=>'Show task on management-plane'}},
+     'transaction'=>
+      {'all'=>
+        {'option'=>
+          {:obj=>:element,
+           :attributes=>{'name'=>'option', 'type'=>'enum', 'optional'=>'yes'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'all',
+           'optional'=>'yes',
+           'help-string'=>'Show all transactions'}},
+       'trans-index'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'trans-index',
+           'optional'=>'yes',
+           'type'=>'string',
+           'maxlen'=>'8',
+           'help-string'=>'task index'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'transaction',
+         'help-string'=>'Show cloud application transaction'}},
+     'cloud-app-data'=>
+      {'container'=>
+        {'all'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'all', 'help-string'=>'Show all application containers'}},
+         'statistics'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'statistics',
+             'help-string'=>'statistics of cloud application containers'}},
+         'container-id'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'container-id',
+             'type'=>'string',
+             'maxlen'=>'31',
+             'help-string'=>'application container id'}},
+         'container-name'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'container-name',
+             'type'=>'string',
+             'maxlen'=>'64',
+             'help-string'=>'application container name'}},
+         :obj=>:union,
+         :attributes=>
+          {'name'=>'container',
+           'help-string'=>
+            'Show application containers downloaded from cloud server'}},
+       'application'=>
+        {'all'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'all', 'help-string'=>'Show all cloud applications'}},
+         'statistics'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'statistics',
+             'help-string'=>'statistics of cloud applications'}},
+         'app-id'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'app-id',
+             'type'=>'string',
+             'maxlen'=>'31',
+             'help-string'=>'application id'}},
+         'cloud-app-name'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'cloud-app-name',
+             'type'=>'string',
+             'maxlen'=>'64',
+             'help-string'=>'application name'}},
+         :obj=>:union,
+         :attributes=>
+          {'name'=>'application',
+           'help-string'=>'Show application downloaded from cloud server'}},
+       'app-metadata'=>
+        {'payload'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'payload', 'help-string'=>'Show application metadata'}},
+         'statistics'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'statistics',
+             'help-string'=>'statistics of application metadata'}},
+         :obj=>:union,
+         :attributes=>
+          {'name'=>'app-metadata',
+           'help-string'=>
+            'Show application metadata downloaded from cloud server'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'cloud-app-data',
+         'help-string'=>'Show cloud application, container and metadata'}},
+     'signature-dp'=>
+      {'ignored-cloudapp'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'ignored-cloudapp',
+           'target'=>'mgmt',
+           'handler'=>'show_ignored_cloudapp_handler',
+           'help-string'=>'Show ignored cloud apps'}},
+       'pending-request'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'pending-request',
+           'optional'=>'yes',
+           'help-string'=>'Show pending signature requests on MP'}},
+       'statistics'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'statistics',
+           'optional'=>'yes',
+           'help-string'=>'show signature statistics'}},
+       'application-dp-all'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'application-dp-all',
+           'optional'=>'yes',
+           'help-string'=>'show all applications used on DP'}},
+       'app-sig-mapping'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'app-sig-mapping',
+           'optional'=>'yes',
+           'help-string'=>'show signatures-to-application mappings'}},
+       'app-container-mapping'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'app-container-mapping',
+           'optional'=>'yes',
+           'help-string'=>'show application-to-container mappings'}},
+       'appid'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'appid',
+           'type'=>'string',
+           'maxlen'=>'31',
+           'help-string'=>'check if application is used on dp'}},
+       'app-signature'=>
+        {'all'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'all', 'help-string'=>'Show all application signatures'}},
+         'statistics'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'statistics',
+             'help-string'=>'statistics of cloud application signatures'}},
+         'signature-id'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'signature-id',
+             'type'=>'string',
+             'maxlen'=>'31',
+             'help-string'=>'signature id'}},
+         'cloud-app-name'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'cloud-app-name',
+             'type'=>'string',
+             'maxlen'=>'64',
+             'help-string'=>'application name'}},
+         :obj=>:union,
+         :attributes=>
+          {'name'=>'app-signature',
+           'help-string'=>'Show signatures used on DP'}},
+       'threat-signature'=>
+        {'all'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'all', 'help-string'=>'Show all threat signatures'}},
+         'statistics'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'statistics',
+             'help-string'=>'statistics of cloud threat signatures'}},
+         'threat-id'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'threat-id',
+             'type'=>'string',
+             'maxlen'=>'31',
+             'help-string'=>'threat id'}},
+         'cloud-app-name'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'cloud-app-name',
+             'type'=>'string',
+             'maxlen'=>'64',
+             'help-string'=>'application name'}},
+         :obj=>:union,
+         :attributes=>
+          {'name'=>'threat-signature',
+           'help-string'=>'Show threat signatures used on DP'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'signature-dp',
+         'help-string'=>'Show cloud signatures and applications used on DP'}},
+     'overlap-appid'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'overlap-appid',
+         'optional'=>'yes',
+         'help-string'=>'Show duplicated applications in predefined content'}},
+     'ha-info'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'ha-info',
+         'optional'=>'yes',
+         'help-string'=>
+          'Show statistics of cloud application high availability'}},
+     'app-objects-in-policy'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'app-objects-in-policy',
+         'optional'=>'yes',
+         'help-string'=>
+          'Show application-filter/application-groups referred in policy'}},
+     :obj=>:union,
+     :attributes=>
+      {'name'=>'cloud-appid',
+       'target'=>'iotd',
+       'handler'=>'show_cloud_appid',
+       'help-string'=>'Show cloud appid information'}},
    'management-tunnel'=>
     {'certificates'=>
       {:obj=>:sequence,
@@ -14341,7 +15680,31 @@ module PaloAlto
      'target'=>'mgmt',
      'help-string'=>'Show operational parameters'}},
  'debug'=>
-  {'device-telemetry'=>
+  {'use-proxy-for-email-server'=>
+    {'disabled'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'disabled',
+         'target'=>'script',
+         'handler'=>'/usr/local/bin/sdb cfg.email-use-proxy=0'}},
+     'enabled'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'enabled',
+         'target'=>'script',
+         'handler'=>'/usr/local/bin/sdb cfg.email-use-proxy=1'}},
+     'show'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'show',
+         'target'=>'script',
+         'handler'=>'/usr/local/bin/sdb -n cfg.email-use-proxy'}},
+     :obj=>:union,
+     :attributes=>
+      {'name'=>'use-proxy-for-email-server',
+       'help-string'=>
+        'Setting default option for using Proxy Settings for Email server'}},
+   'device-telemetry'=>
     {'refresh-dest-server'=>
       {:obj=>:sequence,
        :attributes=>
@@ -14355,6 +15718,29 @@ module PaloAlto
       {'name'=>'device-telemetry',
        'roles'=>'superuser',
        'help-string'=>'Device Telemetry debug commands'}},
+   'ui'=>
+    {'telemetry'=>
+      {'enabled'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'enabled',
+           'help-string'=>'Enable Pendo',
+           'handler'=>
+            '/usr/local/bin/sdb -n cfg.ui.telemetry.disabled=False'}},
+       'disabled'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'disabled',
+           'help-string'=>'Disable Pendo',
+           'handler'=>'/usr/local/bin/sdb -n cfg.ui.telemetry.disabled=True'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'telemetry',
+         'roles'=>'superuser,deviceadmin,panorama-admin',
+         'target'=>'script',
+         'help-string'=>'Request to change Pendo support'}},
+     :obj=>:union,
+     :attributes=>{'name'=>'ui', 'help-string'=>'ui'}},
    'iot'=>
     {'global'=>
       {'on'=>
@@ -14422,6 +15808,14 @@ module PaloAlto
          'target'=>'iotd',
          'handler'=>'debug_iotd_clearall',
          'help-string'=>'Clear all iot records in redis'}},
+     'memory'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'memory',
+         'target'=>'iotd',
+         'type'=>'enum',
+         'help-string'=>'Dump memory usage',
+         'handler'=>'show_iotd_memory_usage'}},
      'icd'=>
       {'on'=>
         {:obj=>:element,
@@ -14442,6 +15836,12 @@ module PaloAlto
             {'name'=>'cookie',
              'optional'=>'yes',
              'help-string'=>'clear cookie to trigger Getall'}},
+         'key-value'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'key-value',
+             'type'=>'multiple',
+             'help-string'=>'clear key-value pair in iot component'}},
          :obj=>:sequence,
          :attributes=>
           {'name'=>'reset', 'help-string'=>'verdict related data to reset'}},
@@ -14451,6 +15851,17 @@ module PaloAlto
           {'name'=>'verdict-server',
            'type'=>'multiple',
            'help-string'=>'set verdict server'}},
+       'trigger-app-match'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'trigger-app-match',
+           'help-string'=>'match filters to cloud apps'}},
+       'key-value'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'key-value',
+           'type'=>'multiple',
+           'help-string'=>'pass key-value pair to iot component'}},
        :obj=>:union,
        :attributes=>
         {'name'=>'icd',
@@ -14462,48 +15873,290 @@ module PaloAlto
       {'name'=>'iot',
        'target'=>'script',
        'help-string'=>'debug option for iot daemon'}},
-   'es_reason_whitelist'=>
-    {'add'=>
-      {'reason'=>
+   'cloud-appid'=>
+    {'ace-server'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'ace-server',
+         'type'=>'multiple',
+         'help-string'=>'temporarily set ACE cloud server'}},
+     'reset'=>
+      {'connection-to-cloud'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'connection-to-cloud',
+           'optional'=>'yes',
+           'help-string'=>'reset connection to cloud app server'}},
+       'cloud-app-data'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'cloud-app-data',
+           'optional'=>'yes',
+           'help-string'=>
+            'remove all cloud application data, including application, container and metadata'}},
+       'signature-dp'=>
+        {'option'=>
+          {:obj=>:element,
+           :attributes=>{'name'=>'option', 'type'=>'enum', 'optional'=>'yes'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'signature-dp',
+           'optional'=>'yes',
+           'help-string'=>'remove all cloud signatures',
+           'confirm'=>
+            'All cloud-app signatures will be deleted. Do you want to continue?'}},
+       'task-record'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'task-record',
+           'optional'=>'yes',
+           'help-string'=>'remove all historic task info in memory'}},
+       'pending-request-dp'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'pending-request-dp',
+           'optional'=>'yes',
+           'help-string'=>'remove all signature requests'}},
+       'force-memory-gc'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'force-memory-gc',
+           'optional'=>'yes',
+           'help-string'=>
+            'trigger memory garbage collector to release unused memory'}},
+       'force-data-integrity-check'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'force-data-integrity-check',
+           'optional'=>'yes',
+           'help-string'=>'check cloud data integrity'}},
+       'force-cad-rebuild'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'force-cad-rebuild',
+           'optional'=>'yes',
+           'help-string'=>
+            'force devsrvr to rebuild tdb for cloud app signatures'}},
+       'reload-cloud-data'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'reload-cloud-data',
+           'optional'=>'yes',
+           'help-string'=>'reload cloud-app data from disk files',
+           'confirm'=>
+            'All cloud applications, containers and signatures will be removed from memory and reloaded from local disk files. Do you want to continue?'}},
+       :obj=>:sequence,
+       :attributes=>{'name'=>'reset', 'help-string'=>'ACE data to reset'}},
+     'unknown-signature-query'=>
+      {'appid'=>
         {:obj=>:element,
          :attributes=>
-          {'name'=>'reason',
-           'type'=>'string',
-           'handler'=>'/usr/local/bin/es_wl_reason.py -a \'$reason\'',
-           'help-string'=>'reason to be added'}},
-       :obj=>:sequence,
-       :attributes=>
-        {'name'=>'add',
-         'help-string'=>'add es error reason to the allow list'}},
-     'delete'=>
-      {'reason'=>
+          {'name'=>'appid',
+           'type'=>'multiple',
+           'help-string'=>'cloud application id'}},
+       'app-name'=>
         {:obj=>:element,
          :attributes=>
-          {'name'=>'reason',
-           'type'=>'string',
-           'handler'=>'/usr/local/bin/es_wl_reason.py -d \'$reason\'',
-           'help-string'=>'reason to be deleted'}},
+          {'name'=>'app-name',
+           'type'=>'multiple',
+           'help-string'=>'cloud application name'}},
+       'filter-sig-id'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'filter-sig-id',
+           'type'=>'multiple',
+           'help-string'=>'cloud filter signature id'}},
        :obj=>:sequence,
        :attributes=>
-        {'name'=>'delete',
-         'help-string'=>'delete es error reason to the allow list'}},
-     'clear'=>
-      {:obj=>:sequence,
+        {'name'=>'unknown-signature-query',
+         'help-string'=>
+          'fetch signatures for specific application from ACE cloud'}},
+     'delete-signature-data'=>
+      {'appid'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'appid',
+           'type'=>'multiple',
+           'help-string'=>'cloud application id'}},
+       'app-name'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'app-name',
+           'type'=>'multiple',
+           'help-string'=>'cloud application name'}},
+       'filter-signature-id'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'filter-signature-id',
+           'type'=>'multiple',
+           'help-string'=>'cloud filter signature id'}},
+       :obj=>:sequence,
        :attributes=>
-        {'name'=>'clear',
-         'handler'=>'/usr/local/bin/es_wl_reason.py -c',
-         'help-string'=>'clear all the reasons in the allow list'}},
-     'show'=>
-      {:obj=>:sequence,
+        {'name'=>'delete-signature-data',
+         'help-string'=>'delete cloud application or filter signatures'}},
+     'cloud-manual-pull'=>
+      {'application'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'application',
+           'type'=>'multiple',
+           'help-string'=>'cloud application id'}},
+       'signature-appid'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'signature-appid',
+           'type'=>'multiple',
+           'help-string'=>'cloud application id'}},
+       'signature-id'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'signature-id',
+           'type'=>'multiple',
+           'help-string'=>'cloud application/threat/filter signature id'}},
+       'cookie-base64'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'cookie-base64',
+           'type'=>'multiple',
+           'help-string'=>'fetch cloud data with specific cookie'}},
+       'cookie-base64-and-store'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'cookie-base64-and-store',
+           'type'=>'multiple',
+           'help-string'=>'fetch cloud data and store locally'}},
+       'generate-cookie'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'generate-cookie',
+           'type'=>'multiple',
+           'help-string'=>'generate cookie in base64 format'}},
+       'check-cloud-app-data'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'check-cloud-app-data',
+           'optional'=>'yes',
+           'help-string'=>
+            'check and restore cloud-app data from cloud server'}},
+       'check-cloud-signatures'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'check-cloud-signatures',
+           'optional'=>'yes',
+           'help-string'=>'check and restore signatures from cloud server'}},
+       :obj=>:sequence,
        :attributes=>
-        {'name'=>'show',
-         'handler'=>'/usr/local/bin/es_wl_reason.py -s',
-         'help-string'=>'show all the reasons in the allow list'}},
+        {'name'=>'cloud-manual-pull',
+         'help-string'=>'pull data from ACE cloud directly'}},
+     'set'=>
+      {'config'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'config',
+           'type'=>'multiple',
+           'help-string'=>'cloud internal config'}},
+       :obj=>:sequence,
+       :attributes=>{'name'=>'set', 'help-string'=>'change config'}},
+     'dump'=>
+      {'config'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'config',
+           'optional'=>'yes',
+           'help-string'=>'cloud app internal config on firewall'}},
+       :obj=>:sequence,
+       :attributes=>{'name'=>'dump', 'help-string'=>'dump data'}},
+     'keep-task-file'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'keep-task-file',
+         'type'=>'enum',
+         'help-string'=>'keep temporary task files on disk'}},
      :obj=>:union,
      :attributes=>
-      {'name'=>'es_reason_whitelist',
-       'roles'=>'superuser',
-       'target'=>'script'}},
+      {'name'=>'cloud-appid',
+       'target'=>'iotd',
+       'handler'=>'debug_cloud_appid',
+       'help-string'=>'debug option for cloud application'}},
+   'elasticsearch'=>
+    {'es-state'=>
+      {'option'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'option', 'type'=>'enum', 'help-string'=>'what to check'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'es-state',
+         'target'=>'script',
+         'handler'=>'/usr/local/bin/es_cat.sh $option?v',
+         'help-string'=>'elasticsearch current state'}},
+     'es-alias-mapping'=>
+      {'logtype'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'logtype',
+           'type'=>'enum',
+           'help-string'=>'which log type'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'es-alias-mapping',
+         'target'=>'script',
+         'handler'=>'/usr/local/bin/es_alias_mapping.py $logtype',
+         'help-string'=>'Mapping of alias to indices for a given logtype'}},
+     'es_reason_whitelist'=>
+      {'add'=>
+        {'reason'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'reason',
+             'type'=>'string',
+             'handler'=>'/usr/local/bin/es_wl_reason.py -a \'$reason\'',
+             'help-string'=>'reason to be added'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'add',
+           'help-string'=>'add es error reason to the allow list'}},
+       'delete'=>
+        {'reason'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'reason',
+             'type'=>'string',
+             'handler'=>'/usr/local/bin/es_wl_reason.py -d \'$reason\'',
+             'help-string'=>'reason to be deleted'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'delete',
+           'help-string'=>'delete es error reason to the allow list'}},
+       'clear'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'clear',
+           'handler'=>'/usr/local/bin/es_wl_reason.py -c',
+           'help-string'=>'clear all the reasons in the allow list'}},
+       'show'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'show',
+           'handler'=>'/usr/local/bin/es_wl_reason.py -s',
+           'help-string'=>'show all the reasons in the allow list'}},
+       :obj=>:union,
+       :attributes=>{'name'=>'es_reason_whitelist', 'target'=>'script'}},
+     'es-restart'=>
+      {'option'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'option',
+           'type'=>'enum',
+           'help-string'=>'es restart option'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'es-restart',
+         'target'=>'mgmt',
+         'handler'=>'restart_es_handler',
+         'help-string'=>'Restart elasticsearch process'}},
+     :obj=>:sequence,
+     :attributes=>{'name'=>'elasticsearch', 'roles'=>'superuser'}},
    'logdb'=>
     {'migrate-lc'=>
       {'start'=>
@@ -14571,6 +16224,39 @@ module PaloAlto
        :attributes=>
         {'name'=>'migrate-lc',
          'help-string'=>'Migrate logdb to new version.'}},
+     'show-queue-stats'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'show-queue-stats',
+         'target'=>'script',
+         'handler'=>'/usr/local/bin/es_check_status.py -p',
+         'help-string'=>'Show VLD and ES statistics'}},
+     'persecond-queue-stats'=>
+      {'on'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'on',
+           'help-string'=>'Enable persecond queue stat to log file',
+           'target'=>'script',
+           'handler'=>'/usr/local/bin/sdb cfg.es.persecond_queue_stats=1'}},
+       'off'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'off',
+           'help-string'=>'Disable persecond queue stat to log file',
+           'target'=>'script',
+           'handler'=>'/usr/local/bin/sdb cfg.es.persecond_queue_stats=0'}},
+       'show'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'show',
+           'help-string'=>'Show persecond queue stat enable/disable',
+           'target'=>'script',
+           'handler'=>'/usr/local/bin/sdb cfg.es.persecond_queue_stats'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'persecond-queue-stats',
+         'help-string'=>'Print persecond queue stat'}},
      'set-vld-max-rate-to-es'=>
       {'rate'=>
         {:obj=>:element,
@@ -15203,22 +16889,6 @@ module PaloAlto
      :attributes=>
       {'name'=>'log-output-need-utf8',
        'help-string'=>'system option to support utf8 for log output'}},
-   'rebuild'=>
-    {'database'=>
-      {'globalfind'=>
-        {:obj=>:sequence,
-         :attributes=>
-          {'name'=>'globalfind',
-           'target'=>'mgmt',
-           'handler'=>'rebuild_globalfind_db',
-           'help-string'=>'Rebuild globalfind database'}},
-       :obj=>:union,
-       :attributes=>{'name'=>'database', 'help-string'=>'Rebuild database'}},
-     :obj=>:union,
-     :attributes=>
-      {'name'=>'rebuild',
-       'roles'=>'superuser,deviceadmin,panorama-admin',
-       'target'=>'mgmt'}},
    'system'=>
     {'maintenance-mode'=>
       {:obj=>:sequence,
@@ -15317,11 +16987,166 @@ module PaloAlto
         {'name'=>'stats',
          'handler'=>'/sbin/syslog-ng-ctl stats 2>&1',
          'help-string'=>'List statistics for syslog-ng'}},
+     'start'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'start',
+         'handler'=>'/sbin/service syslog-ng start 2>&1',
+         'help-string'=>'Start syslog-ng'}},
+     'stop'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'stop',
+         'handler'=>'/sbin/service syslog-ng stop 2>&1',
+         'help-string'=>'Stop syslog-ng'}},
+     'restart'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'restart',
+         'handler'=>'/sbin/service syslog-ng restart 2>&1',
+         'help-string'=>'Restart syslog-ng'}},
+     'status'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'status',
+         'handler'=>'/sbin/service syslog-ng status 2>&1',
+         'help-string'=>'List syslog-ng status'}},
+     'reload'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'reload',
+         'handler'=>'/sbin/service syslog-ng reload 2>&1',
+         'help-string'=>'Reload syslog-ng'}},
+     'debug'=>
+      {'debug'=>
+        {'on'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'on',
+             'handler'=>'/sbin/syslog-ng-ctl debug --set=on 2>&1'}},
+         'off'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'off',
+             'handler'=>'/sbin/syslog-ng-ctl debug --set=off 2>&1'}},
+         :obj=>:sequence,
+         :attributes=>{'name'=>'debug', 'help-string'=>'turn debug on/off'}},
+       'trace'=>
+        {'on'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'on',
+             'handler'=>'/sbin/syslog-ng-ctl trace --set=on 2>&1'}},
+         'off'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'off',
+             'handler'=>'/sbin/syslog-ng-ctl trace --set=off 2>&1'}},
+         :obj=>:sequence,
+         :attributes=>{'name'=>'trace', 'help-string'=>'turn trace on/off'}},
+       'verbose'=>
+        {'on'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'on',
+             'handler'=>'/sbin/syslog-ng-ctl verbose --set=on 2>&1'}},
+         'off'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'off',
+             'handler'=>'/sbin/syslog-ng-ctl verbose --set=off 2>&1'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'verbose', 'help-string'=>'turn verbose on/off'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'debug',
+         'target'=>'script',
+         'help-string'=>'debug syslog-ng process'}},
      :obj=>:union,
      :attributes=>
       {'name'=>'syslog-ng',
        'target'=>'script',
        'help-string'=>'debug syslogng'}},
+   'syslogng-params'=>
+    {'reset-to-default-settings'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'reset-to-default-settings',
+         'target'=>'mgmt',
+         'handler'=>'set_syslogng_params_default_settings_handler',
+         'help-string'=>'debug syslog-ng-params reset to default settings'}},
+     'settings'=>
+      {'time-reopen'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'time-reopen',
+           'optional'=>'yes',
+           'type'=>'rangedint',
+           'min'=>'1',
+           'max'=>'900',
+           'help-string'=>'TCP connection re-open delay in seconds'}},
+       'dst-keep-alive'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'dst-keep-alive',
+           'optional'=>'yes',
+           'type'=>'enum',
+           'help-string'=>
+            'turn on/off keep-alive for destination syslog-ng connection'}},
+       'so-keepalive'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'so-keepalive',
+           'optional'=>'yes',
+           'type'=>'enum',
+           'help-string'=>'turn on/off socket keepalive for TCP connection'}},
+       'tcp-keepalive-intvl'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'tcp-keepalive-intvl',
+           'optional'=>'yes',
+           'type'=>'rangedint',
+           'min'=>'0',
+           'max'=>'1800',
+           'help-string'=>'TCP keepalive intvl in seconds'}},
+       'tcp-keepalive-time'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'tcp-keepalive-time',
+           'optional'=>'yes',
+           'type'=>'rangedint',
+           'min'=>'0',
+           'max'=>'7200',
+           'help-string'=>'TCP keepalive time in seconds'}},
+       'tcp-keepalive-probes'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'tcp-keepalive-probes',
+           'optional'=>'yes',
+           'type'=>'rangedint',
+           'min'=>'0',
+           'max'=>'64',
+           'help-string'=>'Number of times sending TCP keepalive messages'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'settings',
+         'target'=>'mgmt',
+         'handler'=>'set_syslogng_params_settings_handler',
+         'help-string'=>'debug syslog-ng-params settings'}},
+     'show'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'show',
+         'target'=>'mgmt',
+         'handler'=>'show_syslogng_params_settings_handler',
+         'help-string'=>'debug syslog-ng-params show'}},
+     :obj=>:union,
+     :attributes=>
+      {'name'=>'syslogng-params',
+       'roles'=>'superuser,panorama-admin',
+       'target'=>'mgmt',
+       'help-string'=>'debug syslog-ng-params'}},
    'skip-condor-reports'=>
     {'yes'=>
       {:obj=>:sequence,
@@ -15374,6 +17199,18 @@ module PaloAlto
         {'name'=>'status',
          'handler'=>'/usr/local/bin/swm status',
          'help-string'=>'Show status of PAN Software Manager'}},
+     'show'=>
+      {'revert-status'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'revert-status',
+           'target'=>'dagger',
+           'handler'=>'revert_status.get_revert_status_str',
+           'help-string'=>'Show status of revertable software packages'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'show',
+         'help-string'=>'Show information of PAN Software Manager'}},
      'unlock'=>
       {:obj=>:sequence,
        :attributes=>
@@ -15384,9 +17221,20 @@ module PaloAlto
       {:obj=>:sequence,
        :attributes=>
         {'name'=>'revert',
-         'handler'=>'/usr/local/bin/swm revert',
-         'help-string'=>
-          'revert back to last successfully installed software'}},
+         'target'=>'mgmt',
+         'handler'=>'debug_swm_revert_handler',
+         'help-string'=>'Revert back to previous running software packages',
+         'confirm'=>
+          'Executing this command will revert back to previous running software (use debug swm show revert-status to get more information). No schema transformation or validation will happen. It will not take effect until system is restarted. Do you want to continue?'}},
+     'cancel'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'cancel',
+         'target'=>'mgmt',
+         'handler'=>'debug_swm_cancel_handler',
+         'help-string'=>'Cancel pending changes to software packages',
+         'confirm'=>
+          'Executing this command will cancel any pending changes to software. Do you want to continue?'}},
      'rebuild-content-db'=>
       {:obj=>:sequence,
        :attributes=>
@@ -15434,7 +17282,7 @@ module PaloAlto
            'type'=>'string',
            'maxlen'=>'64',
            'target'=>'dagger',
-           'complete-handler'=>'masterd_debug.mp_process_completer'}},
+           'complete-handler'=>'md_debug.mp_process_completer'}},
        'limit'=>
         {:obj=>:element,
          :attributes=>
@@ -15448,7 +17296,7 @@ module PaloAlto
          'roles'=>'superuser,deviceadmin,panorama-admin',
          'help-string'=>'Set open fd limit',
          'target'=>'dagger',
-         'handler'=>'masterd_debug.mp_process_modify'}},
+         'handler'=>'md_debug.mp_process_modify'}},
      'no-fd-limit'=>
       {'service'=>
         {:obj=>:element,
@@ -15457,14 +17305,14 @@ module PaloAlto
            'type'=>'string',
            'maxlen'=>'64',
            'target'=>'dagger',
-           'complete-handler'=>'masterd_debug.mp_process_completer'}},
+           'complete-handler'=>'md_debug.mp_process_completer'}},
        :obj=>:sequence,
        :attributes=>
         {'name'=>'no-fd-limit',
          'roles'=>'superuser,deviceadmin,panorama-admin',
          'help-string'=>'Disable open fd limit',
          'target'=>'dagger',
-         'handler'=>'masterd_debug.mp_process_modify'}},
+         'handler'=>'md_debug.mp_process_modify'}},
      'virt-limit'=>
       {'service'=>
         {:obj=>:element,
@@ -15473,7 +17321,7 @@ module PaloAlto
            'type'=>'string',
            'maxlen'=>'64',
            'target'=>'dagger',
-           'complete-handler'=>'masterd_debug.mp_process_completer'}},
+           'complete-handler'=>'md_debug.mp_process_completer'}},
        'limit'=>
         {:obj=>:element,
          :attributes=>
@@ -15487,7 +17335,7 @@ module PaloAlto
          'roles'=>'superuser,deviceadmin,panorama-admin',
          'help-string'=>'Set max virtual memory limit in KB',
          'target'=>'dagger',
-         'handler'=>'masterd_debug.mp_process_modify'}},
+         'handler'=>'md_debug.mp_process_modify'}},
      'no-virt-limit'=>
       {'service'=>
         {:obj=>:element,
@@ -15496,14 +17344,32 @@ module PaloAlto
            'type'=>'string',
            'maxlen'=>'64',
            'target'=>'dagger',
-           'complete-handler'=>'masterd_debug.mp_process_completer'}},
+           'complete-handler'=>'md_debug.mp_process_completer'}},
        :obj=>:sequence,
        :attributes=>
         {'name'=>'no-virt-limit',
          'roles'=>'superuser,deviceadmin,panorama-admin',
          'help-string'=>'Disable max virtual memory limit',
          'target'=>'dagger',
-         'handler'=>'masterd_debug.mp_process_modify'}},
+         'handler'=>'md_debug.mp_process_modify'}},
+     'disable-virt-limit'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'disable-virt-limit',
+         'hidden'=>'yes',
+         'target'=>'script',
+         'help-string'=>'Disable virt limit check in general',
+         'handler'=>
+          '/usr/local/bin/sdb -n cfg.monitor.disable-virt-limit=True > /dev/null'}},
+     'enable-virt-limit'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'enable-virt-limit',
+         'hidden'=>'yes',
+         'target'=>'script',
+         'help-string'=>'Enable virt limit check in general',
+         'handler'=>
+          '/usr/local/bin/sdb -n cfg.monitor.disable-virt-limit=False > /dev/null'}},
      'phy-limit'=>
       {'service'=>
         {:obj=>:element,
@@ -15512,7 +17378,7 @@ module PaloAlto
            'type'=>'string',
            'maxlen'=>'64',
            'target'=>'dagger',
-           'complete-handler'=>'masterd_debug.mp_process_completer'}},
+           'complete-handler'=>'md_debug.mp_process_completer'}},
        'limit'=>
         {:obj=>:element,
          :attributes=>
@@ -15526,7 +17392,7 @@ module PaloAlto
          'roles'=>'superuser,deviceadmin,panorama-admin',
          'help-string'=>'Set max physical memory(rss+swap) limit in KB',
          'target'=>'dagger',
-         'handler'=>'masterd_debug.mp_process_modify'}},
+         'handler'=>'md_debug.mp_process_modify'}},
      'no-phy-limit'=>
       {'service'=>
         {:obj=>:element,
@@ -15535,14 +17401,14 @@ module PaloAlto
            'type'=>'string',
            'maxlen'=>'64',
            'target'=>'dagger',
-           'complete-handler'=>'masterd_debug.mp_process_completer'}},
+           'complete-handler'=>'md_debug.mp_process_completer'}},
        :obj=>:sequence,
        :attributes=>
         {'name'=>'no-phy-limit',
          'roles'=>'superuser,deviceadmin,panorama-admin',
          'help-string'=>'Disable max physical memory(rss+swap) limit',
          'target'=>'dagger',
-         'handler'=>'masterd_debug.mp_process_modify'}},
+         'handler'=>'md_debug.mp_process_modify'}},
      'pprof'=>
       {'service'=>
         {:obj=>:element,
@@ -15551,7 +17417,7 @@ module PaloAlto
            'type'=>'string',
            'maxlen'=>'64',
            'target'=>'dagger',
-           'complete-handler'=>'masterd_debug.mp_pprof_cherrypick'}},
+           'complete-handler'=>'md_debug.mp_pprof_cherrypick'}},
        :obj=>:sequence,
        :attributes=>
         {'name'=>'pprof',
@@ -15560,7 +17426,7 @@ module PaloAlto
          'target'=>'dagger',
          'confirm'=>
           'This operation will enable memory leak detection and restart the process. Continue?',
-         'handler'=>'masterd_debug.mp_process_modify'}},
+         'handler'=>'md_debug.mp_process_modify'}},
      'no-pprof'=>
       {'service'=>
         {:obj=>:element,
@@ -15569,14 +17435,14 @@ module PaloAlto
            'type'=>'string',
            'maxlen'=>'64',
            'target'=>'dagger',
-           'complete-handler'=>'masterd_debug.mp_pprof_cherrypick'}},
+           'complete-handler'=>'md_debug.mp_pprof_cherrypick'}},
        :obj=>:sequence,
        :attributes=>
         {'name'=>'no-pprof',
          'roles'=>'superuser,deviceadmin,panorama-admin',
          'help-string'=>'Disable pprof for the selected service',
          'target'=>'dagger',
-         'handler'=>'masterd_debug.mp_process_modify'}},
+         'handler'=>'md_debug.mp_process_modify'}},
      'resource'=>
       {'subsystem'=>
         {:obj=>:element,
@@ -15644,7 +17510,7 @@ module PaloAlto
          :obj=>:sequence,
          :attributes=>
           {'name'=>'cleanup',
-           'timeout'=>'60',
+           'timeout'=>'90',
            'handler'=>'logfile_cleanup_dbg.cleanup',
            'help-string'=>'system logfile cleanup'}},
        'aggressive-cleaning'=>
@@ -15767,6 +17633,15 @@ module PaloAlto
          'target'=>'mgmt',
          'handler'=>'list_cores_handler',
          'help-string'=>'List core files on system'}},
+     'show-pcaps'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'show-pcaps',
+         'internal'=>'yes',
+         'roles'=>'superuser,superreader',
+         'target'=>'mgmt',
+         'handler'=>'list_pcaps_handler',
+         'help-string'=>'List core files on system'}},
      'core'=>
       {:obj=>:element,
        :attributes=>
@@ -15796,63 +17671,63 @@ module PaloAlto
           {'name'=>'management-server',
            'help-string'=>'Management server process',
            'target'=>'script',
-           'handler'=>'/usr/local/bin/masterd mgmtsrvr trace'}},
+           'handler'=>'/usr/local/bin/md mgmtsrvr trace'}},
        'configd'=>
         {:obj=>:sequence,
          :attributes=>
           {'name'=>'configd',
            'help-string'=>'configd daemon',
            'target'=>'script',
-           'handler'=>'/usr/local/bin/masterd configd trace'}},
+           'handler'=>'/usr/local/bin/md configd trace'}},
        'reportd'=>
         {:obj=>:sequence,
          :attributes=>
           {'name'=>'reportd',
            'help-string'=>'reportd daemon',
            'target'=>'script',
-           'handler'=>'/usr/local/bin/masterd reportd trace'}},
+           'handler'=>'/usr/local/bin/md reportd trace'}},
        'logd'=>
         {:obj=>:sequence,
          :attributes=>
           {'name'=>'logd',
            'help-string'=>'logd daemon',
            'target'=>'script',
-           'handler'=>'/usr/local/bin/masterd logd trace'}},
+           'handler'=>'/usr/local/bin/md logd trace'}},
        'web-server'=>
         {:obj=>:sequence,
          :attributes=>
           {'name'=>'web-server',
            'help-string'=>'Web server process',
            'target'=>'script',
-           'handler'=>'/usr/local/bin/masterd websrvr trace'}},
+           'handler'=>'/usr/local/bin/md websrvr trace'}},
        'web-backend-cms'=>
         {:obj=>:sequence,
          :attributes=>
           {'name'=>'web-backend-cms',
            'help-string'=>'Web server process for Panorama',
            'target'=>'script',
-           'handler'=>'/usr/local/bin/masterd web_backend_cms trace'}},
+           'handler'=>'/usr/local/bin/md web_backend_cms trace'}},
        'web-backend-ctx'=>
         {:obj=>:sequence,
          :attributes=>
           {'name'=>'web-backend-ctx',
            'help-string'=>'Web server process for Context Switches',
            'target'=>'script',
-           'handler'=>'/usr/local/bin/masterd web_backend_ctx trace'}},
+           'handler'=>'/usr/local/bin/md web_backend_ctx trace'}},
        'web-backend-notify'=>
         {:obj=>:sequence,
          :attributes=>
           {'name'=>'web-backend-notify',
            'help-string'=>'Web server process for Notification Engine',
            'target'=>'script',
-           'handler'=>'/usr/local/bin/masterd nodejs trace'}},
+           'handler'=>'/usr/local/bin/md nodejs trace'}},
        'mdb'=>
         {:obj=>:sequence,
          :attributes=>
           {'name'=>'mdb',
            'help-string'=>'Mongo DB',
            'target'=>'script',
-           'handler'=>'/usr/local/bin/masterd mdb trace'}},
+           'handler'=>'/usr/local/bin/md mdb trace'}},
        'vldmgr'=>
         {:obj=>:sequence,
          :attributes=>
@@ -15860,7 +17735,7 @@ module PaloAlto
            'prune-on-sdb'=>'cfg.cms.mode=legacy,cfg.cms.mode=management-only',
            'help-string'=>'VLD Manager process',
            'target'=>'script',
-           'handler'=>'/usr/local/bin/masterd vldmgr trace'}},
+           'handler'=>'/usr/local/bin/md vldmgr trace'}},
        'vld-0-0'=>
         {:obj=>:sequence,
          :attributes=>
@@ -15868,8 +17743,7 @@ module PaloAlto
            'prune-on-sdb'=>'cfg.cms.mode=legacy,cfg.cms.mode=management-only',
            'help-string'=>'VLD process for LD1',
            'target'=>'script',
-           'handler'=>
-            '[[ -e /dev/md1 ]] && /usr/local/bin/masterd vld-0-0 trace'}},
+           'handler'=>'[[ -e /dev/md1 ]] && /usr/local/bin/md vld-0-0 trace'}},
        'vld-1-0'=>
         {:obj=>:sequence,
          :attributes=>
@@ -15877,8 +17751,7 @@ module PaloAlto
            'prune-on-sdb'=>'cfg.cms.mode=legacy,cfg.cms.mode=management-only',
            'help-string'=>'VLD process for LD2',
            'target'=>'script',
-           'handler'=>
-            '[[ -e /dev/md2 ]] && /usr/local/bin/masterd vld-1-0 trace'}},
+           'handler'=>'[[ -e /dev/md2 ]] && /usr/local/bin/md vld-1-0 trace'}},
        'vld-2-0'=>
         {:obj=>:sequence,
          :attributes=>
@@ -15886,8 +17759,7 @@ module PaloAlto
            'prune-on-sdb'=>'cfg.cms.mode=legacy,cfg.cms.mode=management-only',
            'help-string'=>'VLD process for LD3',
            'target'=>'script',
-           'handler'=>
-            '[[ -e /dev/md3 ]] && /usr/local/bin/masterd vld-2-0 trace'}},
+           'handler'=>'[[ -e /dev/md3 ]] && /usr/local/bin/md vld-2-0 trace'}},
        'vld-3-0'=>
         {:obj=>:sequence,
          :attributes=>
@@ -15895,8 +17767,7 @@ module PaloAlto
            'prune-on-sdb'=>'cfg.cms.mode=legacy,cfg.cms.mode=management-only',
            'help-string'=>'VLD process for LD4',
            'target'=>'script',
-           'handler'=>
-            '[[ -e /dev/md4 ]] && /usr/local/bin/masterd vld-3-0 trace'}},
+           'handler'=>'[[ -e /dev/md4 ]] && /usr/local/bin/md vld-3-0 trace'}},
        'vld-4-0'=>
         {:obj=>:sequence,
          :attributes=>
@@ -15904,8 +17775,7 @@ module PaloAlto
            'prune-on-sdb'=>'cfg.cms.mode=legacy,cfg.cms.mode=management-only',
            'help-string'=>'VLD process for LD5',
            'target'=>'script',
-           'handler'=>
-            '[[ -e /dev/md5 ]] && /usr/local/bin/masterd vld-4-0 trace'}},
+           'handler'=>'[[ -e /dev/md5 ]] && /usr/local/bin/md vld-4-0 trace'}},
        'vld-5-0'=>
         {:obj=>:sequence,
          :attributes=>
@@ -15913,8 +17783,7 @@ module PaloAlto
            'prune-on-sdb'=>'cfg.cms.mode=legacy,cfg.cms.mode=management-only',
            'help-string'=>'VLD process for LD6',
            'target'=>'script',
-           'handler'=>
-            '[[ -e /dev/md6 ]] && /usr/local/bin/masterd vld-5-0 trace'}},
+           'handler'=>'[[ -e /dev/md6 ]] && /usr/local/bin/md vld-5-0 trace'}},
        'vld-6-0'=>
         {:obj=>:sequence,
          :attributes=>
@@ -15922,8 +17791,7 @@ module PaloAlto
            'prune-on-sdb'=>'cfg.cms.mode=legacy,cfg.cms.mode=management-only',
            'help-string'=>'VLD process for LD7',
            'target'=>'script',
-           'handler'=>
-            '[[ -e /dev/md7 ]] && /usr/local/bin/masterd vld-6-0 trace'}},
+           'handler'=>'[[ -e /dev/md7 ]] && /usr/local/bin/md vld-6-0 trace'}},
        'vld-7-0'=>
         {:obj=>:sequence,
          :attributes=>
@@ -15931,8 +17799,7 @@ module PaloAlto
            'prune-on-sdb'=>'cfg.cms.mode=legacy,cfg.cms.mode=management-only',
            'help-string'=>'VLD process for LD8',
            'target'=>'script',
-           'handler'=>
-            '[[ -e /dev/md8 ]] && /usr/local/bin/masterd vld-7-0 trace'}},
+           'handler'=>'[[ -e /dev/md8 ]] && /usr/local/bin/md vld-7-0 trace'}},
        'vld-8-0'=>
         {:obj=>:sequence,
          :attributes=>
@@ -15940,8 +17807,7 @@ module PaloAlto
            'prune-on-sdb'=>'cfg.cms.mode=legacy,cfg.cms.mode=management-only',
            'help-string'=>'VLD process for LD9',
            'target'=>'script',
-           'handler'=>
-            '[[ -e /dev/md9 ]] && /usr/local/bin/masterd vld-8-0 trace'}},
+           'handler'=>'[[ -e /dev/md9 ]] && /usr/local/bin/md vld-8-0 trace'}},
        'vld-9-0'=>
         {:obj=>:sequence,
          :attributes=>
@@ -15950,7 +17816,7 @@ module PaloAlto
            'help-string'=>'VLD process for LD10',
            'target'=>'script',
            'handler'=>
-            '[[ -e /dev/md10 ]] && /usr/local/bin/masterd vld-9-0 trace'}},
+            '[[ -e /dev/md10 ]] && /usr/local/bin/md vld-9-0 trace'}},
        'vld-10-0'=>
         {:obj=>:sequence,
          :attributes=>
@@ -15959,7 +17825,7 @@ module PaloAlto
            'help-string'=>'VLD process for LD11',
            'target'=>'script',
            'handler'=>
-            '[[ -e /dev/md11 ]] && /usr/local/bin/masterd vld-10-0 trace'}},
+            '[[ -e /dev/md11 ]] && /usr/local/bin/md vld-10-0 trace'}},
        'vld-11-0'=>
         {:obj=>:sequence,
          :attributes=>
@@ -15968,14 +17834,14 @@ module PaloAlto
            'help-string'=>'VLD process for LD12',
            'target'=>'script',
            'handler'=>
-            '[[ -e /dev/md12 ]] && /usr/local/bin/masterd vld-11-0 trace'}},
+            '[[ -e /dev/md12 ]] && /usr/local/bin/md vld-11-0 trace'}},
        'user-id'=>
         {:obj=>:sequence,
          :attributes=>
           {'name'=>'user-id',
            'help-string'=>'User-ID process',
            'target'=>'script',
-           'handler'=>'/usr/local/bin/masterd useridd trace'}},
+           'handler'=>'/usr/local/bin/md useridd trace'}},
        :obj=>:union,
        :attributes=>
         {'name'=>'trace', 'help-string'=>'Get process backtraces'}},
@@ -16037,7 +17903,7 @@ module PaloAlto
          :attributes=>
           {'name'=>'instance',
            'type'=>'enum',
-           'help-string'=>'repair mdb or cdb instance',
+           'help-string'=>'repair mdb, cdb or dmdb instance',
            'handler'=>'/usr/local/bin/mongo_repair_instance.sh $instance'}},
        'disk-space'=>
         {'database'=>
@@ -16083,126 +17949,12 @@ module PaloAlto
         {'name'=>'repair',
          'target'=>'script',
          'help-string'=>'repair database'}},
-     'backup'=>
-      {'dump'=>
-        {'database'=>
-          {:obj=>:element,
-           :attributes=>
-            {'name'=>'database',
-             'type'=>'string',
-             'optional'=>'yes',
-             'max-length'=>'63',
-             'help-string'=>
-              'database name needs to be backup, will dump all if none provided'}},
-         'instance'=>
-          {:obj=>:element,
-           :attributes=>
-            {'name'=>'instance',
-             'type'=>'enum',
-             'help-string'=>'mdb or cdb instance'}},
-         'partition'=>
-          {:obj=>:element,
-           :attributes=>
-            {'name'=>'partition',
-             'type'=>'enum',
-             'help-string'=>'disk path to store mongodump data'}},
-         :obj=>:sequence,
-         :attributes=>
-          {'name'=>'dump',
-           'help-string'=>'mongodump to make a backup data',
-           'target'=>'script',
-           'handler'=>
-            '/usr/local/bin/mongo_dump.sh $partition $instance $database'}},
-       'restore'=>
-        {'database'=>
-          {:obj=>:element,
-           :attributes=>
-            {'name'=>'database',
-             'type'=>'string',
-             'max-length'=>'63',
-             'optional'=>'yes',
-             'help-string'=>
-              'database name needs to be restored, will clear all and restore if none provided'}},
-         'dump-filepath'=>
-          {:obj=>:element,
-           :attributes=>
-            {'name'=>'dump-filepath',
-             'type'=>'string',
-             'max-length'=>'256',
-             'help-string'=>'filepath where mongodump data stores'}},
-         'instance'=>
-          {:obj=>:element,
-           :attributes=>
-            {'name'=>'instance',
-             'type'=>'enum',
-             'help-string'=>'mdb or cdb instance'}},
-         :obj=>:sequence,
-         :attributes=>
-          {'name'=>'restore',
-           'help-string'=>'mongorestore to load data back',
-           'target'=>'mgmt',
-           'handler'=>'debug_mongo_restore_handler',
-           'confirm'=>
-            'This operation will delete your data first, we suggest you to make a backup copy. Are you willing to continue?'}},
-       'dump-and-restore'=>
-        {'partition'=>
-          {:obj=>:element,
-           :attributes=>
-            {'name'=>'partition',
-             'type'=>'enum',
-             'help-string'=>'disk path to store mongodump data'}},
-         'instance'=>
-          {:obj=>:element,
-           :attributes=>
-            {'name'=>'instance',
-             'type'=>'enum',
-             'help-string'=>'mdb or cdb instance'}},
-         :obj=>:sequence,
-         :attributes=>
-          {'name'=>'dump-and-restore',
-           'help-string'=>'mongo dump and restore data',
-           'target'=>'script',
-           'handler'=>
-            '/usr/local/bin/mongo_dump_restore.sh $partition $instance'}},
-       :obj=>:union,
-       :attributes=>
-        {'name'=>'backup', 'help-string'=>'backup and restore database'}},
-     'storage-engine-transfer'=>
-      {'version'=>
-        {:obj=>:element,
-         :attributes=>
-          {'name'=>'version',
-           'type'=>'enum',
-           'help-string'=>'Change to which storage engine version'}},
-       'path'=>
-        {:obj=>:element,
-         :attributes=>
-          {'name'=>'path',
-           'type'=>'string',
-           'optional'=>'yes',
-           'help-string'=>
-            'Path to temporarily store a dump file. Default: /tmp'}},
-       'instance'=>
-        {:obj=>:element,
-         :attributes=>
-          {'name'=>'instance',
-           'type'=>'enum',
-           'optional'=>'yes',
-           'help-string'=>'DB instances. Default: mdb'}},
-       :obj=>:sequence,
-       :attributes=>
-        {'name'=>'storage-engine-transfer',
-         'target'=>'mgmt',
-         'handler'=>'debug_mongo_transfer_storage_engine_handler',
-         'help-string'=>
-          'Storage engine transfer between different mongo versions'}},
      'drop'=>
       {'instance'=>
         {:obj=>:element,
          :attributes=>
           {'name'=>'instance',
            'type'=>'enum',
-           'optional'=>'no',
            'help-string'=>
             'DB instance mdb|cdb that your database or collection in'}},
        'database'=>
@@ -16233,7 +17985,6 @@ module PaloAlto
          :attributes=>
           {'name'=>'instance',
            'type'=>'enum',
-           'optional'=>'no',
            'help-string'=>
             'DB instance mdb|cdb|dmdb that your database or collection in'}},
        'database'=>
@@ -17595,6 +19346,19 @@ module PaloAlto
          'type'=>'enum',
          'handler'=>'db_rollup',
          'help-string'=>'Enable/disable summary database roll up'}},
+     'show-predef-hash'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'show-predef-hash',
+         'handler'=>'debug_show_predef_hash_handler',
+         'paas'=>'yes',
+         'help-string'=>'Dump DB config to disk'}},
+     'check-predef-hash'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'check-predef-hash',
+         'handler'=>'debug_check_ref_predef_hash_handler',
+         'help-string'=>'Check for cloud app references'}},
      'db-intervals'=>
       {'start-time'=>
         {:obj=>:element,
@@ -17631,6 +19395,13 @@ module PaloAlto
          'type'=>'enum',
          'handler'=>'dump_req_stats',
          'help-string'=>'Dump req stats'}},
+     'toggle-ui-notification'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'toggle-ui-notification',
+         'type'=>'enum',
+         'handler'=>'debug_enable_ui_notification',
+         'help-string'=>'Debug enable UI notification'}},
      'memory'=>
       {:obj=>:element,
        :attributes=>
@@ -17732,6 +19503,99 @@ module PaloAlto
          'handler'=>'show_rolledup_intervals',
          'help-string'=>
           'Show available summary rollups for a given period rolled up optimally'}},
+     'ui-refresh'=>
+      {'set'=>
+        {'xml'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'xml',
+             'type'=>'rangedint',
+             'min'=>'10',
+             'max'=>'60',
+             'help-string'=>'10 - 60'}},
+         'rest'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'rest',
+             'type'=>'rangedint',
+             'min'=>'10',
+             'max'=>'60',
+             'help-string'=>'10 - 60'}},
+         'cli'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'cli',
+             'type'=>'rangedint',
+             'min'=>'0',
+             'max'=>'60',
+             'help-string'=>'2 - 60, 0 for immediate refresh'}},
+         'ui'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'ui',
+             'type'=>'rangedint',
+             'min'=>'0',
+             'max'=>'60',
+             'help-string'=>'2 - 60, 0 for immediate refresh'}},
+         :obj=>:union,
+         :attributes=>
+          {'name'=>'set',
+           'help-string'=>'Set WebUI refresh interval in seconds',
+           'target'=>'mgmt',
+           'handler'=>'set_ui_refresh'}},
+       'show'=>
+        {'xml'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'xml',
+             'handler'=>'/usr/local/bin/sdb cfg.cms.ui-refresh.xml'}},
+         'rest'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'rest',
+             'handler'=>'/usr/local/bin/sdb cfg.cms.ui-refresh.rest'}},
+         'cli'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'cli',
+             'handler'=>'/usr/local/bin/sdb cfg.cms.ui-refresh.cli'}},
+         'ui'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'ui',
+             'handler'=>'/usr/local/bin/sdb cfg.cms.ui-refresh.ui'}},
+         'all'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'all',
+             'handler'=>
+              '/usr/local/bin/sdb cfg.cms.ui-refresh.ui cfg.cms.ui-refresh.cli cfg.cms.ui-refresh.rest cfg.cms.ui-refresh.xml'}},
+         :obj=>:union,
+         :attributes=>
+          {'name'=>'show',
+           'help-string'=>'Show WebUI refresh interval in seconds'}},
+       'on'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'on',
+           'help-string'=>'Enable WebUI auto refresh',
+           'target'=>'mgmt',
+           'type'=>'enum',
+           'handler'=>'enable_ui_refresh'}},
+       'off'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'off',
+           'help-string'=>'Disable WebUI auto refresh',
+           'target'=>'mgmt',
+           'type'=>'enum',
+           'handler'=>'disable_ui_refresh'}},
+       :obj=>:union,
+       :attributes=>
+        {'target'=>'script',
+         'name'=>'ui-refresh',
+         'roles'=>'superuser,deviceadmin,panorama-admin',
+         'help-string'=>'WebUI refresh interval in seconds'}},
      'set'=>
       {'all'=>{:obj=>:sequence, :attributes=>{'name'=>'all'}},
        'comm'=>{:obj=>:element, :attributes=>{'name'=>'comm', 'type'=>'enum'}},
@@ -17952,6 +19816,33 @@ module PaloAlto
        :attributes=>
         {'name'=>'template-stack',
          'help-string'=>'Debug option for template-stack'}},
+     'log-forwarding-congestion-ctrl'=>
+      {'set'=>
+        {'reno'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'reno',
+             'target'=>'script',
+             'handler'=>'/usr/local/bin/sdb cfg.tcp-cong-ctrl=reno'}},
+         'default'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'default',
+             'target'=>'script',
+             'handler'=>'/usr/local/bin/sdb cfg.tcp-cong-ctrl=None'}},
+         :obj=>:union,
+         :attributes=>{'name'=>'set', 'help-string'=>'set the option'}},
+       'show'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'show',
+           'help-string'=>'show the setting',
+           'target'=>'script',
+           'handler'=>'/usr/local/bin/sdb -n cfg.tcp-cong-ctrl'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'log-forwarding-congestion-ctrl',
+         'help-string'=>'TCP Congestion Control for Log Forwarding'}},
      'contmgr'=>
       {'status'=>
         {:obj=>:sequence,
@@ -18339,8 +20230,8 @@ module PaloAlto
       {:obj=>:element,
        :attributes=>
         {'name'=>'keep_summary_on_disk',
+         'hidden'=>'yes',
          'type'=>'enum',
-         'handler'=>'cms_sdwan_save_summary_handler',
          'help-string'=>
           'knob to control whether save inline summary on local disk'}},
      'max_total_msgs'=>
@@ -18361,6 +20252,20 @@ module PaloAlto
          'max'=>'2048',
          'handler'=>'logd_set_notifier_queue_size_handler',
          'help-string'=>'Default value = 256'}},
+     'queue_stats'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'queue_stats',
+         'type'=>'enum',
+         'handler'=>'queuestat_show_handler',
+         'help-string'=>'Show logd queue_stats'}},
+     'persecond_queue_stats'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'persecond_queue_stats',
+         'type'=>'enum',
+         'handler'=>'persecond_queuestat_handler',
+         'help-string'=>'Print persecond queue stat'}},
      'contmgr'=>
       {'status'=>
         {:obj=>:sequence,
@@ -19062,6 +20967,7 @@ module PaloAlto
          :attributes=>
           {'name'=>'crl',
            'type'=>'string',
+           'regex'=>'.*',
            'maxlen'=>'256',
            'complete-handler'=>'sslmgr_file_complete',
            'handler'=>'sslmgr_view_crl',
@@ -19118,6 +21024,30 @@ module PaloAlto
        'handler'=>
         '/usr/local/bin/sdb cfg.mgmtsrvr.content-download-retry=$attempts',
        'help-string'=>'Set content download retry attempts'}},
+   'skip-cert-renewal-check-syslog'=>
+    {'no'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'no',
+         'target'=>'script',
+         'handler'=>'/usr/local/bin/sdb cfg.cert.skip-renewal-syslog=False;'}},
+     'yes'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'yes',
+         'target'=>'script',
+         'handler'=>'/usr/local/bin/sdb cfg.cert.skip-renewal-syslog=True;'}},
+     'show'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'show',
+         'target'=>'script',
+         'handler'=>'/usr/local/bin/sdb -n cfg.cert.skip-renewal-syslog'}},
+     :obj=>:union,
+     :attributes=>
+      {'name'=>'skip-cert-renewal-check-syslog',
+       'help-string'=>
+        'debug option to skip syslog for device certificate renewal'}},
    'skip-policy-address-check'=>
     {'no'=>
       {:obj=>:sequence,
@@ -19325,7 +21255,14 @@ module PaloAlto
            'handler'=>'debug_clear_group',
            'help-string'=>'Show user groups data'}},
        'domain-map'=>
-        {:obj=>:sequence,
+        {'from-disk'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'from-disk',
+             'type'=>'enum',
+             'optional'=>'yes',
+             'help-string'=>'Clears from disk file as well'}},
+         :obj=>:sequence,
          :attributes=>{'name'=>'domain-map', 'handler'=>'clear_dns_map'}},
        'email-cache'=>
         {:obj=>:sequence,
@@ -19389,6 +21326,23 @@ module PaloAlto
         {'name'=>'wmic-dynamic-range',
          'target'=>'script',
          'help-string'=>'enable time range for server monitor with type WMI'}},
+     'resolve-fqdn-3p'=>
+      {'on'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'on',
+           'handler'=>'/usr/local/bin/sdb cfg.useridd.resolve-fqdn-3p=1'}},
+       'off'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'off',
+           'handler'=>'/usr/local/bin/sdb cfg.useridd.resolve-fqdn-3p=0'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'resolve-fqdn-3p',
+         'target'=>'script',
+         'help-string'=>
+          'Resolve FQDN and pass IP address instead into third-party libs'}},
      'disable-max-initial-wmi'=>
       {'on'=>
         {:obj=>:sequence,
@@ -19407,6 +21361,48 @@ module PaloAlto
         {'name'=>'disable-max-initial-wmi',
          'target'=>'script',
          'help-string'=>'whether to disable max initial wmi queries'}},
+     'l3svc-max-retry'=>
+      {'rate'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'rate',
+           'type'=>'rangedint',
+           'min'=>'1000',
+           'max'=>'900000',
+           'target'=>'exec',
+           'handler'=>'/usr/local/bin/sdb cfg.l3svc.nginx.max-retry=$rate',
+           'help-string'=>'number of retries to fetch client request'}},
+       'show'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'show',
+           'handler'=>'/usr/local/bin/sdb cfg.l3svc.nginx.max-retry'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'l3svc-max-retry',
+         'target'=>'script',
+         'help-string'=>'max number of retries to fetch the client request'}},
+     'agent-getall-rate'=>
+      {'rate'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'rate',
+           'type'=>'rangedint',
+           'min'=>'0',
+           'max'=>'100',
+           'target'=>'exec',
+           'handler'=>'/usr/local/bin/sdb cfg.useridd.uia-getall-rate=$rate',
+           'help-string'=>'number of get-all requests every minute'}},
+       'show'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'show',
+           'handler'=>'/usr/local/bin/sdb cfg.useridd.uia-getall-rate'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'agent-getall-rate',
+         'target'=>'script',
+         'help-string'=>'max number of new getall request every minute'}},
      'disable-hip-ha'=>
       {:obj=>:element,
        :attributes=>
@@ -19509,6 +21505,22 @@ module PaloAlto
          'help-string'=>'Debug agent',
          'complete-handler'=>
           '$config/panorama/redistribution-agent/entry/@name'}},
+     'dscd'=>
+      {'on'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'on',
+           'type'=>'enum',
+           'help-string'=>'Turn on dscd debug logging'}},
+       'off'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'off', 'help-string'=>'Turn off dscd debug logging'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'dscd',
+         'help-string'=>'debug dcd',
+         'handler'=>'debug_directory_sync'}},
      'refresh'=>
       {'user-id'=>
         {'agent'=>
@@ -19538,10 +21550,53 @@ module PaloAlto
           {'name'=>'dp-uid-gid',
            'help-string'=>'refresh dp\'s user group info',
            'handler'=>'refresh_dp_uid_gid'}},
+       'cloud-identity-engine'=>
+        {'config-data'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'config-data', 'help-string'=>'refresh config data'}},
+         'all'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'all', 'help-string'=>'refresh all profiles'}},
+         'name'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'name',
+             'type'=>'string',
+             'help-string'=>'name',
+             'timeout'=>'300',
+             'complete-handler'=>
+              '$config/panorama/cloud-identity-engine/entry/@name'}},
+         :obj=>:union,
+         :attributes=>
+          {'name'=>'cloud-identity-engine',
+           'help-string'=>'refresh cloud identity engine',
+           'timeout'=>'120',
+           'handler'=>'refresh_directory_sync'}},
        :obj=>:union,
        :attributes=>{'name'=>'refresh', 'help-string'=>'Refresh data'}},
      'reset'=>
-      {'user-id-agent'=>
+      {'cloud-identity-engine'=>
+        {'all'=>
+          {:obj=>:sequence,
+           :attributes=>{'name'=>'all', 'help-string'=>'reset all'}},
+         'name'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'name',
+             'type'=>'string',
+             'help-string'=>'name',
+             'timeout'=>'300',
+             'complete-handler'=>
+              '$config/panorama/cloud-identity-engine/entry/@name'}},
+         :obj=>:union,
+         :attributes=>
+          {'name'=>'cloud-identity-engine',
+           'help-string'=>'reset cloud identity engine',
+           'timeout'=>'120',
+           'handler'=>'reset_directory_sync'}},
+       'user-id-agent'=>
         {:obj=>:element,
          :attributes=>
           {'name'=>'user-id-agent',
@@ -20375,7 +22430,8 @@ module PaloAlto
                :attributes=>
                 {'name'=>'name',
                  'type'=>'string',
-                 'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$'}},
+                 'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$',
+                 'maxlen'=>'63'}},
              'tag-source'=>
               {:obj=>:element,
                :attributes=>
@@ -20402,7 +22458,8 @@ module PaloAlto
               {'name'=>'user',
                'type'=>'string',
                'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$',
-               'help-string'=>'User name'}},
+               'help-string'=>'User name',
+               'maxlen'=>'63'}},
            'tag'=>
             {:obj=>:element,
              :attributes=>
@@ -20431,7 +22488,8 @@ module PaloAlto
               {'name'=>'user',
                'type'=>'string',
                'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$',
-               'help-string'=>'User name'}},
+               'help-string'=>'User name',
+               'maxlen'=>'63'}},
            'tag'=>
             {:obj=>:element,
              :attributes=>
@@ -20611,6 +22669,19 @@ module PaloAlto
        :obj=>:sequence,
        :attributes=>
         {'name'=>'redist', 'help-string'=>'Redistribution control'}},
+     'log-flow-counters'=>
+      {'name'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'name',
+           'type'=>'string',
+           'handler'=>'show_log_flow_counters_handler',
+           'help-string'=>'log collector group name',
+           'complete-handler'=>
+            '$config/devices/entry/log-collector-group/entry/@name'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'log-flow-counters', 'help-string'=>'Log flow counters'}},
      :obj=>:union,
      :attributes=>{'name'=>'log-collector-group', 'target'=>'mgmt'}},
    'log-collector'=>
@@ -21024,6 +23095,29 @@ module PaloAlto
              'help-string'=>'Turn off VLD manager debug logging'}},
          :obj=>:union,
          :attributes=>{'name'=>'debug'}},
+       'threadpool'=>
+        {'set'=>
+          {'count'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'count',
+               'type'=>'rangedint',
+               'min'=>'4',
+               'max'=>'32',
+               'handler'=>'/usr/local/bin/sdb cfg.vld.threadcount=$count'}},
+           :obj=>:sequence,
+           :attributes=>
+            {'name'=>'set',
+             'help-string'=>'Set number of threads in vldmgr threadpool'}},
+         'show'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'show',
+             'handler'=>
+              'Number of threads=`/usr/local/bin/sdb -ne cfg.vld.threadcount',
+             'help-string'=>'Show number of threads in the threadpool'}},
+         :obj=>:union,
+         :attributes=>{'name'=>'threadpool', 'target'=>'script'}},
        :obj=>:sequence,
        :attributes=>
         {'name'=>'vldmgr',
@@ -21129,6 +23223,16 @@ module PaloAlto
        :obj=>:union,
        :attributes=>
         {'name'=>'contmgr', 'help-string'=>'content manager related debug'}},
+     'log-flow'=>
+      {'counters'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'counters',
+           'target'=>'mgmt',
+           'handler'=>'show_log_flow_counters_handler',
+           'help-string'=>'show stats'}},
+       :obj=>:union,
+       :attributes=>{'name'=>'log-flow', 'help-string'=>'Log flow counters'}},
      :obj=>:union,
      :attributes=>
       {'name'=>'log-collector',
@@ -21305,6 +23409,42 @@ module PaloAlto
          'target'=>'dagger',
          'handler'=>'snmpd_handler.debug_off',
          'help-string'=>'Turn off debug logging'}},
+     'clear_persistence'=>
+      {'entity'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'entity',
+           'target'=>'dagger',
+           'handler'=>'snmpd_handler.clear_persistence_entity',
+           'help-string'=>'Clear ENTITY-MIB persistence DB'}},
+       'interface'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'interface',
+           'target'=>'dagger',
+           'handler'=>'snmpd_handler.clear_persistence_interface',
+           'help-string'=>'Clear IF-MIB persistence DB'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'clear_persistence', 'help-string'=>'Clear persistence DB'}},
+     'sysd-disable-retry'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'sysd-disable-retry',
+         'type'=>'bool',
+         'target'=>'dagger',
+         'handler'=>'snmpd_handler.disable_retry',
+         'help-string'=>'Enable/Disable snmpd retry if sysd fetch times out'}},
+     'sysd-timeout'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'sysd-timeout',
+         'type'=>'rangedint',
+         'min'=>'8',
+         'max'=>'100',
+         'target'=>'dagger',
+         'handler'=>'snmpd_handler.sysd_timeout',
+         'help-string'=>'Set sysd timeout for snmpd'}},
      :obj=>:union,
      :attributes=>
       {'name'=>'snmpd', 'help-string'=>'debug option for snmpd daemon'}},
@@ -21335,6 +23475,229 @@ module PaloAlto
      :attributes=>
       {'name'=>'management-tunnel',
        'help-string'=>'Debug commands for management tunnel'}},
+   'pancfg-directory-usage'=>
+    {'set'=>
+      {'optimize-database-usage'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'optimize-database-usage',
+           'target'=>'mgmt',
+           'help-string'=>'Optimize mongo database disk usage',
+           'handler'=>'set_mongo_storage_wired_tiger_handler'}},
+       'device-monitoring'=>
+        {'disk-quota'=>
+          {'set'=>
+            {'size'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'size',
+                 'type'=>'rangedint',
+                 'min'=>'1',
+                 'max'=>'25600',
+                 'handler'=>'devmon-resize-db-handler'}},
+             'force'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'force',
+                 'type'=>'bool',
+                 'default'=>'no',
+                 'optional'=>'yes',
+                 'confirm'=>
+                  'All Device Monitoring data will be lost. Do you want to continue?'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'name'=>'set',
+               'target'=>'mgmt',
+               'help-string'=>'Set quota in MB'}},
+           'show'=>
+            {'local'=>
+              {:obj=>:sequence,
+               :attributes=>
+                {'name'=>'local',
+                 'target'=>'script',
+                 'handler'=>
+                  'echo -n \'Device Monitoring Disk Quota(MB): \'; /usr/local/bin/sdb -n cfg.devmon-storage-size',
+                 'help-string'=>'Show quota in MB'}},
+             'peer'=>
+              {:obj=>:sequence,
+               :attributes=>
+                {'name'=>'peer',
+                 'target'=>'script',
+                 'handler'=>
+                  'echo -n \'Peer Device Monitoring Disk Quota(MB): \'; /usr/local/bin/sdb -n peer.cfg.devmon-storage-size',
+                 'help-string'=>'Show peer\'s quota in MB'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'name'=>'show', 'help-string'=>'Show disk quota in MB'}},
+           :obj=>:sequence,
+           :attributes=>{'name'=>'disk-quota', 'help-string'=>'Disk quota'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'device-monitoring',
+           'help-string'=>'Optimize device-monitoring data'}},
+       'max-num-images'=>
+        {'count'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'count',
+             'type'=>'rangedint',
+             'min'=>'2',
+             'max'=>'64',
+             'handler'=>'set_max_num_images'}},
+         'show'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'show',
+             'handler'=>'show_max_num_images',
+             'help-string'=>
+              'Show maximum number of software or content images'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'max-num-images',
+           'target'=>'mgmt',
+           'roles'=>'superuser,vsysadmin,deviceadmin,panorama-admin',
+           'help-string'=>'Set limit for max-num of images software/content'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'set',
+         'help-string'=>'Set operations to optimize pancfg partition'}},
+     'clean'=>
+      {'config'=>
+        {'saved'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'saved',
+             'type'=>'string',
+             'maxlen'=>'32',
+             'regex'=>'^[a-zA-Z0-9][\.a-zA-Z0-9_-]+$',
+             'complete-handler'=>'delete_config_complete_handler',
+             'help-string'=>'Filename'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'config',
+           'help-string'=>'Clean unused saved configurations',
+           'handler'=>'delete_config_handler'}},
+       'dynamic-updates'=>
+        {'local'=>
+          {'content'=>
+            {'update'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'update',
+                 'type'=>'string',
+                 'maxlen'=>'64',
+                 'regex'=>'^[a-zA-Z0-9][\.a-zA-Z0-9_-]+$',
+                 'complete-handler'=>'delete_content_complete_handler',
+                 'help-string'=>'Filename'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'name'=>'content',
+               'help-string'=>'Remove content updates on disk',
+               'handler'=>'delete_content_handler'}},
+           'anti-virus'=>
+            {'update'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'update',
+                 'type'=>'string',
+                 'maxlen'=>'64',
+                 'regex'=>'^[a-zA-Z0-9][\.a-zA-Z0-9_-]+$',
+                 'complete-handler'=>'delete_av_complete_handler',
+                 'help-string'=>'Filename'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'name'=>'anti-virus',
+               'help-string'=>'Remove anti-virus updates on disk',
+               'handler'=>'delete_av_handler'}},
+           :obj=>:sequence,
+           :attributes=>
+            {'name'=>'local', 'help-string'=>'local content/av images'}},
+         'deployment'=>
+          {'content'=>
+            {'file'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'file',
+                 'type'=>'string',
+                 'maxlen'=>'256',
+                 'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+                 'complete-handler'=>
+                  'batch_content_install_file_complete_handler'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'name'=>'content',
+               'help-string'=>'Delete a given content package',
+               'handler'=>'batch_content_delete_file_handler'}},
+           'anti-virus'=>
+            {'file'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'file',
+                 'type'=>'string',
+                 'maxlen'=>'256',
+                 'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+                 'complete-handler'=>
+                  'batch_antivirus_install_file_complete_handler'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'name'=>'anti-virus',
+               'help-string'=>'Delete a given antivirus package',
+               'handler'=>'batch_antivirus_delete_file_handler'}},
+           :obj=>:sequence,
+           :attributes=>
+            {'name'=>'deployment',
+             'help-string'=>'deployment content/av images'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'dynamic-updates',
+           'help-string'=>'Clean unused dynamic updates'}},
+       'software-images'=>
+        {'local'=>
+          {'version'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'version',
+               'type'=>'string',
+               'maxlen'=>'32',
+               'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]+$',
+               'complete-handler'=>'delete_software_version_complete_handler',
+               'handler'=>'delete_software_version_handler',
+               'help-string'=>'Version'}},
+           :obj=>:sequence,
+           :attributes=>
+            {'name'=>'local', 'help-string'=>'local software images'}},
+         'deployment'=>
+          {'delete'=>
+            {'file'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'file',
+                 'type'=>'string',
+                 'maxlen'=>'256',
+                 'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+                 'complete-handler'=>
+                  'batch_software_install_file_complete_handler'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'name'=>'delete',
+               'help-string'=>'Delete a given software package',
+               'handler'=>'batch_software_delete_file_handler'}},
+           :obj=>:sequence,
+           :attributes=>
+            {'name'=>'deployment',
+             'help-string'=>'deployment software images'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'software-images', 'help'=>'Clean unused software images'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'clean',
+         'target'=>'mgmt',
+         'help-string'=>'delete operations to clean pancfg partition'}},
+     :obj=>:union,
+     :attributes=>
+      {'name'=>'pancfg-directory-usage',
+       'help-string'=>'Optimize or clean pancfg directory usage'}},
    :obj=>:union,
    :attributes=>
     {'name'=>'debug',
@@ -21391,6 +23754,16 @@ module PaloAlto
          'type'=>'enum',
          'help-string'=>'Logging',
          'handler'=>'set_logging_handler'}},
+     'peer-timeout'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'peer-timeout',
+         'target'=>'mgmt',
+         'type'=>'rangedint',
+         'min'=>'30',
+         'max'=>'999999',
+         'handler'=>'set_mgmtsrvr_connection_timeout',
+         'help-string'=>'Set mgmtsrvr peer timeout in seconds'}},
      :obj=>:union,
      :attributes=>
       {'name'=>'management-server',
@@ -21847,102 +24220,105 @@ module PaloAlto
        'roles'=>'superuser,panorama-admin',
        'help-string'=>
         'Setting for failing SSL connections on non-compliant/invalid cert'}},
-   'syslogng-ssl-conn-validation'=>
-    {'all-conns'=>
-      {:obj=>:element,
-       :attributes=>
-        {'name'=>'all-conns',
-         'type'=>'enum',
-         'handler'=>'set_syslogng_ssl_all_conn_validation_handler',
-         'help-string'=>'Validation options for all connections'}},
-     'explicit'=>
-      {'CRL'=>
-        {'enforce'=>
-          {:obj=>:sequence,
+   'syslogng'=>
+    {'ssl-conn-validation'=>
+      {'all-conns'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'all-conns',
+           'type'=>'enum',
+           'handler'=>'set_syslogng_ssl_all_conn_validation_handler',
+           'help-string'=>'Validation options for all connections'}},
+       'explicit'=>
+        {'CRL'=>
+          {'enforce'=>
+            {:obj=>:sequence,
+             :attributes=>
+              {'name'=>'enforce',
+               'handler'=>'set_syslogng_ssl_explicit_validation_handler',
+               'help-string'=>
+                'Default for FIPS-CC mode. Enforce CRL validation for all connections.'}},
+           'skip'=>
+            {:obj=>:sequence,
+             :attributes=>
+              {'name'=>'skip',
+               'handler'=>'set_syslogng_ssl_explicit_validation_handler',
+               'help-string'=>'Skip CRL validation for all connections'}},
+           'prefer'=>
+            {:obj=>:sequence,
+             :attributes=>
+              {'name'=>'prefer',
+               'handler'=>'set_syslogng_ssl_explicit_validation_handler',
+               'help-string'=>
+                'Default for non-FIPS-CC mode. CRL validation failure is overridden'}},
+           :obj=>:sequence,
            :attributes=>
-            {'name'=>'enforce',
-             'handler'=>'set_syslogng_ssl_explicit_validation_handler',
+            {'name'=>'CRL',
+             'help-string'=>'CRL Validation for all connections'}},
+         'OCSP'=>
+          {'enforce'=>
+            {:obj=>:sequence,
+             :attributes=>
+              {'name'=>'enforce',
+               'handler'=>'set_syslogng_ssl_explicit_validation_handler',
+               'help-string'=>
+                'Default for FIPS-CC mode. Enforce OCSP validation for all connections.'}},
+           'skip'=>
+            {:obj=>:sequence,
+             :attributes=>
+              {'name'=>'skip',
+               'handler'=>'set_syslogng_ssl_explicit_validation_handler',
+               'help-string'=>'Skip OCSP validation for all connections'}},
+           'prefer'=>
+            {:obj=>:sequence,
+             :attributes=>
+              {'name'=>'prefer',
+               'handler'=>'set_syslogng_ssl_explicit_validation_handler',
+               'help-string'=>
+                'Default for non-FIPS-CC mode. OCSP validation failure is overridden'}},
+           :obj=>:sequence,
+           :attributes=>
+            {'name'=>'OCSP',
+             'help-string'=>'OCSP validation for all connections'}},
+         'EKU'=>
+          {'enforce'=>
+            {:obj=>:sequence,
+             :attributes=>
+              {'name'=>'enforce',
+               'handler'=>'set_syslogng_ssl_explicit_validation_handler',
+               'help-string'=>
+                'Default for FIPS-CC mode. Enforce EKU validation for all connections.'}},
+           'skip'=>
+            {:obj=>:sequence,
+             :attributes=>
+              {'name'=>'skip',
+               'handler'=>'set_syslogng_ssl_explicit_validation_handler',
+               'help-string'=>'Skip EKU validation for all connections'}},
+           'prefer'=>
+            {:obj=>:sequence,
+             :attributes=>
+              {'name'=>'prefer',
+               'handler'=>'set_syslogng_ssl_explicit_validation_handler',
+               'help-string'=>
+                'Default for non-FIPS-CC mode. EKU validation failure is overridden'}},
+           :obj=>:sequence,
+           :attributes=>
+            {'name'=>'EKU',
              'help-string'=>
-              'Enforce CRL validation for all connections. Default.'}},
-         'skip'=>
-          {:obj=>:sequence,
-           :attributes=>
-            {'name'=>'skip',
-             'handler'=>'set_syslogng_ssl_explicit_validation_handler',
-             'help-string'=>'Skip CRL validation for all connections'}},
-         'prefer'=>
-          {:obj=>:sequence,
-           :attributes=>
-            {'name'=>'prefer',
-             'handler'=>'set_syslogng_ssl_explicit_validation_handler',
-             'help-string'=>
-              'Explicitly enforce CRL validation for all connections'}},
+              'EKU validation for all connections. This parameter is used when CRL and OCSP are not set to \'skip\'.'}},
          :obj=>:sequence,
          :attributes=>
-          {'name'=>'CRL',
-           'help-string'=>'CRL Validation for all connections'}},
-       'OCSP'=>
-        {'enforce'=>
-          {:obj=>:sequence,
-           :attributes=>
-            {'name'=>'enforce',
-             'handler'=>'set_syslogng_ssl_explicit_validation_handler',
-             'help-string'=>
-              'Enforce OCSP validation for all connections. Default.'}},
-         'skip'=>
-          {:obj=>:sequence,
-           :attributes=>
-            {'name'=>'skip',
-             'handler'=>'set_syslogng_ssl_explicit_validation_handler',
-             'help-string'=>'Skip OCSP validation for all connections'}},
-         'prefer'=>
-          {:obj=>:sequence,
-           :attributes=>
-            {'name'=>'prefer',
-             'handler'=>'set_syslogng_ssl_explicit_validation_handler',
-             'help-string'=>
-              'Explicitly enforce OCSP validation for all connections'}},
-         :obj=>:sequence,
-         :attributes=>
-          {'name'=>'OCSP',
-           'help-string'=>'OCSP validation for all connections'}},
-       'EKU'=>
-        {'enforce'=>
-          {:obj=>:sequence,
-           :attributes=>
-            {'name'=>'enforce',
-             'handler'=>'set_syslogng_ssl_explicit_validation_handler',
-             'help-string'=>
-              'Enforce EKU validation for all connections. Default.'}},
-         'skip'=>
-          {:obj=>:sequence,
-           :attributes=>
-            {'name'=>'skip',
-             'handler'=>'set_syslogng_ssl_explicit_validation_handler',
-             'help-string'=>'Skip EKU validation for all connections'}},
-         'prefer'=>
-          {:obj=>:sequence,
-           :attributes=>
-            {'name'=>'prefer',
-             'handler'=>'set_syslogng_ssl_explicit_validation_handler',
-             'help-string'=>
-              'Explicitly enforce EKU validation for all connections'}},
-         :obj=>:sequence,
-         :attributes=>
-          {'name'=>'EKU',
+          {'name'=>'explicit',
            'help-string'=>
-            'EKU validation for all connections. This parameter is used when CRL and OCSP are not set to \'skip\'.'}},
-       :obj=>:sequence,
+            'Explicit SSL cert parameter validation settings for all connections.'}},
+       :obj=>:union,
        :attributes=>
-        {'name'=>'explicit',
+        {'name'=>'ssl-conn-validation',
+         'roles'=>'superuser,panorama-admin',
          'help-string'=>
-          'Explicit SSL cert parameter validation settings for all connections.'}},
-     :obj=>:union,
-     :attributes=>
-      {'name'=>'syslogng-ssl-conn-validation',
-       'roles'=>'superuser,panorama-admin',
-       'help-string'=>
-        'Settings for syslog SSL connection\'s certificate validation'}},
+          'Settings for syslog SSL connection\'s certificate validation'}},
+     :obj=>:sequence,
+     :attributes=>{'name'=>'syslogng'}},
    'device-telemetry'=>
     {'inherit-panorama-settings'=>
       {'all-template-stacks'=>
@@ -22101,6 +24477,7 @@ module PaloAlto
        :attributes=>
         {'name'=>'user',
          'type'=>'string',
+         'maxlen'=>'63',
          'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$',
          'help-string'=>'User name'}},
      'users'=>
@@ -22109,6 +24486,7 @@ module PaloAlto
          :attributes=>
           {'name'=>'member',
            'type'=>'string',
+           'maxlen'=>'63',
            'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$'}},
        :obj=>:array,
        :attributes=>{'name'=>'users', 'help-string'=>'User list'}},
@@ -22231,7 +24609,180 @@ module PaloAlto
      'handler'=>'set_handler',
      'help-string'=>'Set operational parameters'}},
  'request'=>
-  {'api'=>
+  {'routing'=>
+    {'migrate-config'=>
+      {'template-stack'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'template-stack',
+           'optional'=>'yes',
+           'type'=>'string',
+           'maxlen'=>'32',
+           'regex'=>'^[a-zA-Z0-9][\.a-zA-Z0-9_-]+$',
+           'help-string'=>'migrate a template stack',
+           'complete-handler'=>'frr_migrate.frr_template_stack_completer'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'migrate-config',
+         'handler'=>'frr_migrate_panorama',
+         'help-string'=>
+          'Migrate routing configuration to advanced-routing mode'}},
+     'delete-config'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'delete-config',
+         'help-string'=>'Delete migrated routing configuration',
+         'handler'=>'frr_delete_migrate_panorama'}},
+     'show-config'=>
+      {'template-stack'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'template-stack',
+           'optional'=>'yes',
+           'type'=>'string',
+           'maxlen'=>'32',
+           'regex'=>'^[a-zA-Z0-9][\.a-zA-Z0-9_-]+$',
+           'help-string'=>'Show for a template stack',
+           'complete-handler'=>'frr_migrate.frr_template_stack_completer'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'show-config',
+         'handler'=>'frr_show_migrate_panorama',
+         'help-string'=>'Show migrated advanced-routing configuration'}},
+     'show-virtual-router'=>
+      {'template-stack'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'template-stack',
+           'optional'=>'yes',
+           'type'=>'string',
+           'maxlen'=>'32',
+           'regex'=>'^[a-zA-Z0-9][\.a-zA-Z0-9_-]+$',
+           'help-string'=>'Show for a template stack',
+           'complete-handler'=>'frr_migrate.frr_template_stack_completer'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'show-virtual-router',
+         'handler'=>'frr_show_virtual_router_panorama',
+         'help-string'=>'Show virtual router list'}},
+     'show-logical-router'=>
+      {'template-stack'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'template-stack',
+           'optional'=>'yes',
+           'type'=>'string',
+           'maxlen'=>'32',
+           'regex'=>'^[a-zA-Z0-9][\.a-zA-Z0-9_-]+$',
+           'help-string'=>'Show for a template stack',
+           'complete-handler'=>'frr_migrate.frr_template_stack_completer'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'show-logical-router',
+         'handler'=>'frr_show_logical_router_panorama',
+         'help-string'=>'Show logical router list'}},
+     'show-error'=>
+      {'template-stack'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'template-stack',
+           'optional'=>'yes',
+           'type'=>'string',
+           'maxlen'=>'32',
+           'regex'=>'^[a-zA-Z0-9][\.a-zA-Z0-9_-]+$',
+           'help-string'=>'Show for a template stack',
+           'complete-handler'=>
+            'frr_show_migrate_error_panorama.frr_error_template_stack_completer'}},
+       'template'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'template',
+           'optional'=>'yes',
+           'type'=>'string',
+           'maxlen'=>'32',
+           'regex'=>'^[a-zA-Z0-9][\.a-zA-Z0-9_-]+$',
+           'help-string'=>'Show for a template',
+           'complete-handler'=>
+            'frr_show_migrate_error_panorama.frr_error_template_completer'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'show-error',
+         'help-string'=>
+          'Show errors in migrated advanced-routing configuration',
+         'handler'=>'frr_show_migrate_error_panorama'}},
+     :obj=>:union,
+     :attributes=>
+      {'name'=>'routing',
+       'target'=>'dagger',
+       'help-string'=>'routing configuration migration handler'}},
+   'upgrade-history'=>
+    {'device-id'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'device-id',
+         'type'=>'string',
+         'help-string'=>'Serial number of the device.',
+         'complete-handler'=>'$$config/mgt-config/devices/entry/@name'}},
+     :obj=>:sequence,
+     :attributes=>
+      {'name'=>'upgrade-history',
+       'help-string'=>'Show the software versions installed on input device.',
+       'handler'=>'request_remote_upgrade_history_handler'}},
+   'user-id'=>
+    {'cloud-identity-engine'=>
+      {'config-data'=>
+        {'status'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'status',
+             'help-string'=>
+              'Request cloud identity engine config data status'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'config-data',
+           'handler'=>'dirsync_config_data',
+           'help-string'=>'Request cloud identity engine config data'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'cloud-identity-engine',
+         'needvsys'=>'yes',
+         'help-string'=>'Cloud Identity Engine'}},
+     :obj=>:sequence,
+     :attributes=>
+      {'name'=>'user-id', 'help-string'=>'user-id', 'target'=>'useridd'}},
+   'licensing'=>
+    {'endpoint'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'endpoint',
+         'type'=>'string',
+         'regex'=>'^[0-9a-zA-Z.\/_-]+$',
+         'maxlen'=>'128'}},
+     'argument-names'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'member',
+           'type'=>'string',
+           'maxlen'=>'64',
+           'regex'=>'^[0-9a-zA-Z._:-]+$'}},
+       :obj=>:array,
+       :attributes=>
+        {'name'=>'argument-names', 'help-string'=>'List of Variable Object'}},
+     'arguments'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'member',
+           'type'=>'string',
+           'maxlen'=>'64',
+           'regex'=>'^[0-9a-zA-Z._:-]+$'}},
+       :obj=>:array,
+       :attributes=>
+        {'name'=>'arguments', 'help-string'=>'List of Variable Object'}},
+     :obj=>:sequence,
+     :attributes=>{'name'=>'licensing', 'handler'=>'generic_license_handler'}},
+   'api'=>
     {'key'=>
       {'expiration'=>
         {:obj=>:sequence,
@@ -22249,6 +24800,163 @@ module PaloAlto
      :obj=>:union,
      :attributes=>
       {'name'=>'api', 'help-string'=>'All API related operations'}},
+   'ui'=>
+    {'telemetry'=>
+      {'enabled'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'enabled',
+           'help-string'=>'Enable Pendo',
+           'handler'=>
+            '/usr/local/bin/sdb -n cfg.ui.telemetry.disabled=False'}},
+       'disabled'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'disabled',
+           'help-string'=>'Disable Pendo',
+           'handler'=>'/usr/local/bin/sdb -n cfg.ui.telemetry.disabled=True'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'telemetry',
+         'roles'=>'superuser,deviceadmin,panorama-admin',
+         'target'=>'script',
+         'help-string'=>'Request to change Pendo support'}},
+     :obj=>:union,
+     :attributes=>{'name'=>'ui', 'help-string'=>'ui'}},
+   'mongo'=>
+    {'show'=>
+      {'storage-engine'=>
+        {'instance'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'instance',
+             'type'=>'enum',
+             'help-string'=>'mongoDB instance'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'storage-engine',
+           'handler'=>'show_mongo_storage_engine_handler',
+           'help-string'=>'show mongod storage engine'}},
+       'backup-schedule'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'backup-schedule',
+           'handler'=>'show_mongo_backup_schedule_handler',
+           'help-string'=>'show current mongo backup schedule'}},
+       'partition-path'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'partition-path',
+           'handler'=>'show_mongo_partition_path_handler',
+           'help-string'=>'show current mongo backup data storage path'}},
+       'databases'=>
+        {'instance'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'instance',
+             'type'=>'enum',
+             'help-string'=>'mongoDB instance'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'databases',
+           'target'=>'script',
+           'handler'=>
+            '/usr/bin/python /usr/local/bin/mongo_list_dbs.py $instance',
+           'help-string'=>'show mongo database list'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'show',
+         'target'=>'mgmt',
+         'help-string'=>'show mongoDB info'}},
+     'set'=>
+      {'storage-engine'=>
+        {'instance'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'instance',
+             'type'=>'enum',
+             'help-string'=>'mongoDB instance'}},
+         'format'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'format',
+             'type'=>'enum',
+             'help-string'=>'mongoDB storage engine format'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'storage-engine',
+           'handler'=>'set_mongo_storage_engine_handler',
+           'help-string'=>'set mongod storage engine',
+           'confirm'=>'It will take some time, are you willing to continue?'}},
+       'partition'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'partition',
+           'type'=>'enum',
+           'handler'=>'set_mongo_partition_handler',
+           'help-string'=>'Set default partition path'}},
+       'backup-schedule'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'backup-schedule',
+           'type'=>'enum',
+           'handler'=>'set_mongo_backup_freq_handler',
+           'help-string'=>'Setup backup frequency'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'set',
+         'target'=>'mgmt',
+         'help-string'=>'set mongoDB feature'}},
+     'backup'=>
+      {'database'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'database',
+           'type'=>'string',
+           'maxlen'=>'64',
+           'optional'=>'yes',
+           'complete-handler'=>'show_mongo_dbs_complete_handler',
+           'help-string'=>
+            'database name, will backup default db and tables if not given'}},
+       'collection'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'collection',
+           'type'=>'string',
+           'maxlen'=>'64',
+           'optional'=>'yes',
+           'complete-handler'=>'show_mongo_colls_complete_handler',
+           'help-string'=>'table name'}},
+       'instance'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'instance',
+           'type'=>'enum',
+           'optional'=>'yes',
+           'help-string'=>'mongoDB instance, the default would be mgmt'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'backup',
+         'target'=>'mgmt',
+         'handler'=>'request_mongo_backup_handler',
+         'help-string'=>'manually backup MongoDB data'}},
+     'restore'=>
+      {'instance'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'instance',
+           'type'=>'enum',
+           'optional'=>'yes',
+           'help-string'=>'mongoDB instance, the default would be mgmt'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'restore',
+         'target'=>'mgmt',
+         'handler'=>'request_mongo_restore_handler',
+         'help-string'=>'manually restore MongoDB data from backup files'}},
+     :obj=>:union,
+     :attributes=>
+      {'name'=>'mongo', 'help-string'=>'All mongo related operations'}},
    'global-protect-portal'=>
     {'ticket'=>
       {'portal'=>
@@ -22276,6 +24984,14 @@ module PaloAlto
            'type'=>'rangedint',
            'min'=>'0',
            'max'=>'65535'}},
+       'tpl'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'tpl',
+           'type'=>'string',
+           'complete-handler'=>
+            '$config/devices/entry[@name=\'localhost.localdomain\']/template/entry/@name',
+           'help-string'=>'template name'}},
        :obj=>:sequence,
        :attributes=>
         {'name'=>'ticket',
@@ -22336,7 +25052,7 @@ module PaloAlto
        :attributes=>
         {'name'=>'show',
          'handler'=>
-          'max_keys=`/usr/local/bin/sdb -ne cfg.report.max-keys-limit`; if [ -z $max_keys ]; then max_keys=50; model=`/usr/local/bin/sdb -ne cfg.platform.model`; if [ $model == \'M-100\' ]; then max_keys=25; else mode=`/usr/local/bin/sdb -ne cfg.cms.mode`; if [ $mode ]; then if [ $mode == \'legacy\' ]; then max_keys=25; fi; fi; fi; fi; ((max_keys=max_keys*1000)); echo $max_keys;',
+          'max_keys=`/usr/local/bin/sdb -ne cfg.report.max-keys-limit`; if [ -z $max_keys ]; then max_keys=500; model=`/usr/local/bin/sdb -ne cfg.platform.model`; if [ $model == \'M-100\' ]; then max_keys=25; else mode=`/usr/local/bin/sdb -ne cfg.cms.mode`; if [ $mode ]; then if [ $mode == \'legacy\' ]; then max_keys=25; fi; fi; fi; fi; ((max_keys=max_keys*1000)); echo $max_keys;',
          'help-string'=>'report max key limit'}},
      :obj=>:union,
      :attributes=>{'name'=>'max-report-keys', 'target'=>'script'}},
@@ -22375,6 +25091,13 @@ module PaloAlto
          'maxlen'=>'128',
          'complete-handler'=>'get-plugin-packages-completer',
          'handler'=>'install-plugin-handler'}},
+     'quick-install'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'quick-install',
+         'type'=>'string',
+         'maxlen'=>'128',
+         'handler'=>'quick-install-plugin-handler'}},
      'uninstall'=>
       {:obj=>:element,
        :attributes=>
@@ -22419,6 +25142,14 @@ module PaloAlto
            'handler'=>'plugin-upgrade-download-file-handler',
            'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
            'help-string'=>'Download plugin package by file name'}},
+       'sync-to-peer'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'sync-to-peer',
+           'type'=>'bool',
+           'optional'=>'yes',
+           'default'=>'no',
+           'help-string'=>'Send a copy to HA peer'}},
        :obj=>:sequence,
        :attributes=>
         {'name'=>'download', 'help-string'=>'Download plugin packages'}},
@@ -22492,11 +25223,121 @@ module PaloAlto
        :obj=>:sequence,
        :attributes=>
         {'name'=>'dau', 'help-string'=>'Enable/disable dau plugin'}},
+     'set'=>
+      {'no-dep-check'=>
+        {'yes'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'yes',
+             'target'=>'script',
+             'handler'=>
+              '/usr/local/bin/sdb -n cfg.plugin.global.no-dep-check=yes',
+             'help-string'=>
+              'Disable dependency check during plugin install/uninstall'}},
+         'no'=>
+          {:obj=>:sequence,
+           :attributes=>
+            {'name'=>'no',
+             'target'=>'script',
+             'handler'=>
+              '/usr/local/bin/sdb -n cfg.plugin.global.no-dep-check=None',
+             'help-string'=>
+              'Enable dependency check during plugin install/uninstall'}},
+         :obj=>:union,
+         :attributes=>{'name'=>'no-dep-check'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'set', 'help-string'=>'Set global plugin options'}},
+     'vm_series'=>
+      {'test'=>
+        {'case'=>
+          {:obj=>:element,
+           :attributes=>{'name'=>'case', 'type'=>'string', 'maxlen'=>'63'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'test',
+           'handler'=>':vm_series:test_op_cmd',
+           'help-string'=>'Query from cloud service'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'vm_series',
+         'help-string'=>'Cloud services operational commands'}},
      :obj=>:union,
      :attributes=>
       {'name'=>'plugins',
        'roles'=>'superuser,panorama-admin',
        'help-string'=>'Request information of plugins'}},
+   'clean-replay'=>
+    {'entries'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'entries',
+         'help-string'=>'type of entries to be purged',
+         'type'=>'enum'}},
+     :obj=>:sequence,
+     :attributes=>
+      {'name'=>'clean-replay',
+       'roles'=>'superuser,panorama-admin',
+       'help-string'=>'Purge entries from replay database',
+       'handler'=>'clean_replaydb_handler'}},
+   'update-db'=>
+    {'jobs'=>
+      {'id'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'id',
+           'help-string'=>'Job id',
+           'type'=>'rangedint',
+           'min'=>'1',
+           'max'=>'4294967295'}},
+       'params'=>
+        {'progress'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'progress',
+             'optional'=>'yes',
+             'type'=>'rangedint',
+             'min'=>'0',
+             'max'=>'100',
+             'help-string'=>'Job progre ss, from 0 to 100'}},
+         'estimated-time'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'estimated-time',
+             'optional'=>'yes',
+             'type'=>'rangedint',
+             'min'=>'0',
+             'max'=>'4294967295',
+             'help-string'=>'Estimated time for job to complete'}},
+         'error'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'error',
+             'optional'=>'yes',
+             'type'=>'string',
+             'help-string'=>'Error message',
+             'maxlen'=>'1024'}},
+         'warning'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'warning',
+             'optional'=>'yes',
+             'type'=>'string',
+             'help-string'=>'Warning message',
+             'maxlen'=>'1024'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'params', 'help-string'=>'Parameters to be updated'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'jobs',
+         'help-string'=>'Update jobs',
+         'handler'=>'update-job-status-handler'}},
+     :obj=>:union,
+     :attributes=>
+      {'name'=>'update-db',
+       'roles'=>'superuser,panorama-admin',
+       'help-string'=>'Update database'}},
    'session-role'=>
     {:obj=>:sequence,
      :attributes=>
@@ -22613,6 +25454,14 @@ module PaloAlto
        :obj=>:array,
        :attributes=>
         {'name'=>'device-group', 'optional'=>'yes', 'internal'=>'yes'}},
+     'firewall-master-key'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'firewall-master-key',
+         'type'=>'string',
+         'optional'=>'yes',
+         'help-string'=>'masterkey to encrypt firewall passwords',
+         'secret'=>'yes'}},
      :obj=>:sequence,
      :attributes=>
       {'name'=>'device-config-import',
@@ -22858,37 +25707,51 @@ module PaloAlto
                'maxlen'=>'64',
                'help-string'=>'template',
                'complete-handler'=>
-                '$$config/devices/entry/template/entry/@name'}},
+                '$$config/devices/entry/template/entry/@name|$$config/devices/entry/template-stack/entry/@name'}},
            :obj=>:array,
            :attributes=>
             {'name'=>'reference-templates',
              'optional'=>'yes',
              'help-string'=>'directly referred templates'}},
-         'master-device'=>
-          {'device'=>
-            {:obj=>:element,
+         'user-group-source'=>
+          {'master-device'=>
+            {'device'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'device', 'type'=>'string', 'maxlen'=>'64'}},
+             'vsys'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'vsys', 'type'=>'string', 'optional'=>'yes'}},
+             'sync-group'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'sync-group',
+                 'type'=>'bool',
+                 'default'=>'yes',
+                 'optional'=>'yes'}},
+             :obj=>:sequence,
              :attributes=>
-              {'name'=>'device',
-               'type'=>'string',
-               'maxlen'=>'64',
-               'complete-handler'=>'$config/mgt-config/devices/entry/@name'}},
-           'vsys'=>
-            {:obj=>:element,
+              {'name'=>'master-device',
+               'optional'=>'yes',
+               'help-string'=>
+                'device from which user and user groups will be retrieved'}},
+           'cloud-identity-engine'=>
+            {'member'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'member',
+                 'type'=>'string',
+                 'maxlen'=>'63',
+                 'help-string'=>'cloud identity engine instance'}},
+             :obj=>:array,
              :attributes=>
-              {'name'=>'vsys', 'type'=>'string', 'optional'=>'yes'}},
-           'sync-group'=>
-            {:obj=>:element,
-             :attributes=>
-              {'name'=>'sync-group',
-               'type'=>'bool',
-               'default'=>'yes',
-               'optional'=>'yes'}},
+              {'name'=>'cloud-identity-engine',
+               'optional'=>'yes',
+               'help-string'=>
+                'cloud identity engine from which user and user groups will be retrived'}},
            :obj=>:sequence,
-           :attributes=>
-            {'name'=>'master-device',
-             'optional'=>'yes',
-             'help-string'=>
-              'device from which user and user groups will be retrieved'}},
+           :attributes=>{'name'=>'user-group-source', 'optional'=>'yes'}},
          'description'=>
           {:obj=>:element,
            :attributes=>
@@ -22934,7 +25797,7 @@ module PaloAlto
        :attributes=>
         {'name'=>'address',
          'type'=>'string',
-         'maxlen'=>'63',
+         'maxlen'=>'255',
          'regex'=>'^([a-zA-Z0-9:\.\_-])+([a-zA-Z0-9:\_-])$',
          'help-string'=>'Address name you want to resolve'}},
      :obj=>:sequence,
@@ -23018,6 +25881,14 @@ module PaloAlto
          'optional'=>'yes',
          'default'=>'no',
          'help-string'=>'trigger commit on device?'}},
+     'firewall-master-key'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'firewall-master-key',
+         'type'=>'string',
+         'optional'=>'yes',
+         'help-string'=>'masterkey to encrypt firewall passwords',
+         'secret'=>'yes'}},
      :obj=>:sequence,
      :attributes=>
       {'name'=>'export-load-config-bundle',
@@ -23079,6 +25950,7 @@ module PaloAlto
        :attributes=>
         {'name'=>'password',
          'type'=>'string',
+         'maxlen'=>'63',
          'regex'=>'^.*$',
          'help-string'=>'plain text password',
          'secret'=>'yes'}},
@@ -23140,15 +26012,7 @@ module PaloAlto
          'help-stirng'=>
           'Re-Encrypt historical passwords using current or new master key'}},
      'dump-history'=>
-      {'master-key'=>
-        {:obj=>:element,
-         :attributes=>
-          {'name'=>'master-key',
-           'type'=>'string',
-           'optional'=>'yes',
-           'help-string'=>'Master key used to encrypt passwords',
-           'secret'=>'yes'}},
-       :obj=>:sequence,
+      {:obj=>:sequence,
        :attributes=>
         {'name'=>'dump-history',
          'handler'=>'pw_history_dump_handler',
@@ -23692,6 +26556,14 @@ module PaloAlto
          'target'=>'script',
          'handler'=>
           '/usr/local/bin/sdb -n \'cfg.device-telem[collect-now-canceled]=1\' > /dev/null'}},
+     'reload-config-now'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'reload-config-now',
+         'optional'=>'yes',
+         'target'=>'script',
+         'handler'=>
+          '/usr/local/bin/sdb -n cfg.device-telem.config-reload-now=1 >/dev/null'}},
      :obj=>:union,
      :attributes=>
       {'name'=>'device-telemetry',
@@ -23868,6 +26740,7 @@ module PaloAlto
      :obj=>:union,
      :attributes=>
       {'name'=>'restart',
+       'roles'=>'superuser,deviceadmin,panorama-admin',
        'target'=>'mgmt',
        'handler'=>'restart_handler',
        'help-string'=>'Restart the system or software modules'}},
@@ -24099,6 +26972,102 @@ module PaloAlto
       {'name'=>'metadata-regenerate',
        'prune-on-sdb'=>'cfg.cms.mode=legacy,cfg.cms.mode=management-only',
        'help-string'=>'regenerate metadata for disk-array'}},
+   'authkey'=>
+    {'list'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'list',
+         'type'=>'string',
+         'maxlen'=>'31',
+         'help-string'=>'list key(s)',
+         'handler'=>'ms_authkey_list',
+         'complete-handler'=>'ms_authkey_completer',
+         'regex'=>'^(\*|([a-zA-Z0-9_]{1}[ a-zA-Z0-9_-]*)|)$'}},
+     'delete'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'delete',
+         'type'=>'string',
+         'maxlen'=>'31',
+         'help-string'=>'delete a key',
+         'handler'=>'ms_authkey_del',
+         'regex'=>'^([a-zA-Z0-9_]{1}[ a-zA-Z0-9_-]*)$',
+         'complete-handler'=>'ms_authkey_completer'}},
+     'add'=>
+      {'name'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'name',
+           'type'=>'string',
+           'maxlen'=>'31',
+           'help-string'=>'name of key',
+           'regex'=>'^([a-zA-Z0-9]{1}[ a-zA-Z0-9_-]*)$'}},
+       'lifetime'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'lifetime',
+           'type'=>'rangedint',
+           'min'=>'5',
+           'max'=>'525600',
+           'default'=>'60',
+           'help-string'=>'lifetime (in min)'}},
+       'count'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'count',
+           'type'=>'rangedint',
+           'min'=>'1',
+           'max'=>'100',
+           'default'=>'1',
+           'help-string'=>'usage count'}},
+       'devtype'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'devtype',
+           'optional'=>'yes',
+           'type'=>'enum',
+           'help-string'=>'device type'}},
+       'serial'=>
+        {'member'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'member',
+             'type'=>'string',
+             'maxlen'=>'31',
+             'regex'=>'^[0-9a-zA-Z]+$'}},
+         :obj=>:array,
+         :attributes=>
+          {'name'=>'serial',
+           'optional'=>'yes',
+           'help-string'=>'serial numbers',
+           'max-count'=>'100'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'add',
+         'help-string'=>'add a key',
+         'handler'=>'ms_authkey_add'}},
+     :obj=>:union,
+     :attributes=>
+      {'name'=>'authkey',
+       'help-string'=>'Auth-Key management',
+       'roles'=>'superuser,panorama-admin',
+       'target'=>'mgmt'}},
+   'sc3'=>
+    {'reset'=>
+      {:obj=>:sequence,
+       :attributes=>
+        {'name'=>'reset',
+         'help-string'=>'reset sc3',
+         'hidden'=>'yes',
+         'handler'=>'sc3_reset_handler',
+         'confirm'=>
+          'WARNING: Executing this command will reset SC3 state on this device. You will need to re-onboard managed devices. Do you want to continue?'}},
+     :obj=>:sequence,
+     :attributes=>
+      {'name'=>'sc3',
+       'help-string'=>'sc3 mgmt',
+       'roles'=>'superuser,deviceadmin,panorama-admin',
+       'hidden'=>'yes'}},
    'system'=>
     {'self-test'=>
       {'crypto'=>
@@ -24186,7 +27155,19 @@ module PaloAlto
          'target'=>'dagger',
          'help-string'=>'Copy and migrate system disk'}},
      'private-data-reset'=>
-      {:obj=>:sequence,
+      {'shutdown'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'shutdown',
+           'optional'=>'yes',
+           'help-string'=>'Shutdown the system',
+           'target'=>'script',
+           'handler'=>
+            '/usr/local/bin/light-reset.sh && /usr/local/bin/root_reboot --shutdown Private Data Reset CMS Cmd Initiated',
+           'prune-on'=>'fips-mode',
+           'confirm'=>
+            'Warning: executing this command will leave the system in a shutdown state. Power must be removed and reapplied for the system to restart and then reset the data. All logs and configuration will revert back to factory defaults. Are you sure you want to continue?'}},
+       :obj=>:sequence,
        :attributes=>
         {'name'=>'private-data-reset',
          'help-string'=>
@@ -24211,8 +27192,42 @@ module PaloAlto
           {'name'=>'check',
            'handler'=>'system_upgrade_check_handler',
            'help-string'=>'Get information from PaloAlto Networks server'}},
+       'eligible'=>
+        {'to-version'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'to-version',
+             'type'=>'string',
+             'complete-handler'=>
+              'system_upgrade_download_version_complete_handler',
+             'handler'=>'system_upgrade_check_to_version_handler',
+             'help-string'=>
+              'get names of all images needed to go to an image version'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'eligible', 'help-string'=>'Download software packages'}},
        'download'=>
-        {'version'=>
+        {'scp-profile'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'scp-profile',
+             'optional'=>'yes',
+             'type'=>'string',
+             'maxlen'=>'31',
+             'subtype'=>'object-name',
+             'complete-handler'=>
+              '$$config/panorama/server-profile/scp/entry/@name',
+             'help-string'=>'scp server profile name'}},
+         'to-version'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'to-version',
+             'type'=>'string',
+             'complete-handler'=>
+              'system_upgrade_download_version_complete_handler',
+             'help-string'=>'Download all software packages till version',
+             'handler'=>'system_upgrade_download_to_version_handler'}},
+         'version'=>
           {:obj=>:element,
            :attributes=>
             {'name'=>'version',
@@ -24269,10 +27284,143 @@ module PaloAlto
          :attributes=>
           {'name'=>'install',
            'help-string'=>'Install a downloaded software package'}},
+       'scp-import'=>
+        {'profile-name'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'profile-name',
+             'type'=>'string',
+             'complete-handler'=>
+              '$$config/panorama/server-profile/scp/entry/@name',
+             'help-string'=>'scp server profile name'}},
+         nil=>
+          {nil=>
+            {:obj=>:memberof,
+             :attributes=>
+              {'memberof'=>'#config/panorama/server-profile/scp/entry/@name'}},
+           :obj=>:validate,
+           :attributes=>{}},
+         'file'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'file', 'type'=>'string', 'help-string'=>'File name'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'scp-import',
+           'roles'=>
+            'superuser,superreader,deviceadmin,devicereader,panorama-admin',
+           'help-string'=>'Use scp profile to import files',
+           'handler'=>'scp-profile-import-handler'}},
+       'scp-export'=>
+        {'profile-name'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'profile-name',
+             'type'=>'string',
+             'complete-handler'=>
+              '$$config/panorama/server-profile/scp/entry/@name',
+             'help-string'=>'scp server profile name'}},
+         nil=>
+          {nil=>
+            {:obj=>:memberof,
+             :attributes=>
+              {'memberof'=>'#config/panorama/server-profile/scp/entry/@name'}},
+           :obj=>:validate,
+           :attributes=>{}},
+         'file'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'file',
+             'type'=>'string',
+             'help-string'=>'File name',
+             'maxlen'=>'256',
+             'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+             'complete-handler'=>
+              'system_upgrade_install_file_complete_handler'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'scp-export',
+           'roles'=>
+            'superuser,superreader,deviceadmin,devicereader,panorama-admin',
+           'help-string'=>'Use scp profile to export files ',
+           'handler'=>'scp-profile-export-handler'}},
        :obj=>:union,
        :attributes=>
         {'name'=>'software',
          'help-string'=>'Perform system software installation functions'}},
+     'patch'=>
+      {'info'=>
+        {'version'=>
+          {:obj=>:element,
+           :attributes=>
+            {'optional'=>'yes',
+             'name'=>'version',
+             'type'=>'string',
+             'help-string'=>
+              'Show detailed information about about a downloaded patch'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'info',
+           'handler'=>'system_patch_upgrade_info_handler',
+           'help-string'=>
+            'Show information about available software patches'}},
+       'check'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'check',
+           'handler'=>'system_patch_upgrade_check_handler',
+           'help-string'=>'Get information from PaloAlto Networks server'}},
+       'download'=>
+        {'version'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'version',
+             'type'=>'string',
+             'complete-handler'=>
+              'system_patch_upgrade_download_version_complete_handler',
+             'handler'=>'system_patch_upgrade_download_version_handler',
+             'help-string'=>'Download software patches by version'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'download', 'help-string'=>'Download software patches'}},
+       'install'=>
+        {'version'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'version',
+             'type'=>'string',
+             'complete-handler'=>
+              'system_patch_upgrade_install_version_complete_handler',
+             'handler'=>'system_patch_upgrade_install_version_handler',
+             'help-string'=>'Upgrade to a software patch by version',
+             'confirm'=>
+              'Executing this command will install a new version of software patch. continue?'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'install',
+           'help-string'=>'Install a downloaded software patch'}},
+       'apply'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'apply',
+           'handler'=>'system_patch_upgrade_apply_version_handler',
+           'help-string'=>
+            'Apply latest downloaded and installed software patch',
+           'confirm'=>
+            'Executing this command may cause reboot or you may get logged out from CLI/UI session and may have to relogin. For exact impact, you may run CLI request system patch info version. continue?'}},
+       'revert'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'revert',
+           'help-string'=>'Revert an installed and applied software patch',
+           'handler'=>'system_patch_upgrade_revert_version_handler',
+           'confirm'=>
+            'Executing this command may cause reboot or you may get logged out from CLI/UI session and may have to relogin. For exact impact, you may run CLI request system patch info version.  continue?'}},
+       :obj=>:union,
+       :attributes=>
+        {'name'=>'patch',
+         'help-string'=>
+          'Perform system software patch installation functions'}},
      'external-list'=>
       {'global-find'=>
         {'string'=>
@@ -24393,7 +27541,16 @@ module PaloAlto
          'help-string'=>
           'Perform external-list sanity functions for predefined IP block lists'}},
      'system-mode'=>
-      {'panorama'=>
+      {'lite'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'lite',
+           'prune-on-sdb'=>'cfg.lite-license=False,cfg.cms.mode=panorama',
+           'target'=>'mgmt',
+           'handler'=>'system_mode_to_lite_handler',
+           'confirm'=>
+            'Executing this command will change the system to lite mode, logs will be removed. This will restart the system. Are you sure you want to continue?'}},
+       'panorama'=>
         {:obj=>:sequence,
          :attributes=>
           {'name'=>'panorama',
@@ -25057,6 +28214,15 @@ module PaloAlto
            'min'=>'0',
            'max'=>'2000000',
            'help-string'=>'Number of tokens to fetch'}},
+       'deployment-type'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'deployment-type',
+           'optional'=>'yes',
+           'type'=>'string',
+           'default'=>'node',
+           'maxlen'=>'32',
+           'help-string'=>'Deployment mode for CN-Series licensing'}},
        :obj=>:sequence,
        :attributes=>
         {'name'=>'fetch-tokens',
@@ -25838,13 +29004,39 @@ module PaloAlto
            'skip-validation'=>'yes',
            'type'=>'string',
            'maxlen'=>'512',
-           'help-string'=>'One time password to generate the certificate'}},
+           'help-string'=>'One time password to generate the certificatei',
+           'prune-on-sdb'=>
+            'cfg.hw-module.psm,cfg.platform.model=M-300,cfg.platform.model=M-700'}},
        :obj=>:sequence,
        :attributes=>
         {'name'=>'fetch',
          'roles'=>'superuser',
          'help-string'=>'Fetch device certificate',
          'handler'=>'fetch_certificate_handler'}},
+     'secure-bridge'=>
+      {'enable'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'enable',
+           'handler'=>'/usr/local/bin/sdb cfg.device-cert.secure-bridge=True',
+           'help-string'=>'Enable secure-bridge.'}},
+       'disable'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'disable',
+           'handler'=>'/usr/local/bin/sdb cfg.device-cert.secure-bridge=False',
+           'help-string'=>'Disable secure-bridge.'}},
+       'show'=>
+        {:obj=>:sequence,
+         :attributes=>
+          {'name'=>'show',
+           'handler'=>'/usr/local/bin/sdb cfg.device-cert.secure-bridge',
+           'help-string'=>'Show cert secure-bridge setting.'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'secure-bridge',
+         'target'=>'script',
+         'help-string'=>'Secure bridge endpoint for China Region'}},
      'batch-otp-install'=>
       {'otp-response'=>
         {:obj=>:element,
@@ -25852,9 +29044,8 @@ module PaloAlto
           {'name'=>'otp-response',
            'type'=>'string',
            'regex'=>'^[a-zA-Z0-9+/=-_]*',
-           'maxlen'=>'8192',
-           'help-string'=>
-            'Batch OTP response obtained from Customer Support Portal'}},
+           'maxlen'=>'200000',
+           'help-string'=>'Batch OTP response obtained from Update Server'}},
        :obj=>:sequence,
        :attributes=>
         {'name'=>'batch-otp-install',
@@ -26062,7 +29253,230 @@ module PaloAlto
        'target'=>'mgmt',
        'help-string'=>'Perform HA operations'}},
    'batch'=>
-    {'address-update'=>
+    {'multi-upload'=>
+      {'source'=>
+        {'panorama'=>
+          {'software'=>
+            {'to-file'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'to-file',
+                 'type'=>'string',
+                 'maxlen'=>'63',
+                 'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+                 'complete-handler'=>
+                  'batch_software_upload_file_complete_handler'}},
+             'devices'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'devices',
+                 'type'=>'string',
+                 'maxlen'=>'131072',
+                 'complete-handler'=>
+                  'batch_software_eligible_complete_handler',
+                 'help-string'=>'List of devices to upload software onto'}},
+             'log-collectors'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'log-collectors',
+                 'type'=>'string',
+                 'maxlen'=>'4096',
+                 'complete-handler'=>
+                  '$config/devices/entry/log-collector/entry/@name',
+                 'help-string'=>
+                  'List of log-collectors to upload software onto'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'name'=>'software', 'help-string'=>'software upload'}},
+           'content'=>
+            {'devices'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'devices',
+                 'type'=>'string',
+                 'maxlen'=>'131072',
+                 'complete-handler'=>
+                  'batch_software_eligible_complete_handler',
+                 'help-string'=>'List of devices to upload content onto'}},
+             'log-collectors'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'log-collectors',
+                 'type'=>'string',
+                 'maxlen'=>'4096',
+                 'complete-handler'=>
+                  '$config/devices/entry/log-collector/entry/@name',
+                 'help-string'=>
+                  'List of log-collectors to upload content onto'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'optional'=>'yes',
+               'name'=>'content',
+               'help-string'=>'latest content upload'}},
+           :obj=>:sequence,
+           :attributes=>
+            {'name'=>'panorama', 'default'=>'yes', 'help-string'=>'panorama'}},
+         'update-server'=>
+          {'software'=>
+            {'to-file'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'to-file',
+                 'type'=>'string',
+                 'maxlen'=>'63',
+                 'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+                 'complete-handler'=>
+                  'batch_software_upload_file_complete_handler'}},
+             'devices'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'devices',
+                 'type'=>'string',
+                 'maxlen'=>'131072',
+                 'complete-handler'=>
+                  'batch_software_eligible_complete_handler',
+                 'help-string'=>'List of devices to upload software onto'}},
+             'log-collectors'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'log-collectors',
+                 'type'=>'string',
+                 'maxlen'=>'4096',
+                 'complete-handler'=>
+                  '$config/devices/entry/log-collector/entry/@name',
+                 'help-string'=>
+                  'List of log-collectors to upload software onto'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'name'=>'software', 'help-string'=>'software upload'}},
+           'content'=>
+            {'devices'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'devices',
+                 'type'=>'string',
+                 'maxlen'=>'131072',
+                 'complete-handler'=>
+                  'batch_software_eligible_complete_handler',
+                 'help-string'=>'List of devices to upload content onto'}},
+             'log-collectors'=>
+              {:obj=>:element,
+               :attributes=>
+                {'name'=>'log-collectors',
+                 'type'=>'string',
+                 'maxlen'=>'4096',
+                 'complete-handler'=>
+                  '$config/devices/entry/log-collector/entry/@name',
+                 'help-string'=>
+                  'List of log-collectors to upload content onto'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'optional'=>'yes',
+               'name'=>'content',
+               'help-string'=>'latest content upload'}},
+           :obj=>:sequence,
+           :attributes=>
+            {'name'=>'update-server', 'help-string'=>'update server'}},
+         'scp'=>
+          {'template-stack'=>
+            {'entry'=>
+              {'name'=>
+                {:obj=>:"attr-req",
+                 :attributes=>
+                  {'name'=>'name',
+                   'type'=>'string',
+                   'help-string'=>'template stack name'}},
+               'profile'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'profile',
+                   'type'=>'string',
+                   'maxlen'=>'31',
+                   'subtype'=>'object-name',
+                   'complete-handler'=>
+                    'system_scp_profile_per_template_stack_complete_handler',
+                   'help-string'=>'scp profile to use'}},
+               'software'=>
+                {'to-file'=>
+                  {:obj=>:element,
+                   :attributes=>
+                    {'name'=>'to-file',
+                     'type'=>'string',
+                     'maxlen'=>'63',
+                     'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+                     'complete-handler'=>
+                      'batch_software_upload_file_complete_handler'}},
+                 'devices'=>
+                  {:obj=>:element,
+                   :attributes=>
+                    {'name'=>'devices',
+                     'type'=>'string',
+                     'maxlen'=>'131072',
+                     'complete-handler'=>
+                      'batch_software_eligible_complete_handler',
+                     'help-string'=>
+                      'List of devices to upload  software onto'}},
+                 'log-collectors'=>
+                  {:obj=>:element,
+                   :attributes=>
+                    {'name'=>'log-collectors',
+                     'type'=>'string',
+                     'maxlen'=>'4096',
+                     'complete-handler'=>
+                      '$config/devices/entry/log-collector/entry/@name',
+                     'help-string'=>
+                      'List of log-collectors to upload software onto'}},
+                 :obj=>:sequence,
+                 :attributes=>
+                  {'name'=>'software', 'help-string'=>'software upload'}},
+               'content'=>
+                {'devices'=>
+                  {:obj=>:element,
+                   :attributes=>
+                    {'name'=>'devices',
+                     'type'=>'string',
+                     'maxlen'=>'131072',
+                     'complete-handler'=>
+                      'batch_software_eligible_complete_handler',
+                     'help-string'=>'List of devices to upload content onto'}},
+                 'log-collectors'=>
+                  {:obj=>:element,
+                   :attributes=>
+                    {'name'=>'log-collectors',
+                     'type'=>'string',
+                     'maxlen'=>'4096',
+                     'complete-handler'=>
+                      '$config/devices/entry/log-collector/entry/@name',
+                     'help-string'=>
+                      'List of log-collectors to upload content onto'}},
+                 :obj=>:sequence,
+                 :attributes=>
+                  {'optional'=>'yes',
+                   'name'=>'content',
+                   'help-string'=>'latest content upload'}},
+               :obj=>:sequence,
+               :attributes=>{'name'=>'entry'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'name'=>'template-stack',
+               'help-string'=>'template stack to use',
+               'complete-handler'=>
+                '$config/devices/entry/template-stack/entry/@name'}},
+           :obj=>:sequence,
+           :attributes=>{'name'=>'scp', 'help-string'=>'scp profile'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'source',
+           'help-string'=>'download source',
+           'optional'=>'yes'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'multi-upload',
+         'target'=>'mgmt',
+         'help-string'=>'Upload multiple files',
+         'handler'=>'batch_multi_ul_handler',
+         'roles'=>'superuser,deviceadmin,panorama-admin'}},
+     'address-update'=>
       {'force-sync'=>
         {'device'=>
           {:obj=>:element,
@@ -26096,6 +29510,34 @@ module PaloAlto
            'help-string'=>
             'check available software versions from PaloAlto Networks server',
            'handler'=>'batch_software_check_handler'}},
+       'dependencies'=>
+        {'to_version'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'to_version',
+             'type'=>'string',
+             'help-string'=>'content version number'}},
+         'devices'=>
+          {'member'=>
+            {:obj=>:element,
+             :attributes=>
+              {'name'=>'member',
+               'type'=>'string',
+               'maxlen'=>'63',
+               'help-string'=>'serial number',
+               'complete-handler'=>'$config/mgt-config/devices/entry/@name'}},
+           :obj=>:array,
+           :attributes=>
+            {'name'=>'devices',
+             'help-string'=>'list of devices',
+             'optional'=>'yes'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'dependencies',
+           'help-string'=>'get software dependencies',
+           'target'=>'script',
+           'handler'=>
+            '/usr/bin/python /usr/local/bin/findrev.py -t $to_version -i $devices'}},
        'download'=>
         {'file'=>
           {:obj=>:element,
@@ -26112,6 +29554,66 @@ module PaloAlto
           {'name'=>'download',
            'help-string'=>'Download software packages to panorama',
            'handler'=>'batch_software_download_file_handler'}},
+       'scp-import'=>
+        {'profile-name'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'profile-name',
+             'type'=>'string',
+             'complete-handler'=>
+              '$$config/panorama/server-profile/scp/entry/@name',
+             'help-string'=>'scp server profile name'}},
+         nil=>
+          {nil=>
+            {:obj=>:memberof,
+             :attributes=>
+              {'memberof'=>'#config/panorama/server-profile/scp/entry/@name'}},
+           :obj=>:validate,
+           :attributes=>{}},
+         'file'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'file', 'type'=>'string', 'help-string'=>'File name'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'scp-import',
+           'roles'=>
+            'superuser,superreader,deviceadmin,devicereader,panorama-admin',
+           'help-string'=>'Use scp profile to import files',
+           'handler'=>'scp-profile-import-handler'}},
+       'scp-export'=>
+        {'profile-name'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'profile-name',
+             'type'=>'string',
+             'complete-handler'=>
+              '$$config/panorama/server-profile/scp/entry/@name',
+             'help-string'=>'scp server profile name'}},
+         nil=>
+          {nil=>
+            {:obj=>:memberof,
+             :attributes=>
+              {'memberof'=>'#config/panorama/server-profile/scp/entry/@name'}},
+           :obj=>:validate,
+           :attributes=>{}},
+         'file'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'file',
+             'type'=>'string',
+             'help-string'=>'File name',
+             'maxlen'=>'256',
+             'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+             'complete-handler'=>
+              'batch_software_upload_file_complete_handler'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'scp-export',
+           'roles'=>
+            'superuser,superreader,deviceadmin,devicereader,panorama-admin',
+           'help-string'=>'Use scp profile to export files ',
+           'handler'=>'scp-profile-export-handler'}},
        'upload'=>
         {'file'=>
           {:obj=>:element,
@@ -26139,6 +29641,224 @@ module PaloAlto
              'maxlen'=>'4096',
              'complete-handler'=>
               '$config/devices/entry/log-collector/entry/@name'}},
+         'source'=>
+          {'panorama'=>
+            {'software'=>
+              {'to-file'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'to-file',
+                   'type'=>'string',
+                   'maxlen'=>'63',
+                   'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+                   'complete-handler'=>
+                    'batch_software_upload_file_complete_handler'}},
+               'devices'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'devices',
+                   'type'=>'string',
+                   'maxlen'=>'131072',
+                   'complete-handler'=>
+                    'batch_software_eligible_complete_handler',
+                   'help-string'=>'List of devices to upload software onto'}},
+               'log-collectors'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'log-collectors',
+                   'type'=>'string',
+                   'maxlen'=>'4096',
+                   'complete-handler'=>
+                    '$config/devices/entry/log-collector/entry/@name',
+                   'help-string'=>
+                    'List of log-collectors to upload software onto'}},
+               :obj=>:sequence,
+               :attributes=>
+                {'name'=>'software', 'help-string'=>'software upload'}},
+             'content'=>
+              {'devices'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'devices',
+                   'type'=>'string',
+                   'maxlen'=>'131072',
+                   'complete-handler'=>
+                    'batch_software_eligible_complete_handler',
+                   'help-string'=>'List of devices to upload content onto'}},
+               'log-collectors'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'log-collectors',
+                   'type'=>'string',
+                   'maxlen'=>'4096',
+                   'complete-handler'=>
+                    '$config/devices/entry/log-collector/entry/@name',
+                   'help-string'=>
+                    'List of log-collectors to upload content onto'}},
+               :obj=>:sequence,
+               :attributes=>
+                {'optional'=>'yes',
+                 'name'=>'content',
+                 'help-string'=>'latest content upload'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'name'=>'panorama',
+               'default'=>'yes',
+               'help-string'=>'panorama'}},
+           'update-server'=>
+            {'software'=>
+              {'to-file'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'to-file',
+                   'type'=>'string',
+                   'maxlen'=>'63',
+                   'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+                   'complete-handler'=>
+                    'batch_software_upload_file_complete_handler'}},
+               'devices'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'devices',
+                   'type'=>'string',
+                   'maxlen'=>'131072',
+                   'complete-handler'=>
+                    'batch_software_eligible_complete_handler',
+                   'help-string'=>'List of devices to upload software onto'}},
+               'log-collectors'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'log-collectors',
+                   'type'=>'string',
+                   'maxlen'=>'4096',
+                   'complete-handler'=>
+                    '$config/devices/entry/log-collector/entry/@name',
+                   'help-string'=>
+                    'List of log-collectors to upload software onto'}},
+               :obj=>:sequence,
+               :attributes=>
+                {'name'=>'software', 'help-string'=>'software upload'}},
+             'content'=>
+              {'devices'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'devices',
+                   'type'=>'string',
+                   'maxlen'=>'131072',
+                   'complete-handler'=>
+                    'batch_software_eligible_complete_handler',
+                   'help-string'=>'List of devices to upload content onto'}},
+               'log-collectors'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'log-collectors',
+                   'type'=>'string',
+                   'maxlen'=>'4096',
+                   'complete-handler'=>
+                    '$config/devices/entry/log-collector/entry/@name',
+                   'help-string'=>
+                    'List of log-collectors to upload content onto'}},
+               :obj=>:sequence,
+               :attributes=>
+                {'optional'=>'yes',
+                 'name'=>'content',
+                 'help-string'=>'latest content upload'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'name'=>'update-server', 'help-string'=>'update server'}},
+           'scp'=>
+            {'template-stack'=>
+              {'entry'=>
+                {'name'=>
+                  {:obj=>:"attr-req",
+                   :attributes=>
+                    {'name'=>'name',
+                     'type'=>'string',
+                     'help-string'=>'template stack name'}},
+                 'profile'=>
+                  {:obj=>:element,
+                   :attributes=>
+                    {'name'=>'profile',
+                     'type'=>'string',
+                     'maxlen'=>'31',
+                     'subtype'=>'object-name',
+                     'complete-handler'=>
+                      'system_scp_profile_per_template_stack_complete_handler',
+                     'help-string'=>'scp profile to use'}},
+                 'software'=>
+                  {'to-file'=>
+                    {:obj=>:element,
+                     :attributes=>
+                      {'name'=>'to-file',
+                       'type'=>'string',
+                       'maxlen'=>'63',
+                       'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+                       'complete-handler'=>
+                        'batch_software_upload_file_complete_handler'}},
+                   'devices'=>
+                    {:obj=>:element,
+                     :attributes=>
+                      {'name'=>'devices',
+                       'type'=>'string',
+                       'maxlen'=>'131072',
+                       'complete-handler'=>
+                        'batch_software_eligible_complete_handler',
+                       'help-string'=>
+                        'List of devices to upload  software onto'}},
+                   'log-collectors'=>
+                    {:obj=>:element,
+                     :attributes=>
+                      {'name'=>'log-collectors',
+                       'type'=>'string',
+                       'maxlen'=>'4096',
+                       'complete-handler'=>
+                        '$config/devices/entry/log-collector/entry/@name',
+                       'help-string'=>
+                        'List of log-collectors to upload software onto'}},
+                   :obj=>:sequence,
+                   :attributes=>
+                    {'name'=>'software', 'help-string'=>'software upload'}},
+                 'content'=>
+                  {'devices'=>
+                    {:obj=>:element,
+                     :attributes=>
+                      {'name'=>'devices',
+                       'type'=>'string',
+                       'maxlen'=>'131072',
+                       'complete-handler'=>
+                        'batch_software_eligible_complete_handler',
+                       'help-string'=>
+                        'List of devices to upload content onto'}},
+                   'log-collectors'=>
+                    {:obj=>:element,
+                     :attributes=>
+                      {'name'=>'log-collectors',
+                       'type'=>'string',
+                       'maxlen'=>'4096',
+                       'complete-handler'=>
+                        '$config/devices/entry/log-collector/entry/@name',
+                       'help-string'=>
+                        'List of log-collectors to upload content onto'}},
+                   :obj=>:sequence,
+                   :attributes=>
+                    {'optional'=>'yes',
+                     'name'=>'content',
+                     'help-string'=>'latest content upload'}},
+                 :obj=>:sequence,
+                 :attributes=>{'name'=>'entry'}},
+               :obj=>:sequence,
+               :attributes=>
+                {'name'=>'template-stack',
+                 'help-string'=>'template stack to use',
+                 'complete-handler'=>
+                  '$config/devices/entry/template-stack/entry/@name'}},
+             :obj=>:sequence,
+             :attributes=>{'name'=>'scp', 'help-string'=>'scp profile'}},
+           :obj=>:sequence,
+           :attributes=>
+            {'name'=>'source',
+             'help-string'=>'download source',
+             'optional'=>'yes'}},
          :obj=>:sequence,
          :attributes=>
           {'name'=>'upload',
@@ -26634,6 +30354,66 @@ module PaloAlto
           {'name'=>'check',
            'help-string'=>'check available content versions',
            'handler'=>'batch_content_check_handler'}},
+       'scp-import'=>
+        {'profile-name'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'profile-name',
+             'type'=>'string',
+             'complete-handler'=>
+              '$$config/panorama/server-profile/scp/entry/@name',
+             'help-string'=>'scp server profile name'}},
+         nil=>
+          {nil=>
+            {:obj=>:memberof,
+             :attributes=>
+              {'memberof'=>'#config/panorama/server-profile/scp/entry/@name'}},
+           :obj=>:validate,
+           :attributes=>{}},
+         'file'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'file', 'type'=>'string', 'help-string'=>'File name'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'scp-import',
+           'roles'=>
+            'superuser,superreader,deviceadmin,devicereader,panorama-admin',
+           'help-string'=>'Use scp profile to import files',
+           'handler'=>'scp-profile-import-handler'}},
+       'scp-export'=>
+        {'profile-name'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'profile-name',
+             'type'=>'string',
+             'complete-handler'=>
+              '$$config/panorama/server-profile/scp/entry/@name',
+             'help-string'=>'scp server profile name'}},
+         nil=>
+          {nil=>
+            {:obj=>:memberof,
+             :attributes=>
+              {'memberof'=>'#config/panorama/server-profile/scp/entry/@name'}},
+           :obj=>:validate,
+           :attributes=>{}},
+         'file'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'file',
+             'type'=>'string',
+             'help-string'=>'File name',
+             'maxlen'=>'256',
+             'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+             'complete-handler'=>
+              'batch_content_install_file_complete_handler'}},
+         :obj=>:sequence,
+         :attributes=>
+          {'name'=>'scp-export',
+           'roles'=>
+            'superuser,superreader,deviceadmin,devicereader,panorama-admin',
+           'help-string'=>'Use scp profile to export files ',
+           'handler'=>'scp-profile-export-handler'}},
        'download'=>
         {'file'=>
           {:obj=>:element,
@@ -26645,6 +30425,224 @@ module PaloAlto
              'complete-handler'=>
               'batch_content_download_file_complete_handler',
              'help-string'=>'content filename'}},
+         'source'=>
+          {'panorama'=>
+            {'software'=>
+              {'to-file'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'to-file',
+                   'type'=>'string',
+                   'maxlen'=>'63',
+                   'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+                   'complete-handler'=>
+                    'batch_software_upload_file_complete_handler'}},
+               'devices'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'devices',
+                   'type'=>'string',
+                   'maxlen'=>'131072',
+                   'complete-handler'=>
+                    'batch_software_eligible_complete_handler',
+                   'help-string'=>'List of devices to upload software onto'}},
+               'log-collectors'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'log-collectors',
+                   'type'=>'string',
+                   'maxlen'=>'4096',
+                   'complete-handler'=>
+                    '$config/devices/entry/log-collector/entry/@name',
+                   'help-string'=>
+                    'List of log-collectors to upload software onto'}},
+               :obj=>:sequence,
+               :attributes=>
+                {'name'=>'software', 'help-string'=>'software upload'}},
+             'content'=>
+              {'devices'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'devices',
+                   'type'=>'string',
+                   'maxlen'=>'131072',
+                   'complete-handler'=>
+                    'batch_software_eligible_complete_handler',
+                   'help-string'=>'List of devices to upload content onto'}},
+               'log-collectors'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'log-collectors',
+                   'type'=>'string',
+                   'maxlen'=>'4096',
+                   'complete-handler'=>
+                    '$config/devices/entry/log-collector/entry/@name',
+                   'help-string'=>
+                    'List of log-collectors to upload content onto'}},
+               :obj=>:sequence,
+               :attributes=>
+                {'optional'=>'yes',
+                 'name'=>'content',
+                 'help-string'=>'latest content upload'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'name'=>'panorama',
+               'default'=>'yes',
+               'help-string'=>'panorama'}},
+           'update-server'=>
+            {'software'=>
+              {'to-file'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'to-file',
+                   'type'=>'string',
+                   'maxlen'=>'63',
+                   'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+                   'complete-handler'=>
+                    'batch_software_upload_file_complete_handler'}},
+               'devices'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'devices',
+                   'type'=>'string',
+                   'maxlen'=>'131072',
+                   'complete-handler'=>
+                    'batch_software_eligible_complete_handler',
+                   'help-string'=>'List of devices to upload software onto'}},
+               'log-collectors'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'log-collectors',
+                   'type'=>'string',
+                   'maxlen'=>'4096',
+                   'complete-handler'=>
+                    '$config/devices/entry/log-collector/entry/@name',
+                   'help-string'=>
+                    'List of log-collectors to upload software onto'}},
+               :obj=>:sequence,
+               :attributes=>
+                {'name'=>'software', 'help-string'=>'software upload'}},
+             'content'=>
+              {'devices'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'devices',
+                   'type'=>'string',
+                   'maxlen'=>'131072',
+                   'complete-handler'=>
+                    'batch_software_eligible_complete_handler',
+                   'help-string'=>'List of devices to upload content onto'}},
+               'log-collectors'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'log-collectors',
+                   'type'=>'string',
+                   'maxlen'=>'4096',
+                   'complete-handler'=>
+                    '$config/devices/entry/log-collector/entry/@name',
+                   'help-string'=>
+                    'List of log-collectors to upload content onto'}},
+               :obj=>:sequence,
+               :attributes=>
+                {'optional'=>'yes',
+                 'name'=>'content',
+                 'help-string'=>'latest content upload'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'name'=>'update-server', 'help-string'=>'update server'}},
+           'scp'=>
+            {'template-stack'=>
+              {'entry'=>
+                {'name'=>
+                  {:obj=>:"attr-req",
+                   :attributes=>
+                    {'name'=>'name',
+                     'type'=>'string',
+                     'help-string'=>'template stack name'}},
+                 'profile'=>
+                  {:obj=>:element,
+                   :attributes=>
+                    {'name'=>'profile',
+                     'type'=>'string',
+                     'maxlen'=>'31',
+                     'subtype'=>'object-name',
+                     'complete-handler'=>
+                      'system_scp_profile_per_template_stack_complete_handler',
+                     'help-string'=>'scp profile to use'}},
+                 'software'=>
+                  {'to-file'=>
+                    {:obj=>:element,
+                     :attributes=>
+                      {'name'=>'to-file',
+                       'type'=>'string',
+                       'maxlen'=>'63',
+                       'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+                       'complete-handler'=>
+                        'batch_software_upload_file_complete_handler'}},
+                   'devices'=>
+                    {:obj=>:element,
+                     :attributes=>
+                      {'name'=>'devices',
+                       'type'=>'string',
+                       'maxlen'=>'131072',
+                       'complete-handler'=>
+                        'batch_software_eligible_complete_handler',
+                       'help-string'=>
+                        'List of devices to upload  software onto'}},
+                   'log-collectors'=>
+                    {:obj=>:element,
+                     :attributes=>
+                      {'name'=>'log-collectors',
+                       'type'=>'string',
+                       'maxlen'=>'4096',
+                       'complete-handler'=>
+                        '$config/devices/entry/log-collector/entry/@name',
+                       'help-string'=>
+                        'List of log-collectors to upload software onto'}},
+                   :obj=>:sequence,
+                   :attributes=>
+                    {'name'=>'software', 'help-string'=>'software upload'}},
+                 'content'=>
+                  {'devices'=>
+                    {:obj=>:element,
+                     :attributes=>
+                      {'name'=>'devices',
+                       'type'=>'string',
+                       'maxlen'=>'131072',
+                       'complete-handler'=>
+                        'batch_software_eligible_complete_handler',
+                       'help-string'=>
+                        'List of devices to upload content onto'}},
+                   'log-collectors'=>
+                    {:obj=>:element,
+                     :attributes=>
+                      {'name'=>'log-collectors',
+                       'type'=>'string',
+                       'maxlen'=>'4096',
+                       'complete-handler'=>
+                        '$config/devices/entry/log-collector/entry/@name',
+                       'help-string'=>
+                        'List of log-collectors to upload content onto'}},
+                   :obj=>:sequence,
+                   :attributes=>
+                    {'optional'=>'yes',
+                     'name'=>'content',
+                     'help-string'=>'latest content upload'}},
+                 :obj=>:sequence,
+                 :attributes=>{'name'=>'entry'}},
+               :obj=>:sequence,
+               :attributes=>
+                {'name'=>'template-stack',
+                 'help-string'=>'template stack to use',
+                 'complete-handler'=>
+                  '$config/devices/entry/template-stack/entry/@name'}},
+             :obj=>:sequence,
+             :attributes=>{'name'=>'scp', 'help-string'=>'scp profile'}},
+           :obj=>:sequence,
+           :attributes=>
+            {'name'=>'source',
+             'help-string'=>'download source',
+             'optional'=>'yes'}},
          :obj=>:sequence,
          :attributes=>
           {'name'=>'download',
@@ -26707,6 +30705,224 @@ module PaloAlto
              'default'=>'no',
              'help-string'=>
               'Skip content pre install validation check with the Paloalto Networks Inc. update server.'}},
+         'source'=>
+          {'panorama'=>
+            {'software'=>
+              {'to-file'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'to-file',
+                   'type'=>'string',
+                   'maxlen'=>'63',
+                   'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+                   'complete-handler'=>
+                    'batch_software_upload_file_complete_handler'}},
+               'devices'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'devices',
+                   'type'=>'string',
+                   'maxlen'=>'131072',
+                   'complete-handler'=>
+                    'batch_software_eligible_complete_handler',
+                   'help-string'=>'List of devices to upload software onto'}},
+               'log-collectors'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'log-collectors',
+                   'type'=>'string',
+                   'maxlen'=>'4096',
+                   'complete-handler'=>
+                    '$config/devices/entry/log-collector/entry/@name',
+                   'help-string'=>
+                    'List of log-collectors to upload software onto'}},
+               :obj=>:sequence,
+               :attributes=>
+                {'name'=>'software', 'help-string'=>'software upload'}},
+             'content'=>
+              {'devices'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'devices',
+                   'type'=>'string',
+                   'maxlen'=>'131072',
+                   'complete-handler'=>
+                    'batch_software_eligible_complete_handler',
+                   'help-string'=>'List of devices to upload content onto'}},
+               'log-collectors'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'log-collectors',
+                   'type'=>'string',
+                   'maxlen'=>'4096',
+                   'complete-handler'=>
+                    '$config/devices/entry/log-collector/entry/@name',
+                   'help-string'=>
+                    'List of log-collectors to upload content onto'}},
+               :obj=>:sequence,
+               :attributes=>
+                {'optional'=>'yes',
+                 'name'=>'content',
+                 'help-string'=>'latest content upload'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'name'=>'panorama',
+               'default'=>'yes',
+               'help-string'=>'panorama'}},
+           'update-server'=>
+            {'software'=>
+              {'to-file'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'to-file',
+                   'type'=>'string',
+                   'maxlen'=>'63',
+                   'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+                   'complete-handler'=>
+                    'batch_software_upload_file_complete_handler'}},
+               'devices'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'devices',
+                   'type'=>'string',
+                   'maxlen'=>'131072',
+                   'complete-handler'=>
+                    'batch_software_eligible_complete_handler',
+                   'help-string'=>'List of devices to upload software onto'}},
+               'log-collectors'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'log-collectors',
+                   'type'=>'string',
+                   'maxlen'=>'4096',
+                   'complete-handler'=>
+                    '$config/devices/entry/log-collector/entry/@name',
+                   'help-string'=>
+                    'List of log-collectors to upload software onto'}},
+               :obj=>:sequence,
+               :attributes=>
+                {'name'=>'software', 'help-string'=>'software upload'}},
+             'content'=>
+              {'devices'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'devices',
+                   'type'=>'string',
+                   'maxlen'=>'131072',
+                   'complete-handler'=>
+                    'batch_software_eligible_complete_handler',
+                   'help-string'=>'List of devices to upload content onto'}},
+               'log-collectors'=>
+                {:obj=>:element,
+                 :attributes=>
+                  {'name'=>'log-collectors',
+                   'type'=>'string',
+                   'maxlen'=>'4096',
+                   'complete-handler'=>
+                    '$config/devices/entry/log-collector/entry/@name',
+                   'help-string'=>
+                    'List of log-collectors to upload content onto'}},
+               :obj=>:sequence,
+               :attributes=>
+                {'optional'=>'yes',
+                 'name'=>'content',
+                 'help-string'=>'latest content upload'}},
+             :obj=>:sequence,
+             :attributes=>
+              {'name'=>'update-server', 'help-string'=>'update server'}},
+           'scp'=>
+            {'template-stack'=>
+              {'entry'=>
+                {'name'=>
+                  {:obj=>:"attr-req",
+                   :attributes=>
+                    {'name'=>'name',
+                     'type'=>'string',
+                     'help-string'=>'template stack name'}},
+                 'profile'=>
+                  {:obj=>:element,
+                   :attributes=>
+                    {'name'=>'profile',
+                     'type'=>'string',
+                     'maxlen'=>'31',
+                     'subtype'=>'object-name',
+                     'complete-handler'=>
+                      'system_scp_profile_per_template_stack_complete_handler',
+                     'help-string'=>'scp profile to use'}},
+                 'software'=>
+                  {'to-file'=>
+                    {:obj=>:element,
+                     :attributes=>
+                      {'name'=>'to-file',
+                       'type'=>'string',
+                       'maxlen'=>'63',
+                       'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
+                       'complete-handler'=>
+                        'batch_software_upload_file_complete_handler'}},
+                   'devices'=>
+                    {:obj=>:element,
+                     :attributes=>
+                      {'name'=>'devices',
+                       'type'=>'string',
+                       'maxlen'=>'131072',
+                       'complete-handler'=>
+                        'batch_software_eligible_complete_handler',
+                       'help-string'=>
+                        'List of devices to upload  software onto'}},
+                   'log-collectors'=>
+                    {:obj=>:element,
+                     :attributes=>
+                      {'name'=>'log-collectors',
+                       'type'=>'string',
+                       'maxlen'=>'4096',
+                       'complete-handler'=>
+                        '$config/devices/entry/log-collector/entry/@name',
+                       'help-string'=>
+                        'List of log-collectors to upload software onto'}},
+                   :obj=>:sequence,
+                   :attributes=>
+                    {'name'=>'software', 'help-string'=>'software upload'}},
+                 'content'=>
+                  {'devices'=>
+                    {:obj=>:element,
+                     :attributes=>
+                      {'name'=>'devices',
+                       'type'=>'string',
+                       'maxlen'=>'131072',
+                       'complete-handler'=>
+                        'batch_software_eligible_complete_handler',
+                       'help-string'=>
+                        'List of devices to upload content onto'}},
+                   'log-collectors'=>
+                    {:obj=>:element,
+                     :attributes=>
+                      {'name'=>'log-collectors',
+                       'type'=>'string',
+                       'maxlen'=>'4096',
+                       'complete-handler'=>
+                        '$config/devices/entry/log-collector/entry/@name',
+                       'help-string'=>
+                        'List of log-collectors to upload content onto'}},
+                   :obj=>:sequence,
+                   :attributes=>
+                    {'optional'=>'yes',
+                     'name'=>'content',
+                     'help-string'=>'latest content upload'}},
+                 :obj=>:sequence,
+                 :attributes=>{'name'=>'entry'}},
+               :obj=>:sequence,
+               :attributes=>
+                {'name'=>'template-stack',
+                 'help-string'=>'template stack to use',
+                 'complete-handler'=>
+                  '$config/devices/entry/template-stack/entry/@name'}},
+             :obj=>:sequence,
+             :attributes=>{'name'=>'scp', 'help-string'=>'scp profile'}},
+           :obj=>:sequence,
+           :attributes=>
+            {'name'=>'source',
+             'help-string'=>'download source',
+             'optional'=>'yes'}},
          :obj=>:sequence,
          :attributes=>
           {'name'=>'upload-install',
@@ -27059,102 +31275,6 @@ module PaloAlto
        :attributes=>
         {'name'=>'wildfire',
          'help-string'=>'Perform wildfire package operations'}},
-     'url-filtering'=>
-      {'info'=>
-        {:obj=>:sequence,
-         :attributes=>
-          {'name'=>'info',
-           'help-string'=>'Check available url filtering DB on panorama',
-           'handler'=>'batch_url_filtering_info_handler'}},
-       'check'=>
-        {:obj=>:sequence,
-         :attributes=>
-          {'name'=>'check',
-           'help-string'=>'check available url filtering DB versions',
-           'handler'=>'batch_url_filtering_check_handler'}},
-       'download'=>
-        {'latest'=>
-          {:obj=>:sequence,
-           :attributes=>
-            {'name'=>'latest',
-             'handler'=>'batch_url_filtering_download_latest_handler',
-             'help-string'=>'Most recent url filtering DB'}},
-         :obj=>:sequence,
-         :attributes=>
-          {'name'=>'download',
-           'help-string'=>'Download url filtering DB to panorama'}},
-       'upload-install'=>
-        {'file'=>
-          {:obj=>:element,
-           :attributes=>
-            {'name'=>'file',
-             'type'=>'string',
-             'maxlen'=>'256',
-             'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
-             'complete-handler'=>
-              'batch_url_filtering_install_file_complete_handler',
-             'help-string'=>'url filtering DB filename'}},
-         'uploaded-file'=>
-          {:obj=>:element,
-           :attributes=>
-            {'name'=>'uploaded-file',
-             'type'=>'string',
-             'maxlen'=>'256',
-             'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
-             'complete-handler'=>
-              'batch_url_filtering_install_uploadedfile_complete_handler',
-             'help-string'=>'url filtering DB filename'}},
-         'devices'=>
-          {:obj=>:element,
-           :attributes=>
-            {'name'=>'devices',
-             'help-string'=>'List of devices to upload url filtering DB onto',
-             'type'=>'string',
-             'maxlen'=>'131072',
-             'complete-handler'=>
-              'batch_url_filtering_eligible_complete_handler'}},
-         'log-collectors'=>
-          {:obj=>:element,
-           :attributes=>
-            {'name'=>'log-collectors',
-             'help-string'=>
-              'List of log-collectors to upload and install url filtering DB onto',
-             'type'=>'string',
-             'maxlen'=>'4096'}},
-         :obj=>:sequence,
-         :attributes=>
-          {'name'=>'upload-install',
-           'help-string'=>'Upload and install an url filtering DB',
-           'handler'=>'batch_url_filtering_uploadinstall_file_handler',
-           'confirm'=>
-            'Executing this command will install and commit a new version of url filtering DB. Do you want to continue?'}},
-       'eligible'=>
-        {:obj=>:sequence,
-         :attributes=>
-          {'name'=>'eligible',
-           'help-string'=>
-            'Get list of devices eligible for a given url filtering DB',
-           'handler'=>'batch_url_filtering_eligible_handler'}},
-       'delete'=>
-        {'file'=>
-          {:obj=>:element,
-           :attributes=>
-            {'name'=>'file',
-             'type'=>'string',
-             'maxlen'=>'256',
-             'regex'=>'^[\*a-zA-Z0-9][\.\*a-zA-Z0-9_-]*$',
-             'complete-handler'=>
-              'batch_url_filtering_install_file_complete_handler'}},
-         :obj=>:sequence,
-         :attributes=>
-          {'name'=>'delete',
-           'help-string'=>'Delete a given url filtering DB',
-           'handler'=>'batch_url_filtering_delete_file_handler'}},
-       :obj=>:union,
-       :attributes=>
-        {'name'=>'url-filtering',
-         'help-string'=>'Perform url filtering DB operations',
-         'err'=>'Not available for PAN-DB'}},
      'reboot'=>
       {'devices'=>
         {:obj=>:element,
@@ -27747,6 +31867,25 @@ module PaloAlto
        'prune-on-sdb'=>'cfg.general.feature.disabled[content_upd]',
        'help-string'=>'List content downloads',
        'handler'=>'list_content_downloads'}},
+   'stats'=>
+    {'dump'=>
+      {'device'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'device',
+           'optional'=>'yes',
+           'type'=>'string',
+           'max-length'=>'63',
+           'help-string'=>'device serial number',
+           'complete-handler'=>'$$config/mgt-config/devices/entry/@name'}},
+       :obj=>:sequence,
+       :attributes=>{'name'=>'dump', 'handler'=>'stats_dump_handler'}},
+     :obj=>:union,
+     :attributes=>
+      {'name'=>'stats',
+       'roles'=>'superuser,panorama-admin',
+       'target'=>'mgmt',
+       'help-string'=>'Generate stats dump'}},
    'get-disabled-applications'=>
     {:obj=>:sequence,
      :attributes=>
@@ -27886,7 +32025,18 @@ module PaloAlto
          'complete-handler'=>'save_config_complete_handler',
          'help-string'=>'Filename'}},
      'partial'=>
-      {'admin'=>
+      {'object-xpaths'=>
+        {'member'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'member',
+             'type'=>'string',
+             'regex'=>'.*',
+             'maxlen'=>'1024'}},
+         :obj=>:array,
+         :attributes=>
+          {'name'=>'object-xpaths', 'optional'=>'yes', 'default'=>'all'}},
+       'admin'=>
         {'member'=>
           {:obj=>:element,
            :attributes=>
@@ -27976,6 +32126,15 @@ module PaloAlto
          :obj=>:array,
          :attributes=>
           {'name'=>'wildfire-appliance-cluster', 'optional'=>'yes'}},
+       'no-plugins'=>
+        {:obj=>:sequence,
+         :attributes=>{'name'=>'no-plugins', 'optional'=>'yes'}},
+       'plugins'=>
+        {'member'=>
+          {:obj=>:element,
+           :attributes=>{'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+         :obj=>:array,
+         :attributes=>{'name'=>'plugins', 'optional'=>'yes'}},
        :obj=>:sequence,
        :attributes=>{'name'=>'partial', 'optional'=>'yes'}},
      :obj=>:sequence,
@@ -28003,6 +32162,14 @@ module PaloAlto
          'max-length'=>'63',
          'help-string'=>'device serial number',
          'complete-handler'=>'$$config/mgt-config/devices/entry/@name'}},
+     'firewall-master-key'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'firewall-master-key',
+         'type'=>'string',
+         'optional'=>'yes',
+         'help-string'=>'masterkey to encrypt firewall passwords',
+         'secret'=>'yes'}},
      :obj=>:sequence,
      :attributes=>
       {'name'=>'import-bundle',
@@ -28081,7 +32248,18 @@ module PaloAlto
          'help-string'=>
           'Skip validation for reverted config to improve revert performance'}},
      'partial'=>
-      {'admin'=>
+      {'object-xpaths'=>
+        {'member'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'member',
+             'type'=>'string',
+             'regex'=>'.*',
+             'maxlen'=>'1024'}},
+         :obj=>:array,
+         :attributes=>
+          {'name'=>'object-xpaths', 'optional'=>'yes', 'default'=>'all'}},
+       'admin'=>
         {'member'=>
           {:obj=>:element,
            :attributes=>
@@ -28171,6 +32349,15 @@ module PaloAlto
          :obj=>:array,
          :attributes=>
           {'name'=>'wildfire-appliance-cluster', 'optional'=>'yes'}},
+       'no-plugins'=>
+        {:obj=>:sequence,
+         :attributes=>{'name'=>'no-plugins', 'optional'=>'yes'}},
+       'plugins'=>
+        {'member'=>
+          {:obj=>:element,
+           :attributes=>{'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+         :obj=>:array,
+         :attributes=>{'name'=>'plugins', 'optional'=>'yes'}},
        :obj=>:sequence,
        :attributes=>{'name'=>'partial', 'optional'=>'yes'}},
      :obj=>:sequence,
@@ -28569,6 +32756,24 @@ module PaloAlto
          'help-string'=>'Send a copy to HA peer'}},
      :obj=>:sequence,
      :attributes=>{'name'=>'software', 'handler'=>'upload_software_handler'}},
+   'patch'=>
+    {'name'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'name',
+         'type'=>'string',
+         'maxlen'=>'256',
+         'regex'=>'^[a-zA-Z0-9][\.a-zA-Z0-9_-]+$',
+         'help-string'=>'Filename'}},
+     'path'=>
+      {:obj=>:element,
+       :attributes=>
+        {'name'=>'path',
+         'type'=>'string',
+         'maxlen'=>'256',
+         'help-string'=>'Path'}},
+     :obj=>:sequence,
+     :attributes=>{'name'=>'patch', 'handler'=>'upload_patch_handler'}},
    'content'=>
     {'name'=>
       {:obj=>:element,
@@ -29778,19 +33983,6 @@ module PaloAlto
        :obj=>:sequence,
        :attributes=>
         {'name'=>'wf-content', 'handler'=>'upload_deploy_wfm_handler'}},
-     'signed-url-database'=>
-      {'path'=>
-        {:obj=>:element,
-         :attributes=>
-          {'name'=>'path',
-           'type'=>'string',
-           'subtype'=>'pathname',
-           'maxlen'=>'256',
-           'help-string'=>'Path'}},
-       :obj=>:sequence,
-       :attributes=>
-        {'name'=>'signed-url-database',
-         'handler'=>'upload_deploy_signed_urldb_handler'}},
      'plugin'=>
       {'name'=>
         {:obj=>:element,
@@ -31304,6 +35496,29 @@ module PaloAlto
         {'name'=>'software',
          'roles'=>'superuser,deviceadmin,panorama-admin',
          'help-string'=>'Use scp to import software package'}},
+     'patch'=>
+      {'from'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'from',
+           'type'=>'string',
+           'regex'=>
+            '^([.a-zA-Z0-9_][.a-zA-Z0-9_-]*@[.:\[\]a-zA-Z0-9_-]+:[^@]+)$',
+           'help-string'=>'Source (username@host:path)'}},
+       'remote-port'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'remote-port',
+           'optional'=>'yes',
+           'type'=>'rangedint',
+           'min'=>'1',
+           'max'=>'65535',
+           'help-string'=>'SSH port number on remote host'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'patch',
+         'roles'=>'superuser,deviceadmin,panorama-admin',
+         'help-string'=>'Use scp to import software patch package'}},
      'deploy-software'=>
       {'from'=>
         {:obj=>:element,
@@ -32315,6 +36530,65 @@ module PaloAlto
        :attributes=>
         {'name'=>'imported-config',
          'help-string'=>'Use scp to export imported configuration'}},
+     'stats-dump'=>
+      {'to'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'to',
+           'type'=>'string',
+           'regex'=>
+            '^([.a-zA-Z0-9_][.a-zA-Z0-9_-]*@[.:\[\]a-zA-Z0-9_-]+:[^@]+)$',
+           'help-string'=>'Destination (username@host:path)'}},
+       'remote-port'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'remote-port',
+           'optional'=>'yes',
+           'type'=>'rangedint',
+           'min'=>'1',
+           'max'=>'65535',
+           'help-string'=>'SSH port number on remote host'}},
+       'start-time'=>
+        {'equal'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'equal',
+             'type'=>'string',
+             'help-string'=>
+              'Datetime YYYY/MM/DD@hh:mm:ss (e.g. 2006/08/01@10:00:00)',
+             'regex'=>
+              '2[0-9][0-9][0-9]/([0][1-9]|[1][0-2])/([0-2][0-9]|[3][0-1])@([01][0-9]|[2][0-3]):([0-5][0-9]):([0-5][0-9])',
+             'minlen'=>'12',
+             'maxlen'=>'20'}},
+         :obj=>:union,
+         :attributes=>{'name'=>'start-time', 'optional'=>'yes'}},
+       'end-time'=>
+        {'equal'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'equal',
+             'type'=>'string',
+             'help-string'=>
+              'Datetime YYYY/MM/DD@hh:mm:ss (e.g. 2006/08/01@10:00:00)',
+             'regex'=>
+              '2[0-9][0-9][0-9]/([0][1-9]|[1][0-2])/([0-2][0-9]|[3][0-1])@([01][0-9]|[2][0-3]):([0-5][0-9]):([0-5][0-9])',
+             'minlen'=>'12',
+             'maxlen'=>'20'}},
+         :obj=>:union,
+         :attributes=>{'name'=>'end-time', 'optional'=>'yes'}},
+       'device'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'device',
+           'optional'=>'yes',
+           'type'=>'string',
+           'help-string'=>'device serial number',
+           'complete-handler'=>'$$config/mgt-config/devices/entry/@name'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'stats-dump',
+         'help-string'=>
+          'Use scp to export AVR report data (default is last 7 days)'}},
      'configuration'=>
       {'from'=>
         {:obj=>:element,
@@ -34782,6 +39056,61 @@ module PaloAlto
        :attributes=>
         {'name'=>'device-state',
          'help-string'=>'Use tftp to export device state'}},
+     'stats-dump'=>
+      {'to'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'to', 'type'=>'string', 'help-string'=>'tftp host'}},
+       'remote-port'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'remote-port',
+           'optional'=>'yes',
+           'type'=>'rangedint',
+           'min'=>'1',
+           'max'=>'65535',
+           'help-string'=>'tftp server port'}},
+       'start-time'=>
+        {'equal'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'equal',
+             'type'=>'string',
+             'help-string'=>
+              'Datetime YYYY/MM/DD@hh:mm:ss (e.g. 2006/08/01@10:00:00)',
+             'regex'=>
+              '2[0-9][0-9][0-9]/([0][1-9]|[1][0-2])/([0-2][0-9]|[3][0-1])@([01][0-9]|[2][0-3]):([0-5][0-9]):([0-5][0-9])',
+             'minlen'=>'12',
+             'maxlen'=>'20'}},
+         :obj=>:union,
+         :attributes=>{'name'=>'start-time', 'optional'=>'yes'}},
+       'end-time'=>
+        {'equal'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'equal',
+             'type'=>'string',
+             'help-string'=>
+              'Datetime YYYY/MM/DD@hh:mm:ss (e.g. 2006/08/01@10:00:00)',
+             'regex'=>
+              '2[0-9][0-9][0-9]/([0][1-9]|[1][0-2])/([0-2][0-9]|[3][0-1])@([01][0-9]|[2][0-3]):([0-5][0-9]):([0-5][0-9])',
+             'minlen'=>'12',
+             'maxlen'=>'20'}},
+         :obj=>:union,
+         :attributes=>{'name'=>'end-time', 'optional'=>'yes'}},
+       'device'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'device',
+           'optional'=>'yes',
+           'type'=>'string',
+           'help-string'=>'device serial number',
+           'complete-handler'=>'$$config/mgt-config/devices/entry/@name'}},
+       :obj=>:sequence,
+       :attributes=>
+        {'name'=>'stats-dump',
+         'help-string'=>
+          'Use scp to export AVR report data (default is last 7 days)'}},
      'threat-pcap'=>
       {'device'=>
         {:obj=>:element,
@@ -36461,6 +40790,34 @@ module PaloAlto
        'type'=>'string',
        'extended-type'=>'pathname',
        'directory'=>'/var/log/appweb/'}},
+   'es-log'=>
+    {:obj=>:element,
+     :attributes=>
+      {'name'=>'es-log',
+       'type'=>'string',
+       'extended-type'=>'pathname',
+       'directory'=>'/var/log/elasticsearch/'}},
+   'es-1-log'=>
+    {:obj=>:element,
+     :attributes=>
+      {'name'=>'es-1-log',
+       'type'=>'string',
+       'extended-type'=>'pathname',
+       'directory'=>'/var/log/es-1/'}},
+   'es-2-log'=>
+    {:obj=>:element,
+     :attributes=>
+      {'name'=>'es-2-log',
+       'type'=>'string',
+       'extended-type'=>'pathname',
+       'directory'=>'/var/log/es-2/'}},
+   'db-log'=>
+    {:obj=>:element,
+     :attributes=>
+      {'name'=>'db-log',
+       'type'=>'string',
+       'extended-type'=>'pathname',
+       'directory'=>'/var/log/db/'}},
    :obj=>:sequence,
    :attributes=>
     {'name'=>'less',
@@ -36544,7 +40901,8 @@ module PaloAlto
        'help-string'=>
         'Print NUM lines of trailing context after matching lines'}},
    'pattern'=>
-    {:obj=>:element, :attributes=>{'name'=>'pattern', 'type'=>'string'}},
+    {:obj=>:element,
+     :attributes=>{'name'=>'pattern', 'type'=>'string', 'regex'=>'^[^*~]+$'}},
    'mp-log'=>
     {:obj=>:element,
      :attributes=>
@@ -36590,6 +40948,13 @@ module PaloAlto
        'type'=>'string',
        'extended-type'=>'pathname',
        'directory'=>'/opt/plugins/var/log/pan/'}},
+   'db-log'=>
+    {:obj=>:element,
+     :attributes=>
+      {'name'=>'db-log',
+       'type'=>'string',
+       'extended-type'=>'pathname',
+       'directory'=>'/var/log/db/'}},
    'webserver-log'=>
     {:obj=>:element,
      :attributes=>
@@ -36604,6 +40969,27 @@ module PaloAlto
        'type'=>'string',
        'extended-type'=>'pathname',
        'directory'=>'/var/log/appweb/'}},
+   'es-log'=>
+    {:obj=>:element,
+     :attributes=>
+      {'name'=>'es-log',
+       'type'=>'string',
+       'extended-type'=>'pathname',
+       'directory'=>'/var/log/elasticsearch/'}},
+   'es-1-log'=>
+    {:obj=>:element,
+     :attributes=>
+      {'name'=>'es-1-log',
+       'type'=>'string',
+       'extended-type'=>'pathname',
+       'directory'=>'/var/log/es-1/'}},
+   'es-2-log'=>
+    {:obj=>:element,
+     :attributes=>
+      {'name'=>'es-2-log',
+       'type'=>'string',
+       'extended-type'=>'pathname',
+       'directory'=>'/var/log/es-2/'}},
    :obj=>:sequence,
    :attributes=>
     {'name'=>'tail',
@@ -36656,7 +41042,7 @@ module PaloAlto
       {'name'=>'host',
        'type'=>'string',
        'help-string'=>'Hostname or IP address of remote host',
-       'regex'=>'^[^-]'}},
+       'regex'=>'^[^-*~]'}},
    :obj=>:sequence,
    :attributes=>
     {'name'=>'ssh',
@@ -36790,6 +41176,7 @@ module PaloAlto
      'xmlapi-exposed'=>'no',
      'handler'=>'cms_traceroute_handler',
      'target'=>'mgmt',
+     'internal'=>'yes',
      'help-string'=>'Print the route packets take to network host'}},
  'traceroute'=>
   {'ipv4'=>
@@ -36926,7 +41313,8 @@ module PaloAlto
       {'name'=>'bypass-routing',
        'type'=>'bool',
        'optional'=>'yes',
-       'help-string'=>'Bypass routing table, use specified interface'}},
+       'help-string'=>
+        'Bypass routing tables and send directly to a host on an attached network'}},
    'count'=>
     {:obj=>:element,
      :attributes=>
@@ -37028,6 +41416,7 @@ module PaloAlto
     {'name'=>'cms-ping',
      'handler'=>'cms_ping_handler',
      'target'=>'mgmt',
+     'internal'=>'yes',
      'help-string'=>'Ping hosts and networks'}},
  'ping'=>
   {'bypass-routing'=>
@@ -37036,7 +41425,8 @@ module PaloAlto
       {'name'=>'bypass-routing',
        'type'=>'bool',
        'optional'=>'yes',
-       'help-string'=>'Bypass routing table, use specified interface'}},
+       'help-string'=>
+        'Bypass routing tables and send directly to a host on an attached network'}},
    'count'=>
     {:obj=>:element,
      :attributes=>
@@ -37407,7 +41797,18 @@ module PaloAlto
  'validate'=>
   {'full'=>{:obj=>:sequence, :attributes=>{'name'=>'full', 'optional'=>'yes'}},
    'partial'=>
-    {'admin'=>
+    {'object-xpaths'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'member',
+           'type'=>'string',
+           'regex'=>'.*',
+           'maxlen'=>'1024'}},
+       :obj=>:array,
+       :attributes=>
+        {'name'=>'object-xpaths', 'optional'=>'yes', 'default'=>'all'}},
+     'admin'=>
       {'member'=>
         {:obj=>:element,
          :attributes=>
@@ -37496,6 +41897,15 @@ module PaloAlto
          :attributes=>{'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
        :obj=>:array,
        :attributes=>{'name'=>'wildfire-appliance-cluster', 'optional'=>'yes'}},
+     'no-plugins'=>
+      {:obj=>:sequence,
+       :attributes=>{'name'=>'no-plugins', 'optional'=>'yes'}},
+     'plugins'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>{'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+       :obj=>:array,
+       :attributes=>{'name'=>'plugins', 'optional'=>'yes'}},
      :obj=>:sequence,
      :attributes=>{'name'=>'partial', 'optional'=>'yes'}},
    :obj=>:union,
@@ -37510,7 +41920,18 @@ module PaloAlto
  'commit'=>
   {'force'=>
     {'partial'=>
-      {'admin'=>
+      {'object-xpaths'=>
+        {'member'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'member',
+             'type'=>'string',
+             'regex'=>'.*',
+             'maxlen'=>'1024'}},
+         :obj=>:array,
+         :attributes=>
+          {'name'=>'object-xpaths', 'optional'=>'yes', 'default'=>'all'}},
+       'admin'=>
         {'member'=>
           {:obj=>:element,
            :attributes=>
@@ -37600,12 +42021,32 @@ module PaloAlto
          :obj=>:array,
          :attributes=>
           {'name'=>'wildfire-appliance-cluster', 'optional'=>'yes'}},
+       'no-plugins'=>
+        {:obj=>:sequence,
+         :attributes=>{'name'=>'no-plugins', 'optional'=>'yes'}},
+       'plugins'=>
+        {'member'=>
+          {:obj=>:element,
+           :attributes=>{'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+         :obj=>:array,
+         :attributes=>{'name'=>'plugins', 'optional'=>'yes'}},
        :obj=>:sequence,
        :attributes=>{'name'=>'partial', 'optional'=>'yes'}},
      :obj=>:sequence,
      :attributes=>{'name'=>'force'}},
    'partial'=>
-    {'admin'=>
+    {'object-xpaths'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'member',
+           'type'=>'string',
+           'regex'=>'.*',
+           'maxlen'=>'1024'}},
+       :obj=>:array,
+       :attributes=>
+        {'name'=>'object-xpaths', 'optional'=>'yes', 'default'=>'all'}},
+     'admin'=>
       {'member'=>
         {:obj=>:element,
          :attributes=>
@@ -37694,6 +42135,15 @@ module PaloAlto
          :attributes=>{'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
        :obj=>:array,
        :attributes=>{'name'=>'wildfire-appliance-cluster', 'optional'=>'yes'}},
+     'no-plugins'=>
+      {:obj=>:sequence,
+       :attributes=>{'name'=>'no-plugins', 'optional'=>'yes'}},
+     'plugins'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>{'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+       :obj=>:array,
+       :attributes=>{'name'=>'plugins', 'optional'=>'yes'}},
      :obj=>:sequence,
      :attributes=>{'name'=>'partial', 'optional'=>'yes'}},
    'description'=>
@@ -37742,7 +42192,18 @@ module PaloAlto
      'help-string'=>'replace device serial number'}},
  'commit-and-push'=>
   {'partial'=>
-    {'admin'=>
+    {'object-xpaths'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>
+          {'name'=>'member',
+           'type'=>'string',
+           'regex'=>'.*',
+           'maxlen'=>'1024'}},
+       :obj=>:array,
+       :attributes=>
+        {'name'=>'object-xpaths', 'optional'=>'yes', 'default'=>'all'}},
+     'admin'=>
       {'member'=>
         {:obj=>:element,
          :attributes=>
@@ -37831,6 +42292,15 @@ module PaloAlto
          :attributes=>{'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
        :obj=>:array,
        :attributes=>{'name'=>'wildfire-appliance-cluster', 'optional'=>'yes'}},
+     'no-plugins'=>
+      {:obj=>:sequence,
+       :attributes=>{'name'=>'no-plugins', 'optional'=>'yes'}},
+     'plugins'=>
+      {'member'=>
+        {:obj=>:element,
+         :attributes=>{'name'=>'member', 'type'=>'string', 'maxlen'=>'63'}},
+       :obj=>:array,
+       :attributes=>{'name'=>'plugins', 'optional'=>'yes'}},
      :obj=>:sequence,
      :attributes=>{'name'=>'partial', 'optional'=>'yes'}},
    'description'=>
@@ -37924,7 +42394,28 @@ module PaloAlto
        :obj=>:sequence,
        :attributes=>{'name'=>'wildfire-appliance-config', 'optional'=>'yes'}},
      'shared-policy'=>
-      {'device-group'=>
+      {'admin'=>
+        {'member'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'member',
+             'type'=>'string',
+             'optional'=>'yes',
+             'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$',
+             'maxlen'=>'63'}},
+         :obj=>:array,
+         :attributes=>
+          {'name'=>'admin',
+           'optional'=>'yes',
+           'help-string'=>'Admin/s whose changes you want to push'}},
+       'exclude-other-admins'=>
+        {:obj=>:element,
+         :attributes=>
+          {'optional'=>'yes',
+           'name'=>'exclude-other-admins',
+           'type'=>'bool',
+           'default'=>'no'}},
+       'device-group'=>
         {'entry'=>
           {'name'=>
             {:obj=>:"attr-req",
@@ -38078,7 +42569,28 @@ module PaloAlto
        :obj=>:sequence,
        :attributes=>{'name'=>'device-config', 'optional'=>'yes'}},
      'template-stack-config'=>
-      {'template-stack'=>
+      {'admin'=>
+        {'member'=>
+          {:obj=>:element,
+           :attributes=>
+            {'name'=>'member',
+             'type'=>'string',
+             'optional'=>'yes',
+             'regex'=>'^[^;|`&\'"<>[:cntrl:]]+$',
+             'maxlen'=>'63'}},
+         :obj=>:array,
+         :attributes=>
+          {'name'=>'admin',
+           'optional'=>'yes',
+           'help-string'=>'Admin/s whose changes you want to push'}},
+       'exclude-other-admins'=>
+        {:obj=>:element,
+         :attributes=>
+          {'optional'=>'yes',
+           'name'=>'exclude-other-admins',
+           'type'=>'bool',
+           'default'=>'no'}},
+       'template-stack'=>
         {'entry'=>
           {'name'=>
             {:obj=>:"attr-req",
@@ -39356,7 +43868,8 @@ module PaloAlto
           {'name'=>'bypass-routing',
            'type'=>'bool',
            'optional'=>'yes',
-           'help-string'=>'Bypass routing table, use specified interface'}},
+           'help-string'=>
+            'Bypass routing tables and send directly to a host on an attached network'}},
        'count'=>
         {:obj=>:element,
          :attributes=>

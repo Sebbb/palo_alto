@@ -3,7 +3,7 @@
 require 'nokogiri'
 require 'pp'
 
-xml = Nokogiri::XML.parse(File.read('schema/cms-opschema.xml')).xpath("union[@name='operations']")
+xml = Nokogiri::XML.parse(File.read('schema/pancfg_cms-opschema.xml')).xpath("union[@name='operations']")
 nil
 
 class String
