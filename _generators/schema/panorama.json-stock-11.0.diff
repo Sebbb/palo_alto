@@ -1,0 +1,362 @@
+--- panorama.json-stock-11.0	2023-11-22 11:50:51.005593004 +0100
++++ panorama.json	2023-11-22 12:04:56.547117295 +0100
+@@ -41828,6 +41828,14 @@
+                   "optional": "yes",
+                   "memberof": []
+                 },
++                "validate": {
++                  "@attr": {
++                    "node-type": "element",
++                    "optional": "yes",
++                    "type": "string",
++                    "help-string": "Validate"
++                  }
++                },
+                 "dashboard": {
+                   "@attr": {
+                     "node-type": "element",
+@@ -50098,6 +50106,14 @@
+                   "optional": "yes",
+                   "memberof": []
+                 },
++                "validate": {
++                  "@attr": {
++                    "node-type": "element",
++                    "optional": "yes",
++                    "type": "string",
++                    "help-string": "Validate"
++                  }
++                },
+                 "dashboard": {
+                   "@attr": {
+                     "node-type": "element",
+@@ -135659,6 +135675,22 @@
+                         "help-string": "alphanumeric string [ 0-9a-zA-Z._-]"
+                       }
+                     },
++                    "common-name": {
++                      "@attr": {
++                        "node-type": "element",
++                        "type": "string",
++                        "minlen": "0",
++                        "maxlen": "255"
++                      }
++                    },
++                    "public-key": {
++                      "@attr": {
++                        "node-type": "element",
++                        "optional": "yes",
++                        "type": "string",
++                        "maxlen": "16384"
++                      }
++                    },
+                     "choice": {
+                       "@attr": {
+                         "node-type": "choice"
+@@ -136593,6 +136625,14 @@
+                             "optional": "yes",
+                             "memberof": []
+                           },
++                          "validate": {
++                            "@attr": {
++                              "node-type": "element",
++                              "optional": "yes",
++                              "type": "string",
++                              "help-string": "Validate"
++                            }
++                          },
+                           "dashboard": {
+                             "@attr": {
+                               "node-type": "element",
+@@ -202630,7 +202670,7 @@
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "enable Equal Cost Multipath routing, change this configuration will result in a virtual router restart"
+                             }
+                           },
+@@ -202661,7 +202701,7 @@
+                                     "node-type": "element",
+                                     "optional": "yes",
+                                     "type": "bool",
+-                                    "default": "false",
++                                    "default": "no",
+                                     "help-string": "only use source address for hash",
+                                     "uiHint-fieldLabel": "Use Source Address Only"
+                                   }
+@@ -202671,7 +202711,7 @@
+                                     "node-type": "element",
+                                     "optional": "yes",
+                                     "type": "bool",
+-                                    "default": "false",
++                                    "default": "no",
+                                     "help-string": "use source/destination port for hash"
+                                   }
+                                 },
+@@ -202751,7 +202791,7 @@
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "allows return packets to egress out of the ingress interface of the flow"
+                             }
+                           },
+@@ -202760,7 +202800,7 @@
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "force VPN traffic to exit interface that the source-ip belongs to"
+                             }
+                           }
+@@ -207352,7 +207392,7 @@
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "enable Equal Cost Multipath routing, change this configuration will result in a virtual router restart"
+                                 }
+                               },
+@@ -207383,7 +207423,7 @@
+                                         "node-type": "element",
+                                         "optional": "yes",
+                                         "type": "bool",
+-                                        "default": "false",
++                                        "default": "no",
+                                         "help-string": "only use source address for hash",
+                                         "uiHint-fieldLabel": "Use Source Address Only"
+                                       }
+@@ -207393,7 +207433,7 @@
+                                         "node-type": "element",
+                                         "optional": "yes",
+                                         "type": "bool",
+-                                        "default": "false",
++                                        "default": "no",
+                                         "help-string": "use source/destination port for hash"
+                                       }
+                                     },
+@@ -207473,7 +207513,7 @@
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "allows return packets to egress out of the ingress interface of the flow"
+                                 }
+                               },
+@@ -207482,7 +207522,7 @@
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "force VPN traffic to exit interface that the source-ip belongs to"
+                                 }
+                               }
+@@ -235124,6 +235164,14 @@
+                               "help-string": "alphanumeric string [ 0-9a-zA-Z._-]"
+                             }
+                           },
++                          "common-name": {
++                            "@attr": {
++                              "node-type": "element",
++                              "type": "string",
++                              "minlen": "0",
++                              "maxlen": "255"
++                            }
++                          },
+                           "choice": {
+                             "@attr": {
+                               "node-type": "choice"
+@@ -235199,6 +235247,15 @@
+                               "maxlen": "1023"
+                             }
+                           },
++                          "public-key": {
++                            "@attr": {
++                              "node-type": "element",
++                              "optional": "yes",
++                              "type": "string",
++                              "minlen": "0",
++                              "maxlen": "16384"
++                            }
++                          },
+                           "subject-hash": {
+                             "@attr": {
+                               "node-type": "element",
+@@ -318958,7 +319015,7 @@
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "enable Equal Cost Multipath routing, change this configuration will result in a virtual router restart"
+                             }
+                           },
+@@ -318989,7 +319046,7 @@
+                                     "node-type": "element",
+                                     "optional": "yes",
+                                     "type": "bool",
+-                                    "default": "false",
++                                    "default": "no",
+                                     "help-string": "only use source address for hash",
+                                     "uiHint-fieldLabel": "Use Source Address Only"
+                                   }
+@@ -318999,7 +319056,7 @@
+                                     "node-type": "element",
+                                     "optional": "yes",
+                                     "type": "bool",
+-                                    "default": "false",
++                                    "default": "no",
+                                     "help-string": "use source/destination port for hash"
+                                   }
+                                 },
+@@ -319079,7 +319136,7 @@
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "allows return packets to egress out of the ingress interface of the flow"
+                             }
+                           },
+@@ -319088,7 +319145,7 @@
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "force VPN traffic to exit interface that the source-ip belongs to"
+                             }
+                           }
+@@ -323682,7 +323739,7 @@
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "enable Equal Cost Multipath routing, change this configuration will result in a virtual router restart"
+                                 }
+                               },
+@@ -323713,7 +323770,7 @@
+                                         "node-type": "element",
+                                         "optional": "yes",
+                                         "type": "bool",
+-                                        "default": "false",
++                                        "default": "no",
+                                         "help-string": "only use source address for hash",
+                                         "uiHint-fieldLabel": "Use Source Address Only"
+                                       }
+@@ -323723,7 +323780,7 @@
+                                         "node-type": "element",
+                                         "optional": "yes",
+                                         "type": "bool",
+-                                        "default": "false",
++                                        "default": "no",
+                                         "help-string": "use source/destination port for hash"
+                                       }
+                                     },
+@@ -323803,7 +323860,7 @@
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "allows return packets to egress out of the ingress interface of the flow"
+                                 }
+                               },
+@@ -323812,7 +323869,7 @@
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "force VPN traffic to exit interface that the source-ip belongs to"
+                                 }
+                               }
+@@ -382917,6 +382974,80 @@
+           "@attr": {
+             "node-type": "sequence",
+             "optional": "yes"
++          },
++          "sw_fw_license": {
++            "@attr": {
++              "node-type": "sequence",
++              "optional": "yes"
++            },
++            "license-manager": {
++              "@attr": {
++                "node-type": "array",
++                "optional": "yes",
++                "add_to_xml_object_cache": "yes"
++              },
++              "entry": {
++                "@attr": {
++                  "node-type": "sequence",
++                  "tlo": "yes",
++                  "max-count": "10000"
++                },
++                "@name": {
++                  "@attr": {
++                    "node-type": "attr-req",
++                    "type": "string",
++                    "minlen": "1",
++                    "maxlen": "127",
++                    "regex": "^[^]'[]*$"
++                  }
++                },
++                "device-group": {
++                  "@attr": {
++                    "node-type": "element",
++                    "optional": "yes",
++                    "type": "string",
++                    "minlen": "0",
++                    "maxlen": "1023"
++                  }
++                },
++                "template-stack": {
++                  "@attr": {
++                    "node-type": "element",
++                    "optional": "yes",
++                    "type": "string",
++                    "minlen": "0",
++                    "maxlen": "1023"
++                  }
++                },
++                "bootstrap-definition": {
++                  "@attr": {
++                    "node-type": "element",
++                    "optional": "yes",
++                    "type": "string",
++                    "minlen": "0",
++                    "maxlen": "1023"
++                  }
++                },
++                "auto-deactivate": {
++                  "@attr": {
++                    "node-type": "element",
++                    "optional": "yes",
++                    "type": "string",
++                    "minlen": "0",
++                    "maxlen": "1023"
++                  }
++                },
++                "description": {
++                  "@attr": {
++                    "node-type": "element",
++                    "optional": "yes",
++                    "type": "string",
++                    "minlen": "0",
++                    "maxlen": "1023"
++                  }
++                }
++              }
++            }
+           }
+         }
+       }
