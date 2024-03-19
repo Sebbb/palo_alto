@@ -129,6 +129,7 @@ module PaloAlto
           raise SessionTimedOutException
         when '400', '403'
           begin
+            pp [:error, options[:host], response.code, response.message]
             data = Nokogiri::XML.parse(response.body)
             message = data.xpath('//response/response/msg').text
             code = response.code.to_i
@@ -215,7 +216,7 @@ module PaloAlto
         options[:verify_ssl] = verify_ssl
         options[:payload]    = payload
         options[:debug]      = debug
-        options[:timeout]    = timeout || 180
+        options[:timeout]    = timeout || 600
         options[:headers]    = if payload[:type] == 'keygen'
                                  {}
                                else
@@ -262,6 +263,7 @@ module PaloAlto
       rescue TemporaryException => e
         dont_retry_at = [
           'Partial revert is not allowed. Full system commit must be completed.',
+          'Local commit jobs are queued. Revert operation is not allowed.',
           'Config for scope ',
           'Config is not currently locked for scope ',
           'Commit lock is not currently held by',
@@ -275,7 +277,7 @@ module PaloAlto
         max_retries = if dont_retry_at.any? { |str| e.message.start_with?(str) }
                         0
                       elsif e.message.start_with?('Timed out while getting config lock. Please try again.')
-                        10
+                        30
                       else
                         1
                       end
