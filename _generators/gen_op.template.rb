@@ -75,63 +75,84 @@ module PaloAlto
         end
       end
 
-      def xml_builder(xml, ops, obj)
-        case obj
+      def xml_builder_iter(xml, ops, data)
+        raise 'No Ops?!' if ops.nil?
+
+        case data
         when String
-          section = obj
-          data = nil
-        when Hash
-          section = obj.keys.first
-          data = obj[section]
+          section = data
+          data2 = nil
+          xml_builder(xml, ops, section, data2)
+        when Hash, Array
+          data.each do |section, data2|
+            xml_builder(xml, ops, section, data2)
+          end
         else
-          raise obj.pretty_inspect
+          raise data.pretty_inspect
         end
+      end
 
-        unless ops.key?(section.to_s)
-          err = "Error #{section} does not exist. Valid: " + ops.keys.pretty_inspect
-          raise err
-        end
+      def xml_builder(xml, ops, section, data, type = ops[section.to_s]&.[](:obj))
+        ops_tree = ops[section.to_s] || raise("no ops tree for section #{section}, #{ops.keys.inspect}")
+        # pp [:xml_builder, :section, section, :type, type]
+        # obj = data
 
-        ops_tree = ops[section.to_s]
-
-        section = escape_xpath_tag(section)
-
-        case ops_tree[:obj]
+        case type
         when :element
-          xml.public_send(section, data)
+          xml.public_send(escape_xpath_tag(section), data)
         when :array
-          xml.public_send(section) do
+          xml.public_send(escape_xpath_tag(section)) do
+            raise 'data is Hash and should be Array' if data.is_a?(Hash)
+
             data.each do |el|
               key = ops_tree.keys.first
-              xml.public_send(escape_xpath_tag(key), el)
+              case el
+              when Hash
+                attr = ops_tree[key].find { |_k, v| v.is_a?(Hash) && v[:obj] == :'attr-req' }.first
+                xml.public_send(escape_xpath_tag(key), { attr => el[attr.to_sym] }) do
+                  remaining_attrs = el.reject { |k, _v| k == attr.to_sym }
+
+                  if remaining_attrs.any?
+                    xml_builder(xml, ops_tree[key], remaining_attrs.keys.first.to_s, remaining_attrs.values.first,
+                                :array)
+                  end
+                end
+              when String
+                xml.public_send(key, el)
+              end
             end
           end
         when :sequence
-          if data.nil?
-            xml.send(section)
+          if data.nil? || data == true
+            xml.send(escape_xpath_tag(section))
           elsif data.is_a?(Hash)
-            xml.send(section)  do
-              xml_builder(xml, ops_tree, data)
+            xml.send(escape_xpath_tag(section)) do
+              xml_builder_iter(xml, ops_tree, data)
             end
-          else # array
+          else # array, what else could it be?!
+            raise "Unknown: #{attr.inspect}" unless data.is_a?(Array)
 
-            if data.is_a?(Array)
-              attr = data.find { |child| child.is_a?(Hash) && ops_tree[child.keys.first.to_s][:obj] == :'attr-req' }
-              data.delete(attr)
-            else
-              attr = {}
-            end
+            raise 'Too many hashes in an array, please update' if data.length > 1
 
-            xml.public_send(section, attr) do
-              data.each do |child|
-                xml_builder(xml, ops_tree, child)
+            key = ops_tree.keys.first
+            attr_name = ops_tree[key].find { |_k, v| v.is_a?(Hash) && v[:obj] == :'attr-req' }.first
+
+            hash = data.first.dup
+
+            data = [hash.reject { |k| k == attr_name.to_sym }]
+            attr = { attr_name => hash[attr_name.to_sym] }
+
+            xml.public_send(escape_xpath_tag(section)) do
+              xml.public_send(escape_xpath_tag(key), attr) do
+                data.each do |child|
+                  xml_builder_iter(xml, ops_tree[key], child)
+                end
               end
             end
           end
         when :union
-          k, v = obj.first
-          xml.send("#{k}_")  do
-            xml_builder(xml, ops_tree, v)
+          xml.public_send(escape_xpath_tag(section)) do
+            xml_builder_iter(xml, ops[section.to_s], data)
           end
         else
           raise ops_tree[:obj].pretty_inspect
@@ -141,7 +162,7 @@ module PaloAlto
 
       def to_xml(obj)
         builder = Nokogiri::XML::Builder.new do |xml|
-          xml_builder(xml, @@ops, obj)
+          xml_builder_iter(xml, @@ops, obj)
         end
         builder.doc.root.to_xml
       end

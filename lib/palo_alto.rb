@@ -195,7 +195,7 @@ module PaloAlto
             new_xpath = 'response/result/' + search_xpath[(remove+2)..]
 
             results = cache.xpath(new_xpath)
-						xml = Nokogiri.parse("<?xml version=\"1.0\"?><response><result>#{results.to_s}</result></response>")
+            xml = Nokogiri.parse("<?xml version=\"1.0\"?><response><result>#{results.to_s}</result></response>")
 
             if debug.include?(:statistics)
               warn "Elapsed for parsing cache: #{Time.now - start_time} seconds"
@@ -323,23 +323,31 @@ module PaloAlto
       cmd = if all
               'commit'
             else
-              { commit: { partial: [
-                { 'admin': admins },
-                if device_groups
-                  device_groups.empty? ? 'no-device-group' : { 'device-group': device_groups }
-                end,
-                if templates
-                  templates.empty? ? 'no-template' : { 'template': templates }
-                end,
-                'no-template-stack',
-                'no-log-collector',
-                'no-log-collector-group',
-                'no-wildfire-appliance',
-                'no-wildfire-appliance-cluster',
-                { 'device-and-network': 'excluded' },
-                { 'shared-object': 'excluded' }
-              ].compact } }
+              commit_partial = {
+                'no-template-stack': true,
+                'no-log-collector': true,
+                'no-log-collector-group': true,
+                'no-wildfire-appliance': true,
+                'no-wildfire-appliance-cluster': true,
+                'device-and-network': 'excluded',
+                'shared-object': 'excluded'
+              }
+
+              if device_groups
+                commit_partial.merge!(device_groups.empty? ? {'no-device-group': true} : { 'device-group': device_groups })
+              end
+
+              if templates
+                commit_partial.merge!(templates.empty? ? {'no-template': true} : { 'template': templates })
+              end
+
+              if admins
+                commit_partial.merge!({'admin': admins})
+              end
+
+              { commit: { partial: commit_partial } }
             end
+
       result = op.execute(cmd)
 
       return result if raw_result
@@ -502,17 +510,17 @@ module PaloAlto
       cmd = if all
               { revert: 'config' }
             else
-              { revert: { config: { partial: [
-                { 'admin': [username] },
-                'no-template',
-                'no-template-stack',
-                'no-log-collector',
-                'no-log-collector-group',
-                'no-wildfire-appliance',
-                'no-wildfire-appliance-cluster',
-                { 'device-and-network': 'excluded' },
-                { 'shared-object': 'excluded' }
-              ] } } }
+              { revert: { config: { partial: {
+                'admin': [username],
+                'no-template': true,
+                'no-template-stack': true,
+                'no-log-collector': true,
+                'no-log-collector-group': true,
+                'no-wildfire-appliance': true,
+                'no-wildfire-appliance-cluster': true,
+                'device-and-network': 'excluded',
+                'shared-object': 'excluded'
+              } } } }
             end
 
       waited = 0

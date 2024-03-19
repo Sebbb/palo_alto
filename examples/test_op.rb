@@ -1,31 +1,31 @@
 require 'palo_alto'
+load '/usr/share/panorama-api/new_op.rb'
 
-a = { commit: { partial: [
-  { admin: ['admin'] },
-  'no-template',
-  'no-template-stack',
-  'no-log-collector',
-  'no-log-collector-group',
-  'no-wildfire-appliance',
-  'no-wildfire-appliance-cluster',
-  { 'device-and-network': 'excluded' },
-  { 'shared-object': 'excluded' }
-] } }
+a = { commit: { partial:
+  { admin: ['admin'],
+    'no-template': true,
+    'no-template-stack': true,
+    'no-log-collector': true,
+    'no-log-collector-group': true,
+    'no-wildfire-appliance': true,
+    'no-wildfire-appliance-cluster': true,
+    'device-and-network': 'excluded',
+    'shared-object': 'excluded' } } }
 
 b = { show: { devices: 'all' } }
 
 c = { revert: { config: {
-  partial: [
-    { admin: ['admin'] },
-    'no-template',
-    'no-template-stack',
-    'no-log-collector',
-    'no-log-collector-group',
-    'no-wildfire-appliance',
-    'no-wildfire-appliance-cluster',
-    { 'device-and-network': 'excluded' },
-    { 'shared-object': 'excluded' }
-  ]
+  partial: {
+    admin: ['admin'],
+    'no-template': true,
+    'no-template-stack': true,
+    'no-log-collector': true,
+    'no-log-collector-group': true,
+    'no-wildfire-appliance': true,
+    'no-wildfire-appliance-cluster': true,
+    'device-and-network': 'excluded',
+    'shared-object': 'excluded'
+  }
 } } }
 
 d = { commit: nil }
@@ -44,20 +44,20 @@ k = { check: 'full-commit-required' }
 
 l = { show: { config: { 'commit-scope': { partial: { admin: ['admin'] } } } } }
 
-m = { show: { config: { 'commit-scope': { partial: { admin: ['admin1', 'admin2'] } } } }}
+m = { show: { config: { 'commit-scope': { partial: { admin: ['admin1', 'admin2'] } } } } }
 
 push_to_device = {	'commit-all': { 'shared-policy': { 'device-group': [{ name: 'TEST-DG' }] } } }
 
 # validate:
 p = {	'commit-all':
   {
-    'shared-policy': [
-      { 'device-group': [{ name: 'PLAYGROUND' }] },
-      { 'include-template': 'yes' },
-      { 'merge-with-candidate-cfg': 'yes' },
-      { 'force-template-values': 'no' },
-      { 'validate-only': 'yes' }
-    ]
+    'shared-policy': {
+      'device-group': [{ name: 'PLAYGROUND' }],
+      'include-template': 'yes',
+      'merge-with-candidate-cfg': 'yes',
+      'force-template-values': 'no',
+      'validate-only': 'yes'
+    }
   } }
 
 i = { show: { query: { result: { id: 10_438 } } } }
@@ -67,21 +67,15 @@ device_group = 'PLAYGROUND'
 
 hc1 = {
   show: {
-    'rule-hit-count': [{
+    'rule-hit-count': {
       'device-group': [{
-        entry: [{
-          name: device_group
-        }, {
-          'pre-rulebase': [{
-            entry: [{
-              name: 'security'
-            }, {
-              rules: 'all'
-            }]
-          }]
+        name: device_group,
+        'pre-rulebase': [{
+          name: 'security',
+          rules: ['all']
         }]
       }]
-    }]
+    }
   }
 }
 
@@ -89,27 +83,15 @@ hc1 = {
 rule_name = 'Rule 27'
 hc2 = {
   show: {
-    'rule-hit-count': [{
+    'rule-hit-count': {
       'device-group': [{
-        entry: [{
-          name: device_group
-        }, {
-          'pre-rulebase': [{
-            entry: [{
-              name: 'security'
-            }, {
-              rules: {
-                'rule-name': [{
-                  entry: [{
-                    name: rule_name
-                  }]
-                }]
-              }
-            }]
-          }]
+        name: device_group,
+        'pre-rulebase': [{
+          name: 'security',
+          rules: { 'rule-name': [{ name: rule_name }] }
         }]
       }]
-    }]
+    }
   }
 }
 
