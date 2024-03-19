@@ -614,10 +614,8 @@ module PaloAlto
         end
       end
 
-      def xml_builder(xml, full_tree: false)
-        keys = self._class.props.keys
-
-        keys.map do |k|
+      def xml_builder(xml, full_tree: false, tag_filter: nil)
+        self._class.props.keys.select { |key| tag_filter.nil? || tag_filter.include?(key) }.map do |k|
           next if k.start_with?('@')
 
           v = prop_get(k, include_defaults: false)
@@ -631,6 +629,8 @@ module PaloAlto
         end
         if full_tree
           @subclasses.each do |tag_name, subclass|
+            next if tag_filter && !tag_filter.include?(tag_name)
+
             if subclass.is_a?(Hash)
               subclass.each do |k2, subclass2|
                 tag_attr = k2.merge(subclass2.api_attributes.select { |attr, _| %w(uuid).include?(attr)})
@@ -768,14 +768,14 @@ module PaloAlto
         @values[prop] = enforce_types(my_prop, value)
       end
 
-      def to_xml(full_tree:, include_root:)
+      def to_xml(tag_filter: nil, full_tree:, include_root:)
         builder = Nokogiri::XML::Builder.new do |xml|
           xml.public_send(_section, begin
             selector
           rescue StandardError
             nil
           end) do
-            xml_builder(xml, full_tree: full_tree)
+            xml_builder(xml, full_tree: full_tree, tag_filter: tag_filter)
           end
         end
         if include_root
@@ -799,13 +799,13 @@ module PaloAlto
 
       alias :push! :edit!
 
-      def set! # TODO: make fields to push selectable
-        xml_str = to_xml(full_tree: true, include_root: true)
+      def set!(tag_filter: nil) # TODO: make fields to push selectable
+        xml_str = to_xml(full_tree: true, include_root: false, tag_filter: tag_filter)
 
         payload = {
           type: 'config',
           action: 'set',
-          xpath: parent_instance.to_xpath,
+          xpath: to_xpath,
           element: xml_str
         }
         @client.execute(payload)
