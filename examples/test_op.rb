@@ -44,6 +44,8 @@ k = { check: 'full-commit-required' }
 
 l = { show: { config: { 'commit-scope': { partial: { admin: ['admin'] } } } } }
 
+m = { show: { config: { 'commit-scope': { partial: { admin: ['admin1', 'admin2'] } } } }}
+
 push_to_device = {	'commit-all': { 'shared-policy': { 'device-group': [{ name: 'TEST-DG' }] } } }
 
 # validate:
@@ -63,7 +65,7 @@ i = { show: { query: { result: { id: 10_438 } } } }
 # hit counts:
 device_group = 'PLAYGROUND'
 
-l = {
+hc1 = {
   show: {
     'rule-hit-count': [{
       'device-group': [{
@@ -85,7 +87,7 @@ l = {
 
 # hit count for one rule, with more details:
 rule_name = 'Rule 27'
-l = {
+hc2 = {
   show: {
     'rule-hit-count': [{
       'device-group': [{
@@ -113,14 +115,7 @@ l = {
 
 client = PaloAlto::XML.new(host: 'panorama-test', username: 'admin', password: 'Admin123!', debug: %i[sent received])
 
-# pp client.op.execute(a)
-# pp client.op.execute(b)
-# pp client.op.execute(c)
-pp client.op.execute(d)
-puts '---------------------------'
-pp client.op.execute(e)
-puts '---------------------------'
-
-# pp client.op.execute(f)
-
-pp client.op.execute(k)
+[a, b, c, d, e, f, g, h, j, k, l, m, push_to_device, p, i, hc1, hc2].each do |cmd|
+  puts client.op.to_xml(cmd)
+  puts '---------------------------'
+end
