@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'palo_alto'
 load '/usr/share/panorama-api/new_op.rb'
 
@@ -44,7 +46,7 @@ k = { check: 'full-commit-required' }
 
 l = { show: { config: { 'commit-scope': { partial: { admin: ['admin'] } } } } }
 
-m = { show: { config: { 'commit-scope': { partial: { admin: ['admin1', 'admin2'] } } } } }
+m = { show: { config: { 'commit-scope': { partial: { admin: %w[admin1 admin2] } } } } }
 
 push_to_device = {	'commit-all': { 'shared-policy': { 'device-group': [{ name: 'TEST-DG' }] } } }
 

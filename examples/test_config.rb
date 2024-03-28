@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'palo_alto'
 
 client = PaloAlto::XML.new(host: 'panorama-test', username: 'admin', password: 'Admin123!',
@@ -19,26 +21,26 @@ new_tag.push!
 # or:
 #
 # filter = (PaloAlto.child(:source).child(:member).text == "Net_10.1.1.0-24").or(PaloAlto.child(:destination).child(:member).text == 'Net_10.1.1.0-24')
-# puts filter.to_xpath
+# puts filter.to_xpath # prints generated Xpath filter
 # => ./source/member/text()='Net_10.1.1.0-24'or./destination/member/text()='Net_10.1.1.0-24'
 #
 # rules = client.config.devices.entry(name:'localhost.localdomain').device_group.entry(name: 'PLAYGROUND').pre_rulebase.security.rules
 #               .entry{filter}.get_all
-#
+
 # also more advanced filters are possible:
-# PaloAlto.not(PaloAlto.child(:'profile-setting').child(:group).child(:member) == 'IPS-Policy').and(
+# filter = PaloAlto.not(PaloAlto.child(:'profile-setting').child(:group).child(:member) == 'IPS-Policy').and(
 #   PaloAlto.parenthesis(
 #     (PaloAlto.child(:tag).child(:member) == 'ips_enabled').or(
 #       PaloAlto.child(:tag).child(:member) == 'ips_force_enabled'
 #     )
 #   )
-# ).to_xpath
-#
+# )
+# puts filter.to_xpath
 # => not(./profile-setting/group/member='IPS-Policy')and(./tag/member='ips_enabled'or./tag/member='ips_force_enabled')
 
 rules = client.config.devices.entry(name: 'localhost.localdomain').device_group.entry(name: dg).pre_rulebase.security.rules.entry{}.get_all
 
-rules.reject! { |rule| rule.api_attributes['loc'] != dg } # remove rules inherited from upper device groups from array
+rules.select! { |rule| rule.api_attributes['loc'] == dg } # filter rules inherited from upper device groups
 
 pp rules
 pp rules.length
