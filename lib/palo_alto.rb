@@ -368,7 +368,7 @@ module PaloAlto
     def primary_active?
       cmd = { show: { 'high-availability': 'state' } }
       state = op.execute(cmd)
-      state.at_xpath('response/result/local-info/state').text == 'primary-active'
+      state.at_xpath('response/result/local-info/state')&.text == 'primary-active'
     end
 
     # area: config, commit
