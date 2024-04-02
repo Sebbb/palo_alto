@@ -11,7 +11,7 @@ tag_name = 'test'
 
 new_tag = client.config.devices.entry(name: 'localhost.localdomain').device_group.entry(name: dg).tag.entry(name: tag_name).create!
 new_tag.color = 'color23'
-new_tag.push!
+new_tag.edit!
 
 # filtered rules:
 # rules = client.config.devices.entry(name:'localhost.localdomain').device_group.entry(name: 'PLAYGROUND').pre_rulebase.security.rules
@@ -45,22 +45,36 @@ rules.select! { |rule| rule.api_attributes['loc'] == dg } # filter rules inherit
 pp rules
 pp rules.length
 
-pp rules.first.api_attributes # attributes like uuid and loc
-pp rules.first.values # values as hash
-
 rule = rules.first
+
+pp rule.api_attributes # attributes like uuid and loc
+pp rule.values # values as hash
+
 rule.tag.member = [new_tag.name]
 rule.group_tag = new_tag.name
 rule.description += '....'
-rule.push!
+rule.edit!
 
+# renaming rules
 puts rule.to_xpath
 rule.rename!('Test 1')
 puts rule.to_xpath
 pp rule.name
 
+# Bulk changes to rules multiple:
+rules = client.config.devices.entry(name: 'localhost.localdomain').device_group.entry(name: dg).pre_rulebase.security.rules.get
+
+rules.entries.each do |name, rule|
+  next unless rule.values.dig('profile-setting', 'group', 'member') == ['Internal-detect']
+ 
+  rule.profile_setting.group.member = ['Internal']
+  # to remove profile-setting: rule.delete_child('profile-setting')
+end
+puts "Pushing all rules to #{rules.to_xpath}"
+rules.edit!
+
 exit 0
 
 # create a new template
 new_template = client.config.devices.entry(name: 'localhost.localdomain').template.entry(name: 'testtemplate').create!
-new_template.push!
+new_template.edit!
