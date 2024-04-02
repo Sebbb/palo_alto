@@ -8,11 +8,11 @@ dg = 'PLAYGROUND'
 
 # create a tag
 tag_name = 'test'
-
 new_tag = client.config.devices.entry(name: 'localhost.localdomain').device_group.entry(name: dg).tag.entry(name: tag_name).create!
 new_tag.color = 'color23'
-new_tag.edit!
+new_tag.set!
 
+# get rules
 # filtered rules:
 # rules = client.config.devices.entry(name:'localhost.localdomain').device_group.entry(name: 'PLAYGROUND').pre_rulebase.security.rules
 #                .entry{ (child(:source).child(:member).text == "Net_10.1.1.0-24").or(child(:destination).child(:member).text == 'Net_10.1.1.0-24') }
@@ -59,9 +59,9 @@ rule.edit!
 puts rule.to_xpath
 rule.rename!('Test 1')
 puts rule.to_xpath
-pp rule.name
+puts rule.name
 
-# Bulk changes to rules multiple:
+# Bulk changes on multiple rules:
 rules = client.config.devices.entry(name: 'localhost.localdomain').device_group.entry(name: dg).pre_rulebase.security.rules.get
 
 rules.entries.each do |name, rule|
@@ -73,8 +73,8 @@ end
 puts "Pushing all rules to #{rules.to_xpath}"
 rules.edit!
 
-exit 0
-
 # create a new template
 new_template = client.config.devices.entry(name: 'localhost.localdomain').template.entry(name: 'testtemplate').create!
-new_template.edit!
+new_template.set!
+
+exit 0
