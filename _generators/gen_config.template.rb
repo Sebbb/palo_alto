@@ -795,6 +795,13 @@ module PaloAlto
           element: xml_str
         }
         @client.execute(payload)
+      rescue PaloAlto::ConnectionErrorException => e
+        warn "*** edit! failed (#{e.inspect}), validating against running configuration"
+        validate_object = dup
+        validate_object.clear!
+        validate_object.get
+        raise e unless validate_object.values == values
+        warn '*** validation successful'
       end
 
       alias :push! :edit!

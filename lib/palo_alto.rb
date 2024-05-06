@@ -3,7 +3,6 @@
 require 'openssl'
 require 'nokogiri'
 require 'net/http'
-require 'pp'
 
 require_relative 'palo_alto/version'
 
@@ -85,7 +84,7 @@ module PaloAlto
 
         headers = {
           'User-Agent': 'ruby-keystone-client',
-          'Accept': 'application/xml',
+          Accept: 'application/xml',
           'Content-Type': 'application/x-www-form-urlencoded'
         }
 
@@ -176,13 +175,42 @@ module PaloAlto
     attr_accessor :host, :username, :auth_key, :verify_ssl, :debug, :timeout
 
     def pretty_print_instance_variables
-      super - [:@password, :@subclasses, :@subclasses, :@expression, :@arguments, :@cache, :@op, :@auth_key]
+      super - %i[@password @subclasses @subclasses @expression @arguments @cache @op @auth_key]
+    end
+
+    @@output_lock = Mutex.new
+
+    def print_sent(options, method = :puts)
+      @@output_lock.synchronize do
+        send(method, "Sent (#{Time.now}}:")
+        options.each do |k, v|
+          case k
+          when :debug
+            send(method, " #{k}: #{v.reject { |str| str.start_with?('_') }.join(', ')}")
+          when :headers
+            headers = options[:headers].dup.transform_keys(&:to_s)
+            headers['X-PAN-KEY'] = '***' if headers.key?('X-PAN-KEY')
+            puts " #{k}: #{headers}"
+          when :payload
+            send(method, ' payload: ' + options[:payload].map do |k, v|
+              element_length = 1024
+              if k == :element && v.length >= element_length
+                [k.to_s, "#{v[..element_length]}..."]
+              elsif k == :password
+                [k.to_s, '***']
+              else
+                [k.to_s, v]
+              end
+            end.to_h.inspect)
+          else
+            send(method, " #{k}: #{v}")
+          end
+        end
+      end
     end
 
     def execute(payload, skip_authentication: false, skip_cache: false)
-      if !auth_key && !skip_authentication
-        get_auth_key
-      end
+      get_auth_key if !auth_key && !skip_authentication
 
       if payload[:type] == 'config' && !skip_cache
         if payload[:action] == 'get'
@@ -192,14 +220,12 @@ module PaloAlto
             next unless search_xpath.start_with?(cached_xpath)
 
             remove = cached_xpath.split('/')[1...-1].join('/').length
-            new_xpath = 'response/result/' + search_xpath[(remove+2)..]
+            new_xpath = 'response/result/' + search_xpath[(remove + 2)..]
 
             results = cache.xpath(new_xpath)
-            xml = Nokogiri.parse("<?xml version=\"1.0\"?><response><result>#{results.to_s}</result></response>")
+            xml = Nokogiri.parse("<?xml version=\"1.0\"?><response><result>#{results}</result></response>")
 
-            if debug.include?(:statistics)
-              warn "Elapsed for parsing cache: #{Time.now - start_time} seconds"
-            end
+            warn "Elapsed for parsing cache: #{Time.now - start_time} seconds" if debug.include?(:statistics)
 
             return xml
           end
@@ -223,7 +249,7 @@ module PaloAlto
                                  { 'X-PAN-KEY': auth_key }
                                end
 
-        warn "sent: (#{Time.now}\n#{options.pretty_inspect}\n" if debug.include?(:sent)
+        print_sent(options) if debug.include?(:sent)
 
         start_time = Time.now
         text = Helpers::Rest.make_request(options)
@@ -231,14 +257,16 @@ module PaloAlto
           warn "Elapsed for API call #{payload[:type]}/#{payload[:action] || '(unknown action)'} on #{host}: #{Time.now - start_time} seconds, #{text.length} bytes"
         end
 
-        warn "received: #{Time.now}\n#{text}\n" if debug.include?(:received)
+        warn "Received (#{Time.now}):\n#{text.inspect}\n" if debug.include?(:received)
 
         data = Nokogiri::XML.parse(text)
         unless data.xpath('//response/@status').to_s == 'success'
           unless %w[op commit].include?(payload[:type]) # here we fail silent
             warn "command failed on host #{host} at #{Time.now}"
-            warn "sent:\n#{options.inspect}\n" if debug.include?(:sent_on_error)
-            warn "received:\n#{text.inspect}\n" if debug.include?(:received_on_error)
+            print_sent(options, :warn) if debug.include?(:sent_on_error) && !debug.include?(:sent)
+            if debug.include?(:received_on_error) && !debug.include?(:received)
+              warn "Received (#{Time.now}):\n#{text.inspect}\n"
+            end
           end
           code = data.at_xpath('//response/@code')&.value.to_i # sometimes there is no code :( e.g. for 'op' errors
           message = data.xpath('/response/msg/line').map(&:text).map(&:strip).join("\n")
@@ -246,10 +274,15 @@ module PaloAlto
         end
 
         data
+      rescue ConnectionErrorException => e
+        # for ConnectionErrorException, you don't know if the command was successful as you don't get a result after an action started:(
+        # As it's a temporary error, we need to rescue/raise it explicitly
+        # #edit! rescues it, for other calls, it normally should not happen.....
+        raise e
       rescue EOFError, Net::ReadTimeout => e
         max_retries = if %w[keygen config].include?(payload[:type])
                         # TODO: only retry on config, when it's get or edit, otherwise you may get strange errors
-                        3
+                        40
                       else
                         0
                       end
@@ -257,7 +290,7 @@ module PaloAlto
         raise e if retried >= max_retries
 
         retried += 1
-        warn "Got error #{e.inspect}; retrying (try #{retried})" if debug.include?(:warnings)
+        warn "Got connection error #{e.inspect}; retrying (try #{retried} of #{max_retries})" if debug.include?(:warnings)
         sleep 10
         retry
       rescue TemporaryException => e
@@ -271,13 +304,14 @@ module PaloAlto
           'This operation is blocked because of ',
           'Other administrators are holding config locks ',
           'Configuration is locked by ',
+          'device-group', #  device-group -> ... is already in use
           ' device-group' #  device-group -> ... is already in use
         ]
 
         max_retries = if dont_retry_at.any? { |str| e.message.start_with?(str) }
                         0
                       elsif e.message.start_with?('Timed out while getting config lock. Please try again.')
-                        30
+                        40
                       else
                         1
                       end
@@ -285,7 +319,7 @@ module PaloAlto
         raise e if retried >= max_retries
 
         retried += 1
-        warn "Got error #{e.inspect}; retrying (try #{retried})" if debug.include?(:warnings)
+        warn "Got temporary error #{e.inspect}; retrying (try #{retried} of #{max_retries})" if debug.include?(:warnings)
 
         get_auth_key if e.is_a?(SessionTimedOutException)
         retry
@@ -334,16 +368,14 @@ module PaloAlto
               }
 
               if device_groups
-                commit_partial.merge!(device_groups.empty? ? {'no-device-group': true} : { 'device-group': device_groups })
+                commit_partial.merge!(device_groups.empty? ? { 'no-device-group': true } : { 'device-group': device_groups })
               end
 
               if templates
-                commit_partial.merge!(templates.empty? ? {'no-template': true} : { 'template': templates })
+                commit_partial.merge!(templates.empty? ? { 'no-template': true } : { template: templates })
               end
 
-              if admins
-                commit_partial.merge!({'admin': admins})
-              end
+              commit_partial.merge!({ admin: admins }) if admins
 
               { commit: { partial: commit_partial } }
             end
@@ -390,6 +422,7 @@ module PaloAlto
     # will execute block if given and unlock afterwards. returns false if lock could not be aquired
     def lock(area:, comment: nil, type: nil, location: nil)
       raise MalformedCommandException, 'No type specified' if location && !type
+
       if block_given?
         return false unless lock(area: area, comment: comment, type: type, location: location)
 
@@ -458,7 +491,7 @@ module PaloAlto
       return result unless %w[ACT PEND].include?(status)
 
       nil
-    rescue => e
+    rescue StandardError => e
       warn [:job_query_error, @host, e].inspect
       false
     end
@@ -479,9 +512,11 @@ module PaloAlto
       end
 
       job_result = query_and_parse_job(job_id)
-      return job_result if !job_result # can be either nil or false (errored)
+      return job_result unless job_result # can be either nil or false (errored)
 
-      return true if job_result.xpath('response/result/job/details/line').text&.include?('Configuration committed successfully')
+      if job_result.xpath('response/result/job/details/line').text&.include?('Configuration committed successfully')
+        return true
+      end
 
       job_result
     end
@@ -494,7 +529,7 @@ module PaloAlto
           result = op.execute(cmd)
           status = result.at_xpath('response/result/job/status')&.text
           return result unless %w[ACT PEND].include?(status)
-        rescue => e
+        rescue StandardError => e
           warn [:job_query_error, Time.now, @host, e].inspect
           return false if e.message =~ /\Ajob \d+ not found\z/
         end
@@ -511,7 +546,7 @@ module PaloAlto
               { revert: 'config' }
             else
               { revert: { config: { partial: {
-                'admin': [username],
+                admin: [username],
                 'no-template': true,
                 'no-template-stack': true,
                 'no-log-collector': true,
