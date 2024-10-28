@@ -468,7 +468,7 @@ module PaloAlto
         @client.execute(payload)
       end
 
-      def get(ignore_empty_result: false, xpath: to_xpath, return_only: false)
+      def get(ignore_empty_result: false, xpath: to_xpath, return_only: false, skip_cache: false)
         if self._class.superclass == ArrayConfigClass && !@selector
           raise(InvalidCommandException, "Please use 'get_all' here")
         end
@@ -479,7 +479,7 @@ module PaloAlto
           xpath: xpath
         }
 
-        data = @client.execute(payload)
+        data = @client.execute(payload, skip_cache: skip_cache)
         start_time = Time.now
 
         if data.xpath('//response/result/*').length != 1 && (ignore_empty_result == false)
@@ -799,7 +799,7 @@ module PaloAlto
         warn "*** edit! failed (#{e.inspect}), validating against running configuration"
         validate_object = dup
         validate_object.clear!
-        validate_object.get
+        validate_object.get(skip_cache: true)
         raise e unless validate_object.values == values
         warn '*** validation successful'
       end

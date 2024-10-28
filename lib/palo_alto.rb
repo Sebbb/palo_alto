@@ -84,7 +84,7 @@ module PaloAlto
 
         headers = {
           'User-Agent': 'ruby-keystone-client',
-          Accept: 'application/xml',
+          'Accept': 'application/xml',
           'Content-Type': 'application/x-www-form-urlencoded'
         }
 
@@ -141,8 +141,8 @@ module PaloAlto
         end
 
         nil
-      rescue Net::OpenTimeout, Errno::ECONNREFUSED, Errno::ETIMEDOUT => e
-        raise ConnectionErrorException, e.message
+      rescue Net::OpenTimeout, Errno::ECONNREFUSED, Errno::ETIMEDOUT, Errno::ECONNRESET => e
+        raise ConnectionErrorException, [e.message, options[:host]].inspect
       end
 
       def self.raise_error(code, message)
@@ -182,7 +182,7 @@ module PaloAlto
 
     def print_sent(options, method = :puts)
       @@output_lock.synchronize do
-        send(method, "Sent (#{Time.now}}:")
+        send(method, "Sent (#{Time.now}, #{options[:session_id]}):")
         options.each do |k, v|
           case k
           when :debug
@@ -211,6 +211,7 @@ module PaloAlto
 
     def execute(payload, skip_authentication: false, skip_cache: false)
       get_auth_key if !auth_key && !skip_authentication
+      session_id = (0...6).map { ('a'..'z').to_a[rand(26)] }.join
 
       if payload[:type] == 'config' && !skip_cache
         if payload[:action] == 'get'
@@ -220,12 +221,14 @@ module PaloAlto
             next unless search_xpath.start_with?(cached_xpath)
 
             remove = cached_xpath.split('/')[1...-1].join('/').length
-            new_xpath = 'response/result/' + search_xpath[(remove + 2)..]
+            new_xpath = "response/result/#{search_xpath[(remove + 2)..]}"
 
             results = cache.xpath(new_xpath)
             xml = Nokogiri.parse("<?xml version=\"1.0\"?><response><result>#{results}</result></response>")
 
-            warn "Elapsed for parsing cache: #{Time.now - start_time} seconds" if debug.include?(:statistics)
+            if debug.include?(:statistics)
+              warn "Elapsed for parsing cache: #{Time.now - start_time} seconds (#{session_id})"
+            end
 
             return xml
           end
@@ -239,6 +242,7 @@ module PaloAlto
         # configure options for the request
         options = {}
         options[:host]       = host
+        options[:session_id] = session_id
         options[:verify_ssl] = verify_ssl
         options[:payload]    = payload
         options[:debug]      = debug
@@ -253,19 +257,24 @@ module PaloAlto
 
         start_time = Time.now
         text = Helpers::Rest.make_request(options)
-        if debug.include?(:statistics)
-          warn "Elapsed for API call #{payload[:type]}/#{payload[:action] || '(unknown action)'} on #{host}: #{Time.now - start_time} seconds, #{text.length} bytes"
-        end
 
-        warn "Received (#{Time.now}):\n#{text.inspect}\n" if debug.include?(:received)
+        @@output_lock.synchronize do
+          if debug.include?(:statistics)
+            warn "Elapsed for API call #{payload[:type]}/#{payload[:action] || '(unknown action)'} on #{host}: #{Time.now - start_time} seconds, #{text.length} bytes (#{session_id})"
+          end
+
+          warn "Received at #{Time.now} (#{session_id}):\n#{text.inspect}\n" if debug.include?(:received)
+        end
 
         data = Nokogiri::XML.parse(text)
         unless data.xpath('//response/@status').to_s == 'success'
           unless %w[op commit].include?(payload[:type]) # here we fail silent
-            warn "command failed on host #{host} at #{Time.now}"
+            warn "Command failed on host #{host} at #{Time.now} (#{session_id})"
             print_sent(options, :warn) if debug.include?(:sent_on_error) && !debug.include?(:sent)
             if debug.include?(:received_on_error) && !debug.include?(:received)
-              warn "Received (#{Time.now}):\n#{text.inspect}\n"
+              @@output_lock.synchronize do
+                warn "Received at #{Time.now} (#{session_id}):\n#{text.inspect}\n"
+              end
             end
           end
           code = data.at_xpath('//response/@code')&.value.to_i # sometimes there is no code :( e.g. for 'op' errors
@@ -287,10 +296,16 @@ module PaloAlto
                         0
                       end
 
-        raise e if retried >= max_retries
+        if retried >= max_retries
+          raise ConnectionErrorException, [e.message, options[:host], payload[:type]].inspect
+        end
 
         retried += 1
-        warn "Got connection error #{e.inspect}; retrying (try #{retried} of #{max_retries})" if debug.include?(:warnings)
+        if debug.include?(:warnings)
+          @@output_lock.synchronize do
+            warn "Got connection error #{e.inspect} from #{host}; retrying (try #{retried} of #{max_retries}, #{session_id})"
+          end
+        end
         sleep 10
         retry
       rescue TemporaryException => e
@@ -319,7 +334,11 @@ module PaloAlto
         raise e if retried >= max_retries
 
         retried += 1
-        warn "Got temporary error #{e.inspect}; retrying (try #{retried} of #{max_retries})" if debug.include?(:warnings)
+        if debug.include?(:warnings)
+          @@output_lock.synchronize do
+            warn "Got temporary error #{e.inspect}; retrying (try #{retried} of #{max_retries})"
+          end
+        end
 
         get_auth_key if e.is_a?(SessionTimedOutException)
         retry
