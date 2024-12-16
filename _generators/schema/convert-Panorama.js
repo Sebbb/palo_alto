@@ -1,6 +1,6 @@
 // To execute:
 //
-// node Panorama.js > panorama.json
+// node convert-Panorama.js > panorama.json
 //
 // Path to Panorama.javascript: https://${panorama}/php/misc/namedschema/Panorama.javascript
 
