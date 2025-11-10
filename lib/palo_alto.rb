@@ -136,6 +136,8 @@ module PaloAlto
             raise ConnectionErrorException, "#{response.code} #{response.message}"
           end
           raise_error(code, message)
+        when '502', '504'
+          raise ConnectionErrorException, "#{options[:host]}: #{response.code} #{response.message}"
         else
           raise ConnectionErrorException, "#{response.code} #{response.message}"
         end
@@ -143,6 +145,67 @@ module PaloAlto
         nil
       rescue Net::OpenTimeout, Errno::ECONNREFUSED, Errno::ETIMEDOUT, Errno::ECONNRESET => e
         raise ConnectionErrorException, [e.message, options[:host]].inspect
+      end
+
+      def self.log_query(payload:, duration:, request_size:, response_size:, host:, debug:)
+        tags = {
+          type: payload[:type],
+          host: host
+        }
+
+        values = {
+          duration: duration,
+          request_size: request_size,
+          response_size: response_size
+        }
+
+        tags[:action] = payload[:action] if payload[:action]
+
+        if payload[:type] == 'op' || payload[:type] == 'commit'
+          tags.merge!({ query: Nokogiri.parse(payload[:cmd]).xpath('//*').map(&:name)[0...3].join(' ') })
+        elsif payload[:type].to_s == 'keygen'
+          tags[:action] = 'keygen'
+        elsif payload[:xpath]
+          tags.merge!(parse_xpath(payload[:xpath]))
+        end
+
+        pp({ values: values, tags: tags }) if debug.include?(:influxdb)
+        influx.write_point('stats', { values: values, tags: tags })
+      rescue StandardError => e
+        pp e
+      end
+
+      def self.influx
+        @influx ||= InfluxDB::Client.new 'axa_panorama_api_stats', username: 'root',
+                                                                   password: 'root',
+                                                                   time_precision: 's', host: '10.71.232.74'
+      end
+
+      def self.parse_xpath(xpath)
+        return {} unless xpath.start_with?("/config/devices/entry[@name='localhost.localdomain']/")
+
+        short_xpath = xpath[53..]
+        return {} unless short_xpath.start_with?('device-group') || short_xpath.start_with?('template')
+
+        section, location, query = short_xpath.split('/', 3)
+
+        query, filter = query&.split(/\[([^@].*)$/)
+
+        # remove queries (strings in [] not starting with a @
+        query, selector = query&.split(/(\[@.*\z)/)
+
+        if selector
+          result = selector.split(/(\A.*'\])/)
+          selector, subquery = result[1..2] if result.length == 3
+        else
+          subquery = nil
+        end
+
+        query += "[*]#{subquery}" if subquery
+
+        # {section: section, location: location, query: query, has_filter: !filter.nil?}.merge(selector ? {selector: selector, has_selector: true} : {has_selector: false})
+        { section: section, location: location, query: query,
+          has_filter: !filter.nil? }.merge(selector ? { has_selector: true } : { has_selector: false })
       end
 
       def self.raise_error(code, message)
@@ -209,15 +272,32 @@ module PaloAlto
       end
     end
 
-    def execute(payload, skip_authentication: false, skip_cache: false)
-      get_auth_key if !auth_key && !skip_authentication
+    def execute(payload, skip_cache: false)
+      retried = false
+
+      begin
+        get_auth_key unless auth_key
+
+        execute_1(payload, skip_cache: skip_cache)
+      rescue ForbiddenException, SessionTimedOutException => e
+        unless retried
+          warn 'Getting new auth_key'
+          retried = true
+          self.auth_key = nil
+          retry
+        end
+        raise e
+      end
+    end
+
+    def execute_1(payload, skip_cache: false)
       session_id = (0...6).map { ('a'..'z').to_a[rand(26)] }.join
 
       if payload[:type] == 'config' && !skip_cache
         if payload[:action] == 'get'
           start_time = Time.now
           @cache.each do |cached_xpath, cache|
-            search_xpath = payload[:xpath].sub('/descendant::device-group[1]/', '/device-group/')
+            search_xpath = payload[:xpath].sub('/./device-group/', '/device-group/')
             next unless search_xpath.start_with?(cached_xpath)
 
             remove = cached_xpath.split('/')[1...-1].join('/').length
@@ -296,9 +376,7 @@ module PaloAlto
                         0
                       end
 
-        if retried >= max_retries
-          raise ConnectionErrorException, [e.message, options[:host], payload[:type]].inspect
-        end
+        raise ConnectionErrorException, [e.message, options[:host], payload[:type]].inspect if retried >= max_retries
 
         retried += 1
         if debug.include?(:warnings)
@@ -308,7 +386,7 @@ module PaloAlto
         end
         sleep 10
         retry
-      rescue TemporaryException => e
+      rescue ConnectionErrorException, UnknownErrorException, InternalErrorException => e # temporary exceptions
         dont_retry_at = [
           'Partial revert is not allowed. Full system commit must be completed.',
           'Local commit jobs are queued. Revert operation is not allowed.',
@@ -319,11 +397,10 @@ module PaloAlto
           'This operation is blocked because of ',
           'Other administrators are holding config locks ',
           'Configuration is locked by ',
-          'device-group', #  device-group -> ... is already in use
-          ' device-group' #  device-group -> ... is already in use
+          'device-group' #  device-group -> ... is already in use
         ]
 
-        max_retries = if dont_retry_at.any? { |str| e.message.start_with?(str) }
+        max_retries = if dont_retry_at.any? { |str| e.message.lstrip.start_with?(str) }
                         0
                       elsif e.message.start_with?('Timed out while getting config lock. Please try again.')
                         40
@@ -336,11 +413,10 @@ module PaloAlto
         retried += 1
         if debug.include?(:warnings)
           @@output_lock.synchronize do
-            warn "Got temporary error #{e.inspect}; retrying (try #{retried} of #{max_retries})"
+            warn "Got temporary error #{e.inspect} from #{options[:host]}; retrying (try #{retried} of #{max_retries})"
           end
         end
 
-        get_auth_key if e.is_a?(SessionTimedOutException)
         retry
       end
     end
@@ -560,12 +636,12 @@ module PaloAlto
     end
 
     # wait: how long revert is retried (every 10 seconds)
-    def revert!(all: false, wait: 60)
+    def revert!(all: false, wait: 60, admin: [username])
       cmd = if all
               { revert: 'config' }
             else
               { revert: { config: { partial: {
-                admin: [username],
+                admin: admin,
                 'no-template': true,
                 'no-template-stack': true,
                 'no-log-collector': true,
@@ -613,7 +689,7 @@ module PaloAlto
                   password: @password }
 
       # get and parse the response for the key
-      xml_data = execute(payload, skip_authentication: true)
+      xml_data = execute_1(payload)
       self.auth_key = xml_data.xpath('//response/result/key')[0].content
     end
   end
