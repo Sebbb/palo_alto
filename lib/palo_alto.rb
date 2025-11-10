@@ -147,67 +147,6 @@ module PaloAlto
         raise ConnectionErrorException, [e.message, options[:host]].inspect
       end
 
-      def self.log_query(payload:, duration:, request_size:, response_size:, host:, debug:)
-        tags = {
-          type: payload[:type],
-          host: host
-        }
-
-        values = {
-          duration: duration,
-          request_size: request_size,
-          response_size: response_size
-        }
-
-        tags[:action] = payload[:action] if payload[:action]
-
-        if payload[:type] == 'op' || payload[:type] == 'commit'
-          tags.merge!({ query: Nokogiri.parse(payload[:cmd]).xpath('//*').map(&:name)[0...3].join(' ') })
-        elsif payload[:type].to_s == 'keygen'
-          tags[:action] = 'keygen'
-        elsif payload[:xpath]
-          tags.merge!(parse_xpath(payload[:xpath]))
-        end
-
-        pp({ values: values, tags: tags }) if debug.include?(:influxdb)
-        influx.write_point('stats', { values: values, tags: tags })
-      rescue StandardError => e
-        pp e
-      end
-
-      def self.influx
-        @influx ||= InfluxDB::Client.new 'axa_panorama_api_stats', username: 'root',
-                                                                   password: 'root',
-                                                                   time_precision: 's', host: '10.71.232.74'
-      end
-
-      def self.parse_xpath(xpath)
-        return {} unless xpath.start_with?("/config/devices/entry[@name='localhost.localdomain']/")
-
-        short_xpath = xpath[53..]
-        return {} unless short_xpath.start_with?('device-group') || short_xpath.start_with?('template')
-
-        section, location, query = short_xpath.split('/', 3)
-
-        query, filter = query&.split(/\[([^@].*)$/)
-
-        # remove queries (strings in [] not starting with a @
-        query, selector = query&.split(/(\[@.*\z)/)
-
-        if selector
-          result = selector.split(/(\A.*'\])/)
-          selector, subquery = result[1..2] if result.length == 3
-        else
-          subquery = nil
-        end
-
-        query += "[*]#{subquery}" if subquery
-
-        # {section: section, location: location, query: query, has_filter: !filter.nil?}.merge(selector ? {selector: selector, has_selector: true} : {has_selector: false})
-        { section: section, location: location, query: query,
-          has_filter: !filter.nil? }.merge(selector ? { has_selector: true } : { has_selector: false })
-      end
-
       def self.raise_error(code, message)
         error = case code
                 when 400 then BadRequestException

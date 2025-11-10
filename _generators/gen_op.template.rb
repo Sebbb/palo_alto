@@ -25,6 +25,11 @@ module PaloAlto
         else
           raise(ArgumentError, "invalid type: #{type.inspect}")
         end
+      rescue PaloAlto::ConnectionErrorException => e
+        if cmd.keys == [:show]
+          warn 'Op command "show" failed; retrying'
+          retry
+        end
       end
 
       def run_with_template_scope(name)
@@ -130,7 +135,7 @@ module PaloAlto
               xml_builder_iter(xml, ops_tree, data)
             end
           else # array, what else could it be?!
-            raise "Unknown: #{attr.inspect}" unless data.is_a?(Array)
+            raise "Unknown: #{data.inspect} not array" unless data.is_a?(Array)
 
             raise 'Too many hashes in an array, please update' if data.length > 1
 

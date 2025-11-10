@@ -32,7 +32,16 @@ module PaloAlto
       end
 
       def run_query
-        result = @client.execute(@log_query_payload)
+        retried = false
+        begin
+          result = @client.execute(@log_query_payload)
+        rescue PaloAlto::InvalidCommandException => e
+          unless retried
+            retried = true
+            retry
+          end
+          raise e
+        end
         @job_id = result.at_xpath('response/result/job').text
         warn "#{@client.host} #{Time.now}: Got job id #{@job_id} for log query"
 
@@ -51,10 +60,12 @@ module PaloAlto
       end
 
       def fetch_result # rubocop:disable Metrics/MethodLength
+        loop_running = false
         return nil if @count && @skip == @count
 
         i = 0
         loop do
+          loop_running = true
           sleep 0.5 if i.positive?
           begin
             payload = {
@@ -72,12 +83,26 @@ module PaloAlto
             end
           end
           i += 1
-          break if @current_result.at_xpath('response/result/job/status').text == 'FIN'
+          if @current_result.at_xpath('response/result/job/status').text == 'FIN'
+            loop_running = false
+            break
+          end
         end
+        loop_running = false
+
         @count = @current_result.at_xpath('response/result/job/cached-logs').text.to_i
 
         @skip += @current_result.at_xpath('response/result/log/logs/@count').value.to_i # skip now shown logs
         @current_result
+      ensure
+        if loop_running
+          payload = {
+            type: 'log',
+            action: 'finish',
+            'job-id': @job_id
+          }
+          @client.execute(payload)
+        end
       end
 
       attr_reader :count

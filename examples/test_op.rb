@@ -64,6 +64,10 @@ p = {	'commit-all':
 
 i = { show: { query: { result: { id: 10_438 } } } }
 
+# request-batch op-command test http-server:
+j = { 'request-batch': { 'op-command': { test: { 'http-server': { port: 3128, address: '10.XXXXXXXXXXXX', protocol: 'HTTP' } },
+                                         device: [{ name: '013XXXXXXX' }] } } }
+
 # hit counts:
 device_group = 'PLAYGROUND'
 

@@ -1,0 +1,10 @@
+pip-3 install jsbeautifier
+
+wget https://panorama/php/misc/namedschema/Panorama.javascript -O Panorama.javascript_11.0.3.js
+
+js-beautify -s 2 -r Panorama.javascript_11.0.3.js
+
+js = JSON.parse(File.read("Panorama.javascript_11.0.3.js"));nil
+File.write("Panorama.javascript_11.0.3_parsed.js", JSON.pretty_generate(js))
+
+diff panorama.json-stock-11.1 panorama.json -u15 -i > panorama.json-stock-11.1.diff
