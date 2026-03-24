@@ -1,0 +1,8 @@
+wget --no-check-certificate https://panorama/php/misc/namedschema/Panorama.javascript -O Panorama.javascript_11.1.13-h1
+ln -sf Panorama.javascript_11.1.13-h1 Panorama.javascript
+node convert-Panorama.js  > panorama.json-stock-11.1.13-h1
+cp panorama.json-stock-11.1.13-h1 panorama.json-11.1.13-h1
+cp panorama.json-stock-11.1.diff panorama.json-stock-11.1.13-h1.diff
+[edit the diff file to change the destination filename to panorama.json-11.1.13-h1]
+patch -p0 < panorama.json-stock-11.1.13-h1.diff
+ruby ../gen_config.rb

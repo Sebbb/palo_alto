@@ -1,0 +1,1062 @@
+--- panorama.json-stock-11.1.13-h1	2024-12-16 11:07:46.965136159 +0100
++++ panorama.json-11.1.13-h1	2024-12-16 11:05:37.066250823 +0100
+@@ -40339,30 +40339,124 @@
+               "subtype": "object-name",
+               "help-string": "alphanumeric string [ 0-9a-zA-Z._-]"
+             }
+           },
+           "title-page": {
+             "@attr": {
+               "node-type": "element",
+               "type": "bool",
+               "optional": "yes"
+             }
+           },
+           "choice": {
+             "@attr": {
+               "node-type": "choice"
+             },
++            "predefined": {
++              "@attr": {
++                "node-type": "element",
++                "type": "enum",
++                "enum": [
++                  {
++                    "value": "user-activity-report"
++                  },
++                  {
++                    "value": "saas-application-usage-report"
++                  }
++                ]
++              }
++            },
++            "custom-widget": {
++              "@attr": {
++                "node-type": "array"
++              },
++              "entry": {
++                "@attr": {
++                  "node-type": "sequence"
++                },
++                "@name": {
++                  "@attr": {
++                    "node-type": "attr-req",
++                    "type": "string",
++                    "maxlen": "31",
++                    "help-string": "positive number",
++                    "regex": "[1-9][0-9]*"
++                  }
++                },
++                "choice": {
++                  "@attr": {
++                    "node-type": "choice"
++                  },
++                  "predefined-report": {
++                    "@attr": {
++                      "node-type": "element",
++                      "type": "string",
++                      "maxlen": "63",
++                      "autocomplete": "yes",
++                      "memberof": [
++                        "##/predefined/reports/entry/@name"
++                      ]
++                    }
++                  },
++                  "custom-report": {
++                    "@attr": {
++                      "node-type": "element",
++                      "type": "string",
++                      "maxlen": "63",
++                      "autocomplete": "yes",
++                      "memberof": [
++                        "#config/shared/reports/entry/@name"
++                      ]
++                    }
++                  },
++                  "pdf-summary-report": {
++                    "@attr": {
++                      "node-type": "element",
++                      "type": "string",
++                      "maxlen": "63",
++                      "autocomplete": "yes",
++                      "memberof": [
++                        "string('predefined')",
++                        "#config/shared/pdf-summary-report/entry/@name"
++                      ]
++                    }
++                  },
++                  "log-view": {
++                    "@attr": {
++                      "node-type": "element",
++                      "type": "string",
++                      "maxlen": "63",
++                      "autocomplete": "yes",
++                      "memberof": [
++                        "#config/shared/reports/entry/@name"
++                      ]
++                    }
++                  },
++                  "csv": {
++                    "@attr": {
++                      "node-type": "element",
++                      "type": "string",
++                      "maxlen": "63",
++                      "autocomplete": "yes",
++                      "memberof": [
++                        "#config/shared/reports/entry/@name"
++                      ]
++                    }
++                  }
++                }
++              }
++            },
+             "all": {
+               "@attr": {
+                 "node-type": "array"
+               },
+               "entry": {
+                 "@attr": {
+                   "node-type": "sequence"
+                 },
+                 "include-user-groups-info": {
+                   "@attr": {
+                     "node-type": "element",
+                     "type": "bool",
+                     "optional": "yes",
+                     "default": "no"
+                   }
+@@ -42190,30 +42284,38 @@
+               "device-admin-role": {
+                 "@attr": {
+                   "node-type": "element",
+                   "optional": "yes",
+                   "type": "string",
+                   "subtype": "object-name",
+                   "help-string": "Admin role to be used while context switching to the device as a device admin"
+                 }
+               },
+               "webui": {
+                 "@attr": {
+                   "node-type": "sequence",
+                   "optional": "yes",
+                   "memberof": []
+                 },
++                "validate": {
++                  "@attr": {
++                    "node-type": "element",
++                    "optional": "yes",
++                    "type": "string",
++                    "help-string": "Validate"
++                  }
++                },
+                 "dashboard": {
+                   "@attr": {
+                     "node-type": "element",
+                     "optional": "yes",
+                     "type": "enum",
+                     "enum": [
+                       {
+                         "value": "enable"
+                       },
+                       {
+                         "value": "disable"
+                       }
+                     ]
+                   }
+                 },
+@@ -50557,30 +50659,38 @@
+               "vsys-admin-role": {
+                 "@attr": {
+                   "node-type": "element",
+                   "optional": "yes",
+                   "type": "string",
+                   "subtype": "object-name",
+                   "help-string": "Admin role to be used while context switching to the device as a vsys admin"
+                 }
+               },
+               "webui": {
+                 "@attr": {
+                   "node-type": "sequence",
+                   "optional": "yes",
+                   "memberof": []
+                 },
++                "validate": {
++                  "@attr": {
++                    "node-type": "element",
++                    "optional": "yes",
++                    "type": "string",
++                    "help-string": "Validate"
++                  }
++                },
+                 "dashboard": {
+                   "@attr": {
+                     "node-type": "element",
+                     "optional": "yes",
+                     "type": "enum",
+                     "enum": [
+                       {
+                         "value": "enable"
+                       },
+                       {
+                         "value": "disable"
+                       }
+                     ]
+                   }
+                 },
+@@ -129184,30 +129294,112 @@
+                     "subtype": "object-name",
+                     "help-string": "alphanumeric string [ 0-9a-zA-Z._-]"
+                   }
+                 },
+                 "title-page": {
+                   "@attr": {
+                     "node-type": "element",
+                     "type": "bool",
+                     "optional": "yes"
+                   }
+                 },
+                 "choice": {
+                   "@attr": {
+                     "node-type": "choice"
+                   },
++                  "predefined": {
++                    "@attr": {
++                      "node-type": "element",
++                      "type": "enum",
++                      "enum": [
++                        {
++                          "value": "user-activity-report"
++                        },
++                        {
++                          "value": "saas-application-usage-report"
++                        }
++                      ]
++                    }
++                  },
++                  "custom-widget": {
++                    "@attr": {
++                      "node-type": "array"
++                    },
++                    "entry": {
++                      "@attr": {
++                        "node-type": "sequence"
++                      },
++                      "@name": {
++                        "@attr": {
++                          "node-type": "attr-req",
++                          "type": "string",
++                          "maxlen": "31",
++                          "help-string": "positive number",
++                          "regex": "[1-9][0-9]*"
++                        }
++                      },
++                      "choice": {
++                        "@attr": {
++                          "node-type": "choice"
++                        },
++                        "custom-report": {
++                          "@attr": {
++                            "node-type": "element",
++                            "type": "string",
++                            "maxlen": "63",
++                            "autocomplete": "yes",
++                            "memberof": [
++                              "#myentry(device-group)/reports/entry/@name"
++                            ]
++                          }
++                        },
++                        "pdf-summary-report": {
++                          "@attr": {
++                            "node-type": "element",
++                            "type": "string",
++                            "maxlen": "63",
++                            "autocomplete": "yes",
++                            "memberof": [
++                              "#myentry(device-group)/pdf-summary-report/entry/@name"
++                            ]
++                          }
++                        },
++                        "log-view": {
++                          "@attr": {
++                            "node-type": "element",
++                            "type": "string",
++                            "maxlen": "63",
++                            "autocomplete": "yes",
++                            "memberof": [
++                              "#myentry(device-group)/reports/entry/@name"
++                            ]
++                          }
++                        },
++                        "csv": {
++                          "@attr": {
++                            "node-type": "element",
++                            "type": "string",
++                            "maxlen": "63",
++                            "autocomplete": "yes",
++                            "memberof": [
++                              "#myentry(device-group)/reports/entry/@name"
++                            ]
++                          }
++                        }
++                      }
++                    }
++                  },
+                   "all": {
+                     "@attr": {
+                       "node-type": "array"
+                     },
+                     "entry": {
+                       "@attr": {
+                         "node-type": "sequence"
+                       },
+                       "include-user-groups-info": {
+                         "@attr": {
+                           "node-type": "element",
+                           "type": "bool",
+                           "optional": "yes",
+                           "default": "no"
+                         }
+@@ -137991,30 +138183,46 @@
+                   "entry": {
+                     "@attr": {
+                       "node-type": "sequence",
+                       "tlo": "yes"
+                     },
+                     "@name": {
+                       "@attr": {
+                         "node-type": "attr-req",
+                         "type": "string",
+                         "regex": ".*",
+                         "maxlen": "63",
+                         "subtype": "object-name",
+                         "help-string": "alphanumeric string [ 0-9a-zA-Z._-]"
+                       }
+                     },
++                    "common-name": {
++                      "@attr": {
++                        "node-type": "element",
++                        "type": "string",
++                        "minlen": "0",
++                        "maxlen": "255"
++                      }
++                    },
++                    "public-key": {
++                      "@attr": {
++                        "node-type": "element",
++                        "optional": "yes",
++                        "type": "string",
++                        "maxlen": "16384"
++                      }
++                    },
+                     "choice": {
+                       "@attr": {
+                         "node-type": "choice"
+                       },
+                       "private-key": {
+                         "@attr": {
+                           "node-type": "element",
+                           "optional": "yes",
+                           "type": "string",
+                           "maxlen": "16384",
+                           "encrypt": "yes",
+                           "double-encrypt": "yes"
+                         }
+                       },
+                       "private-key-on-hsm": {
+@@ -138958,30 +139166,38 @@
+                       "@attr": {
+                         "node-type": "union",
+                         "optional": "yes"
+                       },
+                       "device": {
+                         "@attr": {
+                           "node-type": "sequence",
+                           "optional": "yes"
+                         },
+                         "webui": {
+                           "@attr": {
+                             "node-type": "sequence",
+                             "optional": "yes",
+                             "memberof": []
+                           },
++                          "validate": {
++                            "@attr": {
++                              "node-type": "element",
++                              "optional": "yes",
++                              "type": "string",
++                              "help-string": "Validate"
++                            }
++                          },
+                           "dashboard": {
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "enum",
+                               "enum": [
+                                 {
+                                   "value": "enable"
+                                 },
+                                 {
+                                   "value": "disable"
+                                 }
+                               ]
+                             }
+                           },
+@@ -216330,72 +216546,72 @@
+                               "help-string": "administrative distance used for RIP routes"
+                             }
+                           }
+                         },
+                         "ecmp": {
+                           "@attr": {
+                             "node-type": "sequence",
+                             "optional": "yes",
+                             "help-string": "Equal Cost Multipath configuration"
+                           },
+                           "enable": {
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "enable Equal Cost Multipath routing. Changing this configuration will result in a virtual router restart"
+                             }
+                           },
+                           "algorithm": {
+                             "@attr": {
+                               "node-type": "sequence",
+                               "optional": "yes",
+                               "default": "ip-modulo",
+                               "help-string": "load balancing algorithm"
+                             },
+                             "choice": {
+                               "@attr": {
+                                 "node-type": "choice"
+                               },
+                               "ip-modulo": {
+                                 "@attr": {
+                                   "node-type": "sequence",
+                                   "help-string": "IP addresses modulo number of path"
+                                 }
+                               },
+                               "ip-hash": {
+                                 "@attr": {
+                                   "node-type": "sequence",
+                                   "help-string": "Hash based on IP addresses and optionally port numbers"
+                                 },
+                                 "src-only": {
+                                   "@attr": {
+                                     "node-type": "element",
+                                     "optional": "yes",
+                                     "type": "bool",
+-                                    "default": "false",
++                                    "default": "no",
+                                     "help-string": "only use source address for hash",
+                                     "uiHint-fieldLabel": "Use Source Address Only"
+                                   }
+                                 },
+                                 "use-port": {
+                                   "@attr": {
+                                     "node-type": "element",
+                                     "optional": "yes",
+                                     "type": "bool",
+-                                    "default": "false",
++                                    "default": "no",
+                                     "help-string": "use source/destination port for hash"
+                                   }
+                                 },
+                                 "hash-seed": {
+                                   "@attr": {
+                                     "node-type": "element",
+                                     "optional": "yes",
+                                     "type": "rangedint",
+                                     "min": "0",
+                                     "max": "4294967295",
+                                     "default": "0",
+                                     "help-string": "User-specified hash seed"
+                                   }
+                                 }
+                               },
+@@ -216451,40 +216667,40 @@
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "rangedint",
+                               "min": "2",
+                               "max": "4",
+                               "default": "2",
+                               "help-string": "Maximum number of ECMP paths supported. Changing this configuration will result in a virtual router restart"
+                             }
+                           },
+                           "symmetric-return": {
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "allows return packets to egress out of the ingress interface of the flow"
+                             }
+                           },
+                           "strict-source-path": {
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "force VPN traffic to exit interface that the source-ip belongs to"
+                             }
+                           }
+                         }
+                       }
+                     },
+                     "secure-web-gateway": {
+                       "@attr": {
+                         "node-type": "sequence",
+                         "optional": "yes",
+                         "tlo": "yes",
+                         "prune-on-sdb": "cfg.platform.model=PA-410"
+                       },
+                       "enablement": {
+                         "@attr": {
+@@ -221084,72 +221300,72 @@
+                                   }
+                                 }
+                               }
+                             },
+                             "ecmp": {
+                               "@attr": {
+                                 "node-type": "sequence",
+                                 "optional": "yes",
+                                 "help-string": "Equal Cost Multipath configuration"
+                               },
+                               "enable": {
+                                 "@attr": {
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "enable Equal Cost Multipath routing. Changing this configuration will result in a logical router restart"
+                                 }
+                               },
+                               "algorithm": {
+                                 "@attr": {
+                                   "node-type": "sequence",
+                                   "optional": "yes",
+                                   "default": "ip-modulo",
+                                   "help-string": "load balancing algorithm"
+                                 },
+                                 "choice": {
+                                   "@attr": {
+                                     "node-type": "choice"
+                                   },
+                                   "ip-modulo": {
+                                     "@attr": {
+                                       "node-type": "sequence",
+                                       "help-string": "IP addresses modulo number of path"
+                                     }
+                                   },
+                                   "ip-hash": {
+                                     "@attr": {
+                                       "node-type": "sequence",
+                                       "help-string": "Hash based on IP addresses and optionally port numbers"
+                                     },
+                                     "src-only": {
+                                       "@attr": {
+                                         "node-type": "element",
+                                         "optional": "yes",
+                                         "type": "bool",
+-                                        "default": "false",
++                                        "default": "no",
+                                         "help-string": "only use source address for hash",
+                                         "uiHint-fieldLabel": "Use Source Address Only"
+                                       }
+                                     },
+                                     "use-port": {
+                                       "@attr": {
+                                         "node-type": "element",
+                                         "optional": "yes",
+                                         "type": "bool",
+-                                        "default": "false",
++                                        "default": "no",
+                                         "help-string": "use source/destination port for hash"
+                                       }
+                                     },
+                                     "hash-seed": {
+                                       "@attr": {
+                                         "node-type": "element",
+                                         "optional": "yes",
+                                         "type": "rangedint",
+                                         "min": "0",
+                                         "max": "4294967295",
+                                         "default": "0",
+                                         "help-string": "User-specified hash seed"
+                                       }
+                                     }
+                                   },
+@@ -221205,40 +221421,40 @@
+                                 "@attr": {
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "rangedint",
+                                   "min": "2",
+                                   "max": "4",
+                                   "default": "2",
+                                   "help-string": "Maximum number of ECMP paths supported. Changing this configuration will result in a logical router restart"
+                                 }
+                               },
+                               "symmetric-return": {
+                                 "@attr": {
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "allows return packets to egress out of the ingress interface of the flow"
+                                 }
+                               },
+                               "strict-source-path": {
+                                 "@attr": {
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "force VPN traffic to exit interface that the source-ip belongs to"
+                                 }
+                               }
+                             },
+                             "multicast": {
+                               "@attr": {
+                                 "node-type": "sequence",
+                                 "optional": "yes",
+                                 "help-string": "Multicast routing protocol configuration",
+                                 "tlo": "yes"
+                               },
+                               "enable": {
+                                 "@attr": {
+                                   "node-type": "element",
+                                   "optional": "yes",
+@@ -249147,30 +249363,38 @@
+                           "@attr": {
+                             "node-type": "sequence",
+                             "tlo": "yes",
+                             "in-tpl": "yes"
+                           },
+                           "@name": {
+                             "@attr": {
+                               "node-type": "attr-req",
+                               "type": "string",
+                               "regex": ".*",
+                               "maxlen": "63",
+                               "subtype": "object-name",
+                               "help-string": "alphanumeric string [ 0-9a-zA-Z._-]"
+                             }
+                           },
++                          "common-name": {
++                            "@attr": {
++                              "node-type": "element",
++                              "type": "string",
++                              "minlen": "0",
++                              "maxlen": "255"
++                            }
++                          },
+                           "choice": {
+                             "@attr": {
+                               "node-type": "choice"
+                             },
+                             "private-key": {
+                               "@attr": {
+                                 "node-type": "element",
+                                 "optional": "yes",
+                                 "type": "string",
+                                 "maxlen": "16384",
+                                 "encrypt": "yes",
+                                 "double-encrypt": "yes"
+                               }
+                             },
+                             "private-key-on-hsm": {
+@@ -249222,30 +249446,39 @@
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "string",
+                               "regex": "^[0-9]*$"
+                             }
+                           },
+                           "subject": {
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "string",
+                               "minlen": "0",
+                               "maxlen": "1023"
+                             }
+                           },
++                          "public-key": {
++                            "@attr": {
++                              "node-type": "element",
++                              "optional": "yes",
++                              "type": "string",
++                              "minlen": "0",
++                              "maxlen": "16384"
++                            }
++                          },
+                           "subject-hash": {
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "string",
+                               "minlen": "0",
+                               "maxlen": "255"
+                             }
+                           },
+                           "issuer": {
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "string",
+                               "minlen": "0",
+@@ -344811,72 +345044,72 @@
+                               "help-string": "administrative distance used for RIP routes"
+                             }
+                           }
+                         },
+                         "ecmp": {
+                           "@attr": {
+                             "node-type": "sequence",
+                             "optional": "yes",
+                             "help-string": "Equal Cost Multipath configuration"
+                           },
+                           "enable": {
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "enable Equal Cost Multipath routing. Changing this configuration will result in a virtual router restart"
+                             }
+                           },
+                           "algorithm": {
+                             "@attr": {
+                               "node-type": "sequence",
+                               "optional": "yes",
+                               "default": "ip-modulo",
+                               "help-string": "load balancing algorithm"
+                             },
+                             "choice": {
+                               "@attr": {
+                                 "node-type": "choice"
+                               },
+                               "ip-modulo": {
+                                 "@attr": {
+                                   "node-type": "sequence",
+                                   "help-string": "IP addresses modulo number of path"
+                                 }
+                               },
+                               "ip-hash": {
+                                 "@attr": {
+                                   "node-type": "sequence",
+                                   "help-string": "Hash based on IP addresses and optionally port numbers"
+                                 },
+                                 "src-only": {
+                                   "@attr": {
+                                     "node-type": "element",
+                                     "optional": "yes",
+                                     "type": "bool",
+-                                    "default": "false",
++                                    "default": "no",
+                                     "help-string": "only use source address for hash",
+                                     "uiHint-fieldLabel": "Use Source Address Only"
+                                   }
+                                 },
+                                 "use-port": {
+                                   "@attr": {
+                                     "node-type": "element",
+                                     "optional": "yes",
+                                     "type": "bool",
+-                                    "default": "false",
++                                    "default": "no",
+                                     "help-string": "use source/destination port for hash"
+                                   }
+                                 },
+                                 "hash-seed": {
+                                   "@attr": {
+                                     "node-type": "element",
+                                     "optional": "yes",
+                                     "type": "rangedint",
+                                     "min": "0",
+                                     "max": "4294967295",
+                                     "default": "0",
+                                     "help-string": "User-specified hash seed"
+                                   }
+                                 }
+                               },
+@@ -344932,40 +345165,40 @@
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "rangedint",
+                               "min": "2",
+                               "max": "4",
+                               "default": "2",
+                               "help-string": "Maximum number of ECMP paths supported. Changing this configuration will result in a virtual router restart"
+                             }
+                           },
+                           "symmetric-return": {
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "allows return packets to egress out of the ingress interface of the flow"
+                             }
+                           },
+                           "strict-source-path": {
+                             "@attr": {
+                               "node-type": "element",
+                               "optional": "yes",
+                               "type": "bool",
+-                              "default": "false",
++                              "default": "no",
+                               "help-string": "force VPN traffic to exit interface that the source-ip belongs to"
+                             }
+                           }
+                         }
+                       }
+                     },
+                     "secure-web-gateway": {
+                       "@attr": {
+                         "node-type": "sequence",
+                         "optional": "yes",
+                         "tlo": "yes",
+                         "prune-on-sdb": "cfg.platform.model=PA-410",
+                         "in-tpl": "yes"
+                       },
+                       "enablement": {
+@@ -349567,72 +349800,72 @@
+                                   }
+                                 }
+                               }
+                             },
+                             "ecmp": {
+                               "@attr": {
+                                 "node-type": "sequence",
+                                 "optional": "yes",
+                                 "help-string": "Equal Cost Multipath configuration"
+                               },
+                               "enable": {
+                                 "@attr": {
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "enable Equal Cost Multipath routing. Changing this configuration will result in a logical router restart"
+                                 }
+                               },
+                               "algorithm": {
+                                 "@attr": {
+                                   "node-type": "sequence",
+                                   "optional": "yes",
+                                   "default": "ip-modulo",
+                                   "help-string": "load balancing algorithm"
+                                 },
+                                 "choice": {
+                                   "@attr": {
+                                     "node-type": "choice"
+                                   },
+                                   "ip-modulo": {
+                                     "@attr": {
+                                       "node-type": "sequence",
+                                       "help-string": "IP addresses modulo number of path"
+                                     }
+                                   },
+                                   "ip-hash": {
+                                     "@attr": {
+                                       "node-type": "sequence",
+                                       "help-string": "Hash based on IP addresses and optionally port numbers"
+                                     },
+                                     "src-only": {
+                                       "@attr": {
+                                         "node-type": "element",
+                                         "optional": "yes",
+                                         "type": "bool",
+-                                        "default": "false",
++                                        "default": "no",
+                                         "help-string": "only use source address for hash",
+                                         "uiHint-fieldLabel": "Use Source Address Only"
+                                       }
+                                     },
+                                     "use-port": {
+                                       "@attr": {
+                                         "node-type": "element",
+                                         "optional": "yes",
+                                         "type": "bool",
+-                                        "default": "false",
++                                        "default": "no",
+                                         "help-string": "use source/destination port for hash"
+                                       }
+                                     },
+                                     "hash-seed": {
+                                       "@attr": {
+                                         "node-type": "element",
+                                         "optional": "yes",
+                                         "type": "rangedint",
+                                         "min": "0",
+                                         "max": "4294967295",
+                                         "default": "0",
+                                         "help-string": "User-specified hash seed"
+                                       }
+                                     }
+                                   },
+@@ -349688,40 +349921,40 @@
+                                 "@attr": {
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "rangedint",
+                                   "min": "2",
+                                   "max": "4",
+                                   "default": "2",
+                                   "help-string": "Maximum number of ECMP paths supported. Changing this configuration will result in a logical router restart"
+                                 }
+                               },
+                               "symmetric-return": {
+                                 "@attr": {
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "allows return packets to egress out of the ingress interface of the flow"
+                                 }
+                               },
+                               "strict-source-path": {
+                                 "@attr": {
+                                   "node-type": "element",
+                                   "optional": "yes",
+                                   "type": "bool",
+-                                  "default": "false",
++                                  "default": "no",
+                                   "help-string": "force VPN traffic to exit interface that the source-ip belongs to"
+                                 }
+                               }
+                             },
+                             "multicast": {
+                               "@attr": {
+                                 "node-type": "sequence",
+                                 "optional": "yes",
+                                 "help-string": "Multicast routing protocol configuration",
+                                 "tlo": "yes",
+                                 "in-tpl": "yes"
+                               },
+                               "enable": {
+                                 "@attr": {
+                                   "node-type": "element",
+@@ -409339,28 +409572,102 @@
+             "max-fw-clusters": {
+               "@attr": {
+                 "node-type": "element",
+                 "optional": "yes",
+                 "type": "rangedint",
+                 "min": "0",
+                 "max": "10000"
+               }
+             }
+           }
+         },
+         "plugins": {
+           "@attr": {
+             "node-type": "sequence",
+             "optional": "yes"
++          },
++          "sw_fw_license": {
++            "@attr": {
++              "node-type": "sequence",
++              "optional": "yes"
++            },
++            "license-manager": {
++              "@attr": {
++                "node-type": "array",
++                "optional": "yes",
++                "add_to_xml_object_cache": "yes"
++              },
++              "entry": {
++                "@attr": {
++                  "node-type": "sequence",
++                  "tlo": "yes",
++                  "max-count": "10000"
++                },
++                "@name": {
++                  "@attr": {
++                    "node-type": "attr-req",
++                    "type": "string",
++                    "minlen": "1",
++                    "maxlen": "127",
++                    "regex": "^[^]'[]*$"
++                  }
++                },
++                "device-group": {
++                  "@attr": {
++                    "node-type": "element",
++                    "optional": "yes",
++                    "type": "string",
++                    "minlen": "0",
++                    "maxlen": "1023"
++                  }
++                },
++                "template-stack": {
++                  "@attr": {
++                    "node-type": "element",
++                    "optional": "yes",
++                    "type": "string",
++                    "minlen": "0",
++                    "maxlen": "1023"
++                  }
++                },
++                "bootstrap-definition": {
++                  "@attr": {
++                    "node-type": "element",
++                    "optional": "yes",
++                    "type": "string",
++                    "minlen": "0",
++                    "maxlen": "1023"
++                  }
++                },
++                "auto-deactivate": {
++                  "@attr": {
++                    "node-type": "element",
++                    "optional": "yes",
++                    "type": "string",
++                    "minlen": "0",
++                    "maxlen": "1023"
++                  }
++                },
++                "description": {
++                  "@attr": {
++                    "node-type": "element",
++                    "optional": "yes",
++                    "type": "string",
++                    "minlen": "0",
++                    "maxlen": "1023"
++                  }
++                }
++              }
++            }
+           }
+         }
+       }
+     },
+     "readonly": {
+       "@attr": {
+         "node-type": "sequence",
+         "optional": "yes",
+         "skip-validation": "yes"
+       }
+     }
+   }
+ }

@@ -307,8 +307,10 @@ module PaloAlto
         # As it's a temporary error, we need to rescue/raise it explicitly
         # #edit! rescues it, for other calls, it normally should not happen.....
         raise e
-      rescue EOFError, Net::ReadTimeout => e
-        max_retries = if %w[keygen config].include?(payload[:type])
+      rescue EOFError, Net::ReadTimeout, OpenSSL::SSL::SSLError => e
+        max_retries = if e.is_a?(OpenSSL::SSL::SSLError)
+                        1
+                      elsif %w[keygen config].include?(payload[:type])
                         # TODO: only retry on config, when it's get or edit, otherwise you may get strange errors
                         40
                       else
