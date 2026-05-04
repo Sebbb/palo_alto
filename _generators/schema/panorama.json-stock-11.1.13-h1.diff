@@ -1,5 +1,5 @@
---- panorama.json-stock-11.1.13-h1	2024-12-16 11:07:46.965136159 +0100
-+++ panorama.json-11.1.13-h1	2024-12-16 11:05:37.066250823 +0100
+--- panorama.json-stock-11.1.13-h1	2026-04-23 14:32:12.681638951 +0200
++++ panorama.json-11.1.13-h1	2026-05-04 10:11:16.829588614 +0200
 @@ -40339,30 +40339,124 @@
                "subtype": "object-name",
                "help-string": "alphanumeric string [ 0-9a-zA-Z._-]"
@@ -203,7 +203,7 @@
                      ]
                    }
                  },
-@@ -129184,30 +129294,112 @@
+@@ -129269,30 +129379,112 @@
                      "subtype": "object-name",
                      "help-string": "alphanumeric string [ 0-9a-zA-Z._-]"
                    }
@@ -316,7 +316,7 @@
                            "optional": "yes",
                            "default": "no"
                          }
-@@ -137991,30 +138183,46 @@
+@@ -138078,30 +138270,46 @@
                    "entry": {
                      "@attr": {
                        "node-type": "sequence",
@@ -363,7 +363,7 @@
                          }
                        },
                        "private-key-on-hsm": {
-@@ -138958,30 +139166,38 @@
+@@ -139045,30 +139253,38 @@
                        "@attr": {
                          "node-type": "union",
                          "optional": "yes"
@@ -402,7 +402,7 @@
                                ]
                              }
                            },
-@@ -216330,72 +216546,72 @@
+@@ -216459,72 +216675,72 @@
                                "help-string": "administrative distance used for RIP routes"
                              }
                            }
@@ -478,7 +478,7 @@
                                    }
                                  }
                                },
-@@ -216451,40 +216667,40 @@
+@@ -216580,40 +216796,40 @@
                              "@attr": {
                                "node-type": "element",
                                "optional": "yes",
@@ -521,7 +521,7 @@
                        },
                        "enablement": {
                          "@attr": {
-@@ -221084,72 +221300,72 @@
+@@ -221216,72 +221432,72 @@
                                    }
                                  }
                                }
@@ -597,7 +597,7 @@
                                        }
                                      }
                                    },
-@@ -221205,40 +221421,40 @@
+@@ -221337,40 +221553,40 @@
                                  "@attr": {
                                    "node-type": "element",
                                    "optional": "yes",
@@ -640,7 +640,7 @@
                                  "@attr": {
                                    "node-type": "element",
                                    "optional": "yes",
-@@ -249147,30 +249363,38 @@
+@@ -249286,30 +249502,46 @@
                            "@attr": {
                              "node-type": "sequence",
                              "tlo": "yes",
@@ -664,6 +664,14 @@
 +                              "maxlen": "255"
 +                            }
 +                          },
++                          "csr": {
++                            "@attr": {
++                              "node-type": "element",
++                              "type": "string",
++                              "minlen": "0",
++                              "maxlen": "16384"
++                            }
++                          },
                            "choice": {
                              "@attr": {
                                "node-type": "choice"
@@ -679,7 +687,7 @@
                                }
                              },
                              "private-key-on-hsm": {
-@@ -249222,30 +249446,39 @@
+@@ -249361,30 +249593,39 @@
                                "node-type": "element",
                                "optional": "yes",
                                "type": "string",
@@ -719,7 +727,7 @@
                                "optional": "yes",
                                "type": "string",
                                "minlen": "0",
-@@ -344811,72 +345044,72 @@
+@@ -344992,72 +345233,72 @@
                                "help-string": "administrative distance used for RIP routes"
                              }
                            }
@@ -795,7 +803,7 @@
                                    }
                                  }
                                },
-@@ -344932,40 +345165,40 @@
+@@ -345113,40 +345354,40 @@
                              "@attr": {
                                "node-type": "element",
                                "optional": "yes",
@@ -838,7 +846,7 @@
                          "in-tpl": "yes"
                        },
                        "enablement": {
-@@ -349567,72 +349800,72 @@
+@@ -349751,72 +349992,72 @@
                                    }
                                  }
                                }
@@ -914,7 +922,7 @@
                                        }
                                      }
                                    },
-@@ -349688,40 +349921,40 @@
+@@ -349872,40 +350113,40 @@
                                  "@attr": {
                                    "node-type": "element",
                                    "optional": "yes",
@@ -957,7 +965,7 @@
                                "enable": {
                                  "@attr": {
                                    "node-type": "element",
-@@ -409339,28 +409572,102 @@
+@@ -409523,28 +409764,102 @@
              "max-fw-clusters": {
                "@attr": {
                  "node-type": "element",

@@ -5,4 +5,5 @@ cp panorama.json-stock-11.1.13-h1 panorama.json-11.1.13-h1
 cp panorama.json-stock-11.1.diff panorama.json-stock-11.1.13-h1.diff
 [edit the diff file to change the destination filename to panorama.json-11.1.13-h1]
 patch -p0 < panorama.json-stock-11.1.13-h1.diff
+diff panorama.json-stock-11.1.13-h1 panorama.json-11.1.13-h1 -u15 -i > panorama.json-stock-11.1.13-h1.diff
 ruby ../gen_config.rb
