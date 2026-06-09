@@ -20,7 +20,6 @@ module PaloAlto
           type: 'log',
           'log-type': log_type,
           nlogs: nlogs,
-          query: query,
           dir: dir,
           'show-detail': show_detail ? 'yes' : 'no'
         }
