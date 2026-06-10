@@ -113,13 +113,11 @@ module PaloAlto
         end
 
         loop do
-          @current_result.xpath('/response/result/log/logs/entry').each do |l|
-            result = l.children.each_with_object({}) do |child, h|
-              next h if child.is_a?(Nokogiri::XML::Text)
-
-              h[child.name] = child.text
-            end
-            yield result
+          @current_result.xpath('/response/result/log/logs/entry').each do |entry|
+            yield Hash[
+               [['logid', entry.attribute('logid').value]] +
+               entry.element_children.map { |attrib| [attrib.name, attrib.text] }
+            ]
           end
 
           # skip already returned logs next time
