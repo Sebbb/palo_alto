@@ -37,22 +37,19 @@ module PaloAlto
         @enum.next
       end
 
-      def run_query # rubocop:disable Metrics/MethodLength
-        retried = false
-        begin
-          result = @client.execute(@log_query_payload)
-        rescue PaloAlto::InvalidCommandException => e
-          unless retried
-            retried = true
-            retry
-          end
-          raise e
-        end
+      def run_query
+        retries ||= 0
+        result = @client.execute(@log_query_payload)
+
         @job_id = result.at_xpath('response/result/job').text
         warn "#{@client.host} #{Time.now}: Got job id #{@job_id} for log query"
 
-        @count = nil
         @skip = 0
+        @count = nil
+      rescue PaloAlto::InvalidCommandException => e
+        retry if (retries += 1) <= 1 # retry only once
+
+        raise e
       end
 
       def rewind
@@ -114,10 +111,8 @@ module PaloAlto
 
         loop do
           @current_result.xpath('/response/result/log/logs/entry').each do |entry|
-            yield Hash[
-               [['logid', entry.attribute('logid').value]] +
-               entry.element_children.map { |attrib| [attrib.name, attrib.text] }
-            ]
+            yield({ 'logid' => entry.attribute('logid').value }
+              .merge(entry.element_children.to_h { |attrib| [attrib.name, attrib.text] }))
           end
 
           # skip already returned logs next time

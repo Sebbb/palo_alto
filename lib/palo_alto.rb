@@ -83,8 +83,8 @@ module PaloAlto
         options[:verify_ssl] ||= OpenSSL::SSL::VERIFY_PEER
 
         headers = {
+          Accept: 'application/xml',
           'User-Agent': 'ruby-keystone-client',
-          'Accept': 'application/xml',
           'Content-Type': 'application/x-www-form-urlencoded'
         }
 
@@ -194,7 +194,7 @@ module PaloAlto
             headers['X-PAN-KEY'] = '***' if headers.key?('X-PAN-KEY')
             puts " #{k}: #{headers}"
           when :payload
-            send(method, ' payload: ' + options[:payload].map do |k, v|
+            send(method, ' payload: ' + options[:payload].to_h do |k, v|
               element_length = 1024
               if k == :element && v.length >= element_length
                 [k.to_s, "#{v[..element_length]}..."]
@@ -203,7 +203,7 @@ module PaloAlto
               else
                 [k.to_s, v]
               end
-            end.to_h.inspect)
+            end.inspect)
           else
             send(method, " #{k}: #{v}")
           end
@@ -327,7 +327,7 @@ module PaloAlto
         end
         sleep 10
         retry
-      rescue ConnectionErrorException, UnknownErrorException, InternalErrorException => e # temporary exceptions
+      rescue UnknownErrorException, InternalErrorException => e # temporary exceptions
         dont_retry_at = [
           'Partial revert is not allowed. Full system commit must be completed.',
           'Local commit jobs are queued. Revert operation is not allowed.',
